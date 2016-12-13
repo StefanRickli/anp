@@ -7,7 +7,7 @@
 %
 %   Version 3.1, 2016-11-14
 %   
-%
+%   
 %   What does it do?:
 %   -----------------
 %   This script calculates for a given set of zeros and poles a suitable
@@ -84,6 +84,8 @@
 %   2)  The script can't handle poles and zeros that lie exactly on the
 %       imaginary axis. Please place those points slightly to the left
 %       (or right).
+%   3)  At the moment the function can't handle scaling factors in front of
+%       the transfer function, e.g. the k in G(s)=k*(s+1)/(s+2)
 %
 %
 %   Known Issues:
@@ -97,8 +99,14 @@
 function [] = animated_nyquist_plot(varargin)
     ip = inputParser;
     
+    global arg_types keywords;
+    arg_types = '';
+    keywords = {'noplayer',false;'export',false};
+    
     default_arg1            = NaN;
     default_arg2            = NaN;
+    default_arg3            = NaN;
+    default_arg4            = NaN;
     
     default_R               = NaN;
     default_duration        = 20;               % length of animation in movie player, affects spatial resolution, [s]
@@ -110,8 +118,10 @@ function [] = animated_nyquist_plot(varargin)
     default_right_dims      = [2;2];            % width and heigth of right plot
     default_plot_size       = 500;              % pixel
     
-    addOptional(ip,'arg1',          default_arg1,           @checkArg1);
-    addOptional(ip,'arg2',          default_arg2,           @checkArg2);
+    addOptional(ip,'arg1',          default_arg1,           @checkOptArg);
+    addOptional(ip,'arg2',          default_arg2,           @checkOptArg);
+    addOptional(ip,'arg3',          default_arg3,           @checkOptArg);
+    addOptional(ip,'arg4',          default_arg4,           @checkOptArg);
     
     addParameter(ip,'R',            default_R,              @isScalarNumberPositive);
     addParameter(ip,'duration',     default_duration,       @isScalarNumber);
@@ -125,14 +135,11 @@ function [] = animated_nyquist_plot(varargin)
     
     parse(ip,varargin{:});
     
-    if isa(ip.Results.arg1,'tf') && ~isnan(ip.Results.arg2)
-        error('Error: if ''tf'' is specified, then the second argument must be left empty');
-    elseif isa(ip.Results.arg1,'tf')
-        % we only take the first transfer function if there multiple have
-        % been provided
-        g.zeros = roots(ip.Results.arg1.Numerator{1})';         % zeros of transfer function
-        g.poles = roots(ip.Results.arg1.Denominator{1})';       % poles of transfer function
-    elseif ~isempty(ip.Results.arg1) && ~isempty(ip.Results.arg2) && isnan(ip.Results.arg1) && isnan(ip.Results.arg2)
+    if isempty(regexp(arg_types,'^(t|v{2})?k{0,2}$','emptymatch'))
+        error('Check type and order of optional arguments.');
+    end
+    
+    if ~isempty(regexp(arg_types,'^k{0,2}$','emptymatch','once'))
         % if no poles and zeros have been specified
         fprintf('\nNo transfer function specified. Showing default example.\n\n');
         fprintf('Usage:\n');
@@ -140,52 +147,110 @@ function [] = animated_nyquist_plot(varargin)
         fprintf('animated_nyquist_plot([zeros],[poles])\twhere ''zeros'' and ''poles'' are 2D row vectors with roots of [num] and [denum]\n');
         fprintf('animated_nyquist_plot(__,Name,Value)\tsee documentation\n');
         
-        g.zeros = [-3];
-        g.poles = [-2,-1+1i,-1-1i];
-    elseif (isempty(ip.Results.arg1) || isvector(ip.Results.arg1)) && isvector(ip.Results.arg2)
-        g.zeros = ip.Results.arg1;
-        g.poles = ip.Results.arg2;
+        functionParams.tf_zeros = [-3];
+        functionParams.tf_poles = [-2,-1+1i,-1-1i];
+        
+    elseif ~isempty(regexp(arg_types,'^tk{0,2}$', 'once'))
+        % we only take the first transfer function if there multiple have
+        % been provided
+        functionParams.tf_zeros = roots(ip.Results.arg1.Numerator{1})';         % zeros of transfer function
+        functionParams.tf_poles = roots(ip.Results.arg1.Denominator{1})';       % poles of transfer function
+        
+    elseif ~isempty(regexp(arg_types,'^vvk{0,2}$', 'once'))
+        if ~isempty(ip.Results.arg1) && length(ip.Results.arg1(:,1)) > 1
+            functionParams.tf_zeros = ip.Results.arg1';
+        else
+            functionParams.tf_zeros = ip.Results.arg1;
+        end
+        
+        if ~isempty(ip.Results.arg2) && length(ip.Results.arg2(:,1)) > 1
+            functionParams.tf_poles = ip.Results.arg2';
+        else
+            functionParams.tf_poles = ip.Results.arg2
+        end
     else
         error('Error: oops, we shouldn''t be here... sorry about that. Please send me an email about this and provide me with the input arguments you used.');
     end
-
+    
     if ~isequal(ip.Results.left_x0,[0;0]) || ~isequal(ip.Results.left_dims,[5;5])
-        animationParams.in_auto_size = false;        % values below are only active if auto = false
-        animationParams.in_x0 = ip.Results.left_x0;
-        animationParams.in_dims = ip.Results.left_dims;
+        functionParams.in_auto_size = false;        % values below are only active if auto = false
+
+        if ~isempty(ip.Results.left_x0) && length(ip.Results.left_x0(1,:)) > 1
+            functionParams.in_x0 = ip.Results.left_x0';
+        else
+            functionParams.in_x0 = ip.Results.left_x0;
+        end
+        
+        if ~isempty(ip.Results.left_dims) && length(ip.Results.left_dims(1,:)) > 1
+            functionParams.in_dims = ip.Results.left_dims';
+        else
+            functionParams.in_dims = ip.Results.left_dims;
+        end
     else
-        animationParams.in_auto_size = true;
+        functionParams.in_auto_size = true;
     end
     
     if ~isequal(ip.Results.right_x0,[0;0]) || ~isequal(ip.Results.right_dims,[2;2])
-        animationParams.out_auto_size = false;       % values below are only active if auto = false
-        animationParams.out_x0 = ip.Results.right_x0;
-        animationParams.out_dims = ip.Results.right_dims;
+        functionParams.out_auto_size = false;       % values below are only active if auto = false
+        
+        if ~isempty(ip.Results.right_x0) && length(ip.Results.right_x0(1,:)) > 1
+            functionParams.out_x0 = ip.Results.right_x0';
+        else
+            functionParams.out_x0 = ip.Results.right_x0;
+        end
+        
+        if ~isempty(ip.Results.right_dims) && length(ip.Results.right_dims(1,:)) > 1        
+            functionParams.out_dims = ip.Results.right_dims';
+        else
+            functionParams.out_dims = ip.Results.right_dims;
+        end
     else
-        animationParams.out_auto_size = true;
+        functionParams.out_auto_size = true;
     end
     
-    animationParams.duration = ip.Results.duration;
-    animationParams.FPS = ip.Results.FPS;
-    animationParams.trail_length = ip.Results.trail_length;
-    animationParams.plotSize = ip.Results.plot_size;
-    animationParams.border = 20;                    % pixel   
+    functionParams.duration = ip.Results.duration;
+    functionParams.FPS = ip.Results.FPS;
+    functionParams.trail_length = ip.Results.trail_length;
+    functionParams.plotSize = ip.Results.plot_size;
+    functionParams.border = 20;                    % pixel   
+    functionParams.noPlayer = keywords{1,2};
+    functionParams.export = keywords{2,2};
+    functionParams.R = ip.Results.R;
     
-    R = ip.Results.R;
-    
-    main(g, R, animationParams);
+    main(animationParams);
 end
 
-function res = checkArg1(x)
+function res = checkOptArg(x)
+    global arg_types
+    
+    n = length(arg_types);
     if isa(x,'tf')
-        res = true;
+        arg_types(n+1) = 't';                 % t = transfer function
+    elseif isempty(x) || (isvector(x) && isnumeric(x))
+        arg_types(n+1) = 'v';                 % v = vector
+    elseif isKeyword(x)
+        arg_types(n+1) = 'k';                 % k = keyword
     else
-        res = isempty(x) || (isvector(x) && isnumeric(x));
+        res = false;
+        return;
     end
+    
+    res = true;
+    return;
 end
 
-function res = checkArg2(x)
-    res = isvector(x) && isnumeric(x);
+function res = isKeyword(x)
+    global keywords;
+    
+    try
+        res = ismember(lower(x),lower({keywords{:,1}}));
+    catch
+        error('Wrong argument type.');
+    end
+    
+    for ii = 1:length({keywords{:,1}})
+        keywords{ii,2} = keywords{ii,2} || isequal(x,keywords{ii,1});
+    end
 end
 
 function res = isScalarInteger(x)
@@ -205,28 +270,28 @@ function res = isScalarNumberPositive(x)
 end
 
 function res = isVectorNumber(x)
-    res = isequal(size(x),[1,2]) && isnumeric(x);
+    res = (isequal(size(x),[1,2]) || isequal(size(x),[2,1])) && isnumeric(x);
 end
 
 %% main function
-function [] = main(g, R, animationParams)
+function [] = main(animationParams)
     %% debug
     t_min = 0;
     t_max = 1;
         
     % put the transfer function to the text output
-    transfer_function = tf(poly(g.zeros),poly(g.poles))
+    transfer_function = tf(poly(animationParams.tf_zeros),poly(animationParams.tf_poles))
     fprintf('with\n');
-    zeros = g.zeros
+    zeros = animationParams.tf_zeros
     fprintf('and\n');
-    poles = g.poles
+    poles = animationParams.tf_poles
     
     %% initialization
     phi = 5;                                    % [°], roundoff-parameter of the D-curve, usually not necessary to change
     if isnan(R)
-        R = 2*max([abs(g.zeros) abs(g.poles)]);     % radius of the D-curve. auto value is such that one can oftentimes see what happens in origin of nyquist curve
+        R = 2*max([abs(animationParams.tf_zeros) abs(animationParams.tf_poles)]);     % radius of the D-curve. auto value is such that one can oftentimes see what happens in origin of nyquist curve
     end
-    g.tf = zerosPoles2fncHandle(g.zeros, g.poles);
+    g = zerosPoles2fncHandle(animationParams.tf_zeros, animationParams.tf_poles);
     
     %% preparations
     % prepare frame buffer
@@ -246,13 +311,13 @@ function [] = main(g, R, animationParams)
     
     %% calculate the function values
     in = getInputFunctionHandle();
-    out = @(t,R,phi) g.tf(in(t,R,phi));
+    out = @(t,R,phi) g(in(t,R,phi));
     
     in_values = in(t,R,phi);
     out_values = out(t,R,phi);
     
     %% calculation of the plot(s)
-    frames = drawFunctions(in_values, out_values, g.zeros, g.poles, R, t, t_indexes, animationParams);
+    frames = drawFunctions(in_values, out_values, animationParams.tf_zeros, animationParams.tf_poles, R, t, t_indexes, animationParams);
     
     if ~isstruct(frames) && frames == -1
         return;
