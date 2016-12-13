@@ -5,7 +5,7 @@
 %   Author: Stefan Rickli, ricklis [at] student.ethz.ch
 %           https://blogs.ethz.ch/ricklis
 %
-%   Version 3.2, 2016-11-23
+%   Version 3.1, 2016-11-14
 %   
 %   
 %   What does it do?:
@@ -96,7 +96,7 @@
 %
 % -------------------------------------------------------------------------
 
-function [] = animated_nyquist_plot_new(varargin)
+function [] = animated_nyquist_plot(varargin)
     ip = inputParser;
     
     global arg_types keywords;
@@ -117,7 +117,6 @@ function [] = animated_nyquist_plot_new(varargin)
     default_right_x0        = [0;0];            % center of right plot
     default_right_dims      = [2;2];            % width and heigth of right plot
     default_plot_size       = 500;              % pixel
-    default_filename        = 'animated_nyquist_plot_export';
     
     addOptional(ip,'arg1',          default_arg1,           @checkOptArg);
     addOptional(ip,'arg2',          default_arg2,           @checkOptArg);
@@ -133,14 +132,9 @@ function [] = animated_nyquist_plot_new(varargin)
     addParameter(ip,'right_x0',     default_right_x0,       @isVectorNumber);
     addParameter(ip,'right_dims',   default_right_dims,     @isVectorNumber);
     addParameter(ip,'plot_size',    default_plot_size,      @isScalarInteger);
-    addParameter(ip,'filename',     default_filename,       @ischar);
     
     parse(ip,varargin{:});
     
-    % for the optional arguments we require
-    % either (neither a transfer function nor poles/zeros), followed by zero, one or two keywords
-    % OR a transfer function, followed by zero, one or two keywords
-    % OR two vectors containing the poles and zeros, followed by zero, one or two keywords
     if isempty(regexp(arg_types,'^(t|v{2})?k{0,2}$','emptymatch'))
         error('Check type and order of optional arguments.');
     end
@@ -153,8 +147,8 @@ function [] = animated_nyquist_plot_new(varargin)
         fprintf('animated_nyquist_plot([zeros],[poles])\twhere ''zeros'' and ''poles'' are 2D row vectors with roots of [num] and [denum]\n');
         fprintf('animated_nyquist_plot(__,Name,Value)\tsee documentation\n');
         
-        functionParams.tf_zeros = [-0.7];
-        functionParams.tf_poles = [-3,-2,-1+1i,-1-1i];
+        functionParams.tf_zeros = [-3];
+        functionParams.tf_poles = [-2,-1+1i,-1-1i];
         
     elseif ~isempty(regexp(arg_types,'^tk{0,2}$', 'once'))
         % we only take the first transfer function if there multiple have
@@ -221,18 +215,14 @@ function [] = animated_nyquist_plot_new(varargin)
     functionParams.border = 20;                    % pixel   
     functionParams.noPlayer = keywords{1,2};
     functionParams.export = keywords{2,2};
-    functionParams.filename = ip.Results.filename;
     functionParams.R = ip.Results.R;
     
-    
-    main(functionParams);
+    main(animationParams);
 end
 
 function res = checkOptArg(x)
     global arg_types
     
-    % simply tries to find out the type of argument that has been provided
-    % do a check for sanity later
     n = length(arg_types);
     if isa(x,'tf')
         arg_types(n+1) = 't';                 % t = transfer function
@@ -297,9 +287,9 @@ function [] = main(animationParams)
     poles = animationParams.tf_poles
     
     %% initialization
-    phi = 7;                                    % [°], roundoff-parameter of the D-curve, usually not necessary to change
-    if isnan(animationParams.R)
-        animationParams.R = 2*max([abs(animationParams.tf_zeros) abs(animationParams.tf_poles)]);     % radius of the D-curve. auto value is such that one can oftentimes see what happens in origin of nyquist curve
+    phi = 5;                                    % [°], roundoff-parameter of the D-curve, usually not necessary to change
+    if isnan(R)
+        R = 2*max([abs(animationParams.tf_zeros) abs(animationParams.tf_poles)]);     % radius of the D-curve. auto value is such that one can oftentimes see what happens in origin of nyquist curve
     end
     g = zerosPoles2fncHandle(animationParams.tf_zeros, animationParams.tf_poles);
     
@@ -321,45 +311,24 @@ function [] = main(animationParams)
     
     %% calculate the function values
     in = getInputFunctionHandle();
-    out = @(t,R,phi) g(in(t,animationParams.R,phi));
+    out = @(t,R,phi) g(in(t,R,phi));
     
-    in_values = in(t,animationParams.R,phi);
-    out_values = out(t,animationParams.R,phi);
+    in_values = in(t,R,phi);
+    out_values = out(t,R,phi);
     
     %% calculation of the plot(s)
-    frames = drawFunctions(in_values, out_values, animationParams.tf_zeros, animationParams.tf_poles, animationParams.R, t, t_indexes, animationParams);
+    frames = drawFunctions(in_values, out_values, animationParams.tf_zeros, animationParams.tf_poles, R, t, t_indexes, animationParams);
     
     if ~isstruct(frames) && frames == -1
         return;
     end
     
     %% display the movie player
-    if ~animationParams.noPlayer && ~animationParams.export && exist('implay') == 2
+    if exist('implay') == 2
         implay(frames,animationParams.FPS);
         set(findall(0,'tag','spcui_scope_framework'),'position',[150 150 length(frames(1).cdata(1,:,1))+20 length(frames(1).cdata(:,1,1))+30]);
-    elseif ~(exist('implay') == 2)
+    else
         fprintf('Video player could not be found. Please install Matlabs'' ''Image Processing Toolbox'' in order to use this function\n');
-    end
-    
-    % export the frames as a .mp4 file
-    if animationParams.export
-        if exist([animationParams.filename,'.mp4'],'file') == 2
-            ii = 1;
-            while exist([animationParams.filename,'_',num2str(ii),'.mp4'],'file') == 2
-                ii = ii + 1;
-            end
-            filename = [animationParams.filename,'_',num2str(ii),'.mp4'];
-        else
-            filename = [animationParams.filename,'.mp4'];
-        end
-        v = VideoWriter(filename,'MPEG-4');
-        v.FrameRate = animationParams.FPS;
-        open(v);
-        for ii = 1:length(frames)
-            writeVideo(v,frames(ii));
-        end
-        close(v);
-        fprintf(['Video successfully exported to "',filename,'"\n']);
     end
 end
 
@@ -748,66 +717,6 @@ function z = roundedCurve(t,R,phi)
             z(ii) = -(v51*(1-t(ii)) + v52*(1-t(ii))^4)*i; % part 5
         end
     end
-end
-
-% this D-shaped curve has small arcs at the edges to smooth them and
-% make the derivative of the curve continuous
-% The shape is basically split into 5 parts to which the indexes correspond
-% The two parameters one can play with are phi, which determines the degree
-% of roundoff (0<phi<180) and the radius of the big arc R.
-function z = roundedCurve(t,R,phi)
-    phi = deg2rad(phi);
-    
-    % calculate values of the small round-off circles
-    r = R*sin(phi)/(1+sin(phi));
-    m2 = r + i*sqrt(R^2-2*R*r);
-    m4 = r - i*sqrt(R^2-2*R*r);
-    
-    % need to know how long the parts are
-    d1 = sqrt(R^2-2*R*r);
-    d2 = r*(pi/2 + phi);
-    d3 = R*(pi - 2*phi);
-    d4 = d2;
-    d5 = d1;
-    
-    % length of the round part (small arcs + big arc)
-    d_arcs = d2 + d3 + d4;
-    
-    % calculate the t-values at which two adjacent regions touch
-    % the only arbitrary choice here is t12. together with t45 it
-    % determines the fraction of time we need for the y-axis part of the
-    % D-curve.
-    % the v-values are velocity-factors
-    t12 = 2/5; 
-    t45 = 1-t12;
-    v_ave = d_arcs / (t45 - t12);
-    
-    t23 = t12 + d2/v_ave;
-    t34 = 1-t23;
-    
-    v11 = 3; % again the only arbitrary choice amongst the velocity-factors. determines the speed of the animation near the origin.
-    v12 = (d1-v11*t12)/t12^4;
-    v51 = v11;
-    v52 = v12;
-    
-    z = zeros(length(t),1);
-    for ii = 1:length(t)
-        if t(ii) <= t12
-            z(ii) = (v11*t(ii) + v12*t(ii)^4)*i; % part 1
-        elseif t(ii) > t12 && t(ii) < t23
-            z(ii) = m2 + r*exp(i*(pi - (t(ii)-t12)*(pi/2 + phi)/(t23-t12))); % part 2
-        elseif t(ii) > t23 && t(ii) < t34
-            z(ii) = R*exp(i*(pi/2 - phi - (t(ii)-t23)*(pi-2*phi)/(t34-t23))); % part 3
-        elseif t(ii) > t34 && t(ii) < t45
-            z(ii) = m4 + r*exp(i*(phi - pi/2 - (t(ii)-t34)*(pi/2 + phi)/(t45-t34))); % part 4
-        else
-            z(ii) = -(v51*(1-t(ii)) + v52*(1-t(ii))^4)*i; % part 5
-        end
-    end
-end
-
-function res = detour(y,y0,r_detour)
-    
 end
 
 % unused, this D-curve has sharp edges which cause the arrow in the plot to jump!
