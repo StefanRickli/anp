@@ -1,4 +1,5 @@
 function fitted_poly_coeffs = fit_poly(a,b,ya,yb,va,vb)
+    dbg = true;
     assert(b > a && ya > 0 && yb > 0);
     
     % calculate delta_y
@@ -7,13 +8,22 @@ function fitted_poly_coeffs = fit_poly(a,b,ya,yb,va,vb)
     % init coefficients for c{1} and every even c{i}
     c = get_poly_coeffs(a,b,va,vb);
     
+    if dbg
+        f1 = figure;
+        line([a b],[0 0],'linewidth',0.1);
+        hold on;
+        f2 = figure;
+        hold on;
+        line([a b],[0 0],'linewidth',0.1);
+    end
+    
     % while min-test fails and high <= 16
     low = 2;
-    high = 4;
+    high = 8;
     derivative_negative = true;
     while derivative_negative
         % define g_upper(x) = g_1(x) + g_high(x)
-        c_upper = [zeros(1,length(c{high})-length(c{1})) c{1}] + c{high};
+        c_upper = [zeros(1,length(c{high})-length(c{1})) c{1}] + (high/low)^2*40*c{high};
         % calculate integral of g_upper(x) over [a,b]
         G_upper = diff(polyval(polyint(c_upper),[a b]));
         
@@ -28,6 +38,17 @@ function fitted_poly_coeffs = fit_poly(a,b,ya,yb,va,vb)
         c_g = c_upper - d*[zeros(1,length(c{high})-length(c{low})) c{low}];
         T = a:(b-a)/200:b;
         G = polyval(c_g,T);
+        
+        if dbg
+            fprintf('fit_poly: current high=%d, low=%d\n',high,low);
+            figure(f1);plot(T,G);
+            
+            fitted_poly_coeffs = polyint(c_g);
+            delta_ya = ya - polyval(fitted_poly_coeffs,a);
+            fitted_poly_coeffs(end) = delta_ya;
+            figure(f2);plot(T,polyval(fitted_poly_coeffs,T));
+        end
+        
         if min(G(2:end-1)) <= 0
             % if failed: check if low can be increased.
                 % if low == high - 2 then set low = 2 and high = high + 2
@@ -35,8 +56,8 @@ function fitted_poly_coeffs = fit_poly(a,b,ya,yb,va,vb)
             if low == high - 2
                 low = 2;
                 high = high + 2;
-                if high > 16
-                    error('degree of poly_high > 16');
+                if high == 14
+                    error('degree of poly_high >= 14');
                 end
             else
                 low = low + 2;
