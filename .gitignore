@@ -1,6 +1,7 @@
 # User defined by Stefan Rickli:
 *.tmp
 *.mp4
+*.asv
 
 # Windows image file caches
 Thumbs.db
