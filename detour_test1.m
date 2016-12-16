@@ -1,4 +1,4 @@
-function [] = test2()
+function [] = detour_test1()
     
     l = 1;
     phi = 45;
@@ -123,9 +123,7 @@ function shape = get_shape(R,phi)
         detour_point_idx = find(real(shape) == 0 & imag(shape) > detour_interval_low & imag(shape) < detour_interval_high);
         shape(detour_point_idx) = shifted_circle(shape(detour_point_idx),imaginary_pz(ii));
     end
-    
-    pause;
-    
+        
     function z = shifted_circle(t,y_shift_detour)
         z = sqrt(radius_detour^2-imag(t-y_shift_detour).^2) - x_shift_detour + imag(t).*1i;
     end
