@@ -331,7 +331,7 @@ function [] = main(animationParams)
     in = getInputFunctionHandle();
     %out = @(t,R,phi) g(in(t,animationParams));
     
-    in_values = in(t,animationParams.R,animationParams.phi);
+    %in_values = in(t,animationParams.R,animationParams.phi);
     [ts,in_values] = get_t_and_shape(animationParams);
     out_values = g(in_values);
     
@@ -786,7 +786,7 @@ function [t, shape] = get_t_and_shape(animationParams)
     pairwise_distances = abs(pz1.*mask - pz2.*mask);
     d_min = min(nonzeros(pairwise_distances));
     if isempty(d_min)
-        d_min = 1e200;
+        d_min = 1e100; % high value such that detour_interval_max will be chosen
     end
     
     % determine the radii for the detours 
