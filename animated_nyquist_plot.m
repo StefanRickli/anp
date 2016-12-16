@@ -597,7 +597,7 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
             rethrow(err);
         end
     end
-    if exist('implay') == 2
+    if exist('implay','file') == 2
         close(fig);
     end
 end
@@ -637,8 +637,8 @@ function [in_axis_xlim,in_axis_ylim,out_axis_xlim,out_axis_ylim] = autoZoom(zp, 
     else
         % include the origin in the box around the clumped points and then
         % make the plot size 8 times (rule of thumb) larger
-        in_axis_xlim = resize_limits([min([real(zp(locus_inner)),0]),max([real(zp(locus_inner)),0])],8);
-        in_axis_ylim = resize_limits([min([imag(zp(locus_inner)),0]),max([imag(zp(locus_inner)),0])],8);
+        in_axis_xlim = stretch_centered([min([real(zp(locus_inner)),0]),max([real(zp(locus_inner)),0])],8);
+        in_axis_ylim = stretch_centered([min([imag(zp(locus_inner)),0]),max([imag(zp(locus_inner)),0])],8);
         
         width = in_axis_xlim(2) - in_axis_xlim(1);
         height = in_axis_ylim(2) - in_axis_ylim(1);
@@ -658,8 +658,8 @@ function [in_axis_xlim,in_axis_ylim,out_axis_xlim,out_axis_ylim] = autoZoom(zp, 
     
     % for the right subplot it's fairly easy. Have the Plot such that the
     % whole nyquist curve fits into it.
-    out_axis_xlim = resize_limits([min([real(out_values);0]),max([real(out_values);0])],1.15);
-    out_axis_ylim = resize_limits([min([imag(out_values);0]),max([imag(out_values);0])],1.15);
+    out_axis_xlim = stretch_centered([min([real(out_values);0]),max([real(out_values);0])],1.15);
+    out_axis_ylim = stretch_centered([min([imag(out_values);0]),max([imag(out_values);0])],1.15);
     
     width = out_axis_xlim(2) - out_axis_xlim(1);
     height = out_axis_ylim(2) - out_axis_ylim(1);
@@ -698,67 +698,6 @@ function inputFunctionHandle = getInputFunctionHandle()
     %inputFunctionHandle = @(t) unitCircle(t);
     %inputFunctionHandle = @(t) dCurve(t);
     inputFunctionHandle = @(t,R,phi) roundedCurve(t,R,phi);
-end
-
-% unused, test function
-function z = unitCircle(x)
-    z = exp(2*pi*1i.*x);
-end
-
-% this D-shaped curve has small arcs at the edges to smooth them and
-% make the derivative of the curve continuous
-% The shape is basically split into 5 parts to which the indexes correspond
-% The two parameters one can play with are phi, which determines the degree
-% of roundoff (0<phi<180) and the radius of the big arc R.
-function z = roundedCurve(t,R,phi)
-    phi = deg2rad(phi);
-    
-    % calculate values of the small round-off circles
-    r = R*sin(phi)/(1+sin(phi));
-    m2 = r + 1i*sqrt(R^2-2*R*r);
-    m4 = r - 1i*sqrt(R^2-2*R*r);
-    
-    % need to know how long the parts are
-    d1 = sqrt(R^2-2*R*r);
-    d2 = r*(pi/2 + phi);
-    d3 = R*(pi - 2*phi);
-    d4 = d2;
-    d5 = d1;
-    
-    % length of the round part (small arcs + big arc)
-    d_arcs = d2 + d3 + d4;
-    
-    % calculate the t-values at which two adjacent regions touch
-    % the only arbitrary choice here is t12. together with t45 it
-    % determines the fraction of time we need for the y-axis part of the
-    % D-curve.
-    % the v-values are velocity-factors
-    t12 = 2/5; 
-    t45 = 1-t12;
-    v_ave = d_arcs / (t45 - t12);
-    
-    t23 = t12 + d2/v_ave;
-    t34 = 1-t23;
-    
-    v11 = 3; % again the only arbitrary choice amongst the velocity-factors. determines the speed of the animation near the origin.
-    v12 = (d1-v11*t12)/t12^4;
-    v51 = v11;
-    v52 = v12;
-    
-    z = zeros(length(t),1);
-    for ii = 1:length(t)
-        if t(ii) <= t12
-            z(ii) = (v11*t(ii) + v12*t(ii)^4)*1i; % part 1
-        elseif t(ii) > t12 && t(ii) < t23
-            z(ii) = m2 + r*exp(1i*(pi - (t(ii)-t12)*(pi/2 + phi)/(t23-t12))); % part 2
-        elseif t(ii) > t23 && t(ii) < t34
-            z(ii) = R*exp(1i*(pi/2 - phi - (t(ii)-t23)*(pi-2*phi)/(t34-t23))); % part 3
-        elseif t(ii) > t34 && t(ii) < t45
-            z(ii) = m4 + r*exp(1i*(phi - pi/2 - (t(ii)-t34)*(pi/2 + phi)/(t45-t34))); % part 4
-        else
-            z(ii) = -(v51*(1-t(ii)) + v52*(1-t(ii))^4)*1i; % part 5
-        end
-    end
 end
 
 % this D-shaped curve has small arcs at the edges to smooth them and
@@ -834,7 +773,7 @@ function [t, shape] = get_t_and_shape(animationParams)
     
     % get poles and zeros which lie on the imaginary axis
     imag_pz_idx = find(real(poles_zeros) == 0);
-    if length(imag_pz_idx) == 0
+    if isempty(imag_pz_idx)
         return;
     end
     
@@ -843,7 +782,7 @@ function [t, shape] = get_t_and_shape(animationParams)
     % find minimum distance between any pair of only-imaginary poles and
     % zeros
     mask = triu(ones(length(imaginary_pz)),1);
-    [pz1 pz2] = meshgrid(imaginary_pz,imaginary_pz);
+    [pz1,pz2] = meshgrid(imaginary_pz,imaginary_pz);
     pairwise_distances = abs(pz1.*mask - pz2.*mask);
     d_min = min(nonzeros(pairwise_distances));
     if isempty(d_min)
@@ -876,26 +815,6 @@ function [t, shape] = get_t_and_shape(animationParams)
     end
 end
 
-% unused, this D-curve has sharp edges which cause the arrow in the plot to jump!
-function z = dCurve(x)
-    r = 10;
-    part = 0.3;
-    v = 90;
-    t = 3;
-    c = (r-t*part)/exp(v*part);
-    
-    z = zeros(length(x),1);
-    for ii = 1:length(x)
-        if x(ii) <= part
-            z(ii) = (t*x(ii)+c*exp(v*x(ii)))*i;
-        elseif x(ii) > part && x(ii) < 1-part
-            z(ii) = r*exp(i* (pi/2 * (1-(x(ii)-part)/(0.5-part))));
-        else
-            z(ii) = -(t*(1-x(ii))+c*exp(v*(1-x(ii))))*i;
-        end
-    end
-end
-
 %% transfer function preparation
 function g = polesZeros2fncHandle(zeros,poles)
     g = @(z) polyval(poly(zeros),z)./polyval(poly(poles),z);
@@ -906,11 +825,11 @@ end
 % the plot
 function z = trunc(x,xlim,ylim)
     z = max(xlim(1), min(xlim(2), real(x))) ...
-        + i*max(ylim(1), min(ylim(2), imag(x)));
+        + 1i*max(ylim(1), min(ylim(2), imag(x)));
 end
 
 % stretches a given interval with a given factor about its center
-function result = resize_limits(in, factor)
+function result = stretch_centered(in, factor)
     size_in = in(2) - in(1);
     result = [(in(1)-(factor-1)*size_in/2),(in(2)+(factor-1)*size_in/2)];
 end
