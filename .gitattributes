@@ -22,6 +22,7 @@
 *.p -crlf -diff -merge
 *.slx -crlf -diff -merge
 *.mdl -crlf -diff -merge
+*.tns -crlf -diff -merge
 
 *.mdlp -crlf -diff -merge
 *.slxp -crlf -diff -merge
