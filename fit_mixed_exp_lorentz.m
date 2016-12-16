@@ -82,15 +82,15 @@ function fit_mixed_exp_lorentz
     plot(T,[G1+ya;G2+ya;G1+G2+ya]);
     title('G''s');
     
-    f5 = figure('name','lorentz_0+g');
+    f5 = figure('name','derivative of solution: lorentz_0+g');
     f5.Position = [1151,571,560,420];
     plot(T,lorentz_0+g);
     title('lorentz_0+g');
     
-    f6 = figure('name','ya+Lorentz_0+G');
+    f6 = figure('name','derivative of solution: solution: ya+Lorentz_0+G');
     f6.Position = [1153,57,560,420];
     plot(T,ya+G+Lorentz_0);
-    title('ya+Lorentz_0+G');
+    title('solution: ya+Lorentz_0+G');
     
     dH = diff(H)/dt;
     fprintf('ya=  %.2f, yb=    %.2f, va=   %.2f, vb=     %.2f\n',ya,yb,va,vb);
@@ -107,6 +107,6 @@ end
 function r1 = find_r1(a,b,delta_y,va,vb,alpha)
     delta_x = b-a;
     G = @(t) va*(1/t - delta_x/(exp(t*delta_x)-1))  +  vb*(1/(alpha*t) - delta_x/(exp(alpha*t*delta_x)-1)) - delta_y;
-    r1 = fsolve(G,a);
+    r1 = fsolve(G,1);
 end
 
