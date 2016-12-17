@@ -1,27 +1,30 @@
+function poles_zeros_sorted = test_struct_sort(poles,zeros)
+    poles = poles(real(poles) == 0);
+    zeros = zeros(real(zeros) == 0);
+    
+    poles = imag(poles);
+    zeros = imag(zeros);
 
-poles = [10,3,-1];
-zeros = [2,-5];
+    npoles = length(poles);
+    nzeros = length(zeros);
 
-npoles = length(poles);
-nzeros = length(zeros);
+    % http://stackoverflow.com/questions/13664090/how-to-initialize-an-array-of-structs-in-matlab
+    poles_zeros_sorted = repmat(struct('type','a','value',[]), npoles+nzeros, 1 );
 
-% http://stackoverflow.com/questions/13664090/how-to-initialize-an-array-of-structs-in-matlab
-poles_zeros_sorted = repmat(struct('type','a','value',[]), npoles+nzeros, 1 );
+    p = repmat({'p'},npoles,1);
+    pp = mat2cell(poles,1,ones(1,npoles));
+    z = repmat({'z'},nzeros,1);
+    zz = mat2cell(zeros,1,ones(1,nzeros));
+    [poles_zeros_sorted(1:npoles).type] = p{:};
+    [poles_zeros_sorted(1:npoles).value] = pp{:};
+    [poles_zeros_sorted(npoles+1:end).type] = z{:};
+    [poles_zeros_sorted(npoles+1:end).value] = zz{:};
 
-p = repmat({'p'},npoles,1);
-pp = mat2cell(poles,1,ones(1,npoles));
-z = repmat({'z'},nzeros,1);
-zz = mat2cell(zeros,1,ones(1,nzeros));
-[poles_zeros_sorted(1:npoles).type] = p{:};
-[poles_zeros_sorted(1:npoles).value] = pp{:};
-[poles_zeros_sorted(npoles+1:end).type] = z{:};
-[poles_zeros_sorted(npoles+1:end).value] = zz{:};
-
-poles_zeros_sorted = flipud(sort_struct_array_by_fieldind(poles_zeros_sorted,2));
-
+    poles_zeros_sorted = flipud(sort_struct_array_by_field_index(poles_zeros_sorted,2));
+end
 % code adopted from
 % http://blogs.mathworks.com/pick/2010/09/17/sorting-structure-arrays-based-on-fields/
-function sorted_struct_array = sort_struct_array_by_fieldind(array_in,ind)
+function sorted_struct_array = sort_struct_array_by_field_index(array_in,ind)
     Afields = fieldnames(array_in);
     
     if ind > length(Afields)
@@ -29,7 +32,7 @@ function sorted_struct_array = sort_struct_array_by_fieldind(array_in,ind)
     end
     
     Acell = struct2cell(array_in);
-    sz = size(Acell)            % Notice that the this is a 3 dimensional array.
+    sz = size(Acell);           % Notice that the this is a 3 dimensional array.
                                 % For MxN structure array with P fields, the size
                                 % of the converted cell array is PxMxN
 
@@ -40,17 +43,17 @@ function sorted_struct_array = sort_struct_array_by_fieldind(array_in,ind)
     Acell = Acell';                         % (MxN)xP
 
     % Sort by field #ind
-    Acell = sortrows(Acell, ind)
+    Acell = sortrows(Acell, ind);
 
     % Put back into original cell array format
     Acell = reshape(Acell', sz);
 
     % Convert to Struct
-    sorted_struct_array = cell2struct(Acell, Afields, 1)
+    sorted_struct_array = cell2struct(Acell, Afields, 1);
 
 end
 
-function original_example
+function original_sort_example
     % http://blogs.mathworks.com/pick/2010/09/17/sorting-structure-arrays-based-on-fields/
 
     A = struct(...
