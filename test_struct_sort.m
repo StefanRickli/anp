@@ -14,29 +14,43 @@ function poles_zeros_sorted = test_struct_sort(poles,zeros)
     npoles = length(poles);
     nzeros = length(zeros);
     
+    if npoles + nzeros == 0
+        poles_zeros_sorted = struct('type',{},'pole',{},'zero',{},'value',{},'neg_on_origin',{},'pos_on_origin',{},'neg_overlapping',{},'pos_overlapping',{});
+        return;
+    end
+    
     % initialize the struct array to hold the information, courtesy to this
     % efficient way of initializing the struct array:
     % http://stackoverflow.com/questions/13664090/how-to-initialize-an-array-of-structs-in-matlab
-    poles_zeros_sorted = repmat(struct('type','a','value',[]), npoles+nzeros, 1 );
+    poles_zeros_sorted = repmat(struct('type','a','pole',false,'zero',false,'value',[],'neg_on_origin',false,'pos_on_origin',false,'neg_overlapping',false,'pos_overlapping',false), npoles+nzeros, 1 );
     
     % fill the struct array with the pole/zero locations
     % in order to avoid for-loops, convert the num arrays first to cell
     % arrays, whose multiple outputs we then can use to fill the
     % corresponding struct array fields.
-    p = repmat({'p'},npoles,1);                 % cell array full of 'p'
-    pp = mat2cell(poles,1,ones(1,npoles));      % cell array containing pole values
-    z = repmat({'z'},nzeros,1);                 % cell array full of 'z'
-    zz = mat2cell(zeros,1,ones(1,nzeros));      % cell array containing zero values
-    [poles_zeros_sorted(1:npoles).type] = p{:};
-    [poles_zeros_sorted(1:npoles).value] = pp{:};
-    [poles_zeros_sorted(npoles+1:end).type] = z{:};
-    [poles_zeros_sorted(npoles+1:end).value] = zz{:};
+    if npoles > 0
+        p = repmat({'p'},1,npoles);                 % cell array full of 'p'
+        pp = repmat({true},1,npoles);
+        ppp = mat2cell(poles,1,ones(1,npoles));      % cell array containing pole values
+        [poles_zeros_sorted(1:npoles).type] = p{:};
+        [poles_zeros_sorted(1:npoles).pole] = pp{:};
+        [poles_zeros_sorted(1:npoles).value] = ppp{:};
+    end
+    if nzeros > 0
+        z = repmat({'z'},1,nzeros);                 % cell array full of 'z'
+        zz = repmat({true},1,nzeros);                 % cell array full of 'z'
+        zzz = mat2cell(zeros,1,ones(1,nzeros));      % cell array containing zero values
+        [poles_zeros_sorted(npoles+1:end).type] = z{:};
+        [poles_zeros_sorted(npoles+1:end).zero] = zz{:};
+        [poles_zeros_sorted(npoles+1:end).value] = zzz{:};
+    end
     
-    % Use the function below to sort the rows by the 'value'-field. Flip
-    % its output in order to get a descending sorted list.
+    % Use the function below to sort the rows by the 'value'-field.
     % Now we know in which order the poles and zeros appear on the
     % imaginary axis.
-    poles_zeros_sorted = flipud(sort_struct_array_by_field_index(poles_zeros_sorted,2));
+    if npoles+nzeros > 1
+        poles_zeros_sorted = sort_struct_array_by_field_index(poles_zeros_sorted,4);
+    end
 end
 
 % code adopted from
