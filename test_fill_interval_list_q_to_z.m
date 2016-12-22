@@ -1,5 +1,5 @@
 % muss herausfinden, wo die linearen intervalle aufhören
-function interval_list = test_fill_interval_list(poles,zeros,radii,angles,separation_max_pole,separation_max_zero)
+function interval_list = test_fill_interval_list_q_to_z(poles,zeros,radii,angles,separation_max_pole,separation_max_zero)
     clc;
     global debug;
     debug = false;
