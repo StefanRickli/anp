@@ -1,15 +1,16 @@
 % muss herausfinden, wo die linearen intervalle aufhören
-function interval_list = test_fill_interval_list
+function interval_list = test_fill_interval_list(poles,zeros,radii,angles,separation_max_pole,separation_max_zero)
     clc;
     global debug;
     debug = false;
-    tic
     
-    poles = 1i*[0,0,-0.2,7];
-    zeros = 1i*[0,0.1,-5,-5.2];
-    
-    separation_max_pole = 1/4;
-    separation_max_zero = 1/20;
+%     poles = 1i*[0,0,-0.2,7];
+%     zeros = 1i*[0,0.1,-5,-5.2];
+%     radii.inf = 10;
+%     angles.crop = 7*pi/180;
+%     angles.detour = 45*pi/180;    
+%     separation_max_pole = 1/4;
+%     separation_max_zero = 1/20;
     
     im_pz_sorted = test_struct_sort(poles,zeros);
     [interval_list,pole_zero_combinations,separation_pole,separation_zero] = test_init_interval_list(poles,zeros,im_pz_sorted,separation_max_pole,separation_max_zero);
@@ -17,9 +18,6 @@ function interval_list = test_fill_interval_list
 %     im_pos_pz = im_pz_sorted([im_pz_sorted.value] >= 0);
 %     im_neg_pz = im_pz_sorted([im_pz_sorted.value] < 0);
     
-    radii.inf = 10;
-    angles.crop = 7*pi/180;
-    angles.detour = 45*pi/180;
     secant_pole = 2*separation_pole;
     secant_zero = 2*separation_zero;
     [radii,arc_lengths] = calculate_detour_params(radii,angles,secant_pole,secant_zero);
@@ -393,7 +391,7 @@ function interval_list = test_fill_interval_list
         
         
     % 3
-    elseif ~isnan(idx_current_pz) && any([[im_pz_sorted.neg_overlapping],[im_pz_sorted.pos_overlapping],[im_pz_sorted.neg_on_origin]]);            
+    elseif ~isnan(idx_current_pz) && any([[im_pz_sorted.neg_overlapping],[im_pz_sorted.pos_overlapping],[im_pz_sorted.neg_on_origin]])
         dbg('negative and overlapping p/z\n');
             % lin interval first
             interval_list(interval_ii).q(1) = prev_upper_bound;
@@ -434,15 +432,16 @@ function interval_list = test_fill_interval_list
     else
         error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
     end
-    toc
     
-    for kk = 1:length(interval_list)
-        t = intvl(interval_list(kk).q);
-        scatter(real(interval_list(kk).input_fct_handle(t)),imag(interval_list(kk).input_fct_handle(t)));
-        hold on;
+    
+    if debug
+        for kk = 1:length(interval_list)
+            t = intvl(interval_list(kk).q);
+            scatter(real(interval_list(kk).input_fct_handle(t)),imag(interval_list(kk).input_fct_handle(t)));
+            hold on;
+        end
+        axis equal;
     end
-    
-    axis equal;
     
 end
 
