@@ -4,8 +4,8 @@ function interval_list = test_fill_interval_list
     
     infinity_plus_crop_interval = 1/5;
     
-    poles = 1i*[0.1,2,2.3,3,4];%,-0.24i,-0.1i,0,0.1i,0.24i,0.25i,0.255i,2i];
-    zeros = 1i*[3.5];%[-2i,-0.055i,-0.05i,-0.04i,-0.01i,0,0.01i,0.04i,0.05i,0.055i,2i];
+    poles = 1i*[-4,-3,-2.3,-2,-0.1,0.1,2,2.3,3,4];%,-0.24i,-0.1i,0,0.1i,0.24i,0.25i,0.255i,2i];
+    zeros = 1i*[];%[-2i,-0.055i,-0.05i,-0.04i,-0.01i,0,0.01i,0.04i,0.05i,0.055i,2i];
     
     pure_imag_poles = imag(poles(real(poles) == 0));
     pure_imag_zeros = imag(zeros(real(zeros) == 0));
@@ -54,16 +54,16 @@ function interval_list = test_fill_interval_list
     
     interval_ii = 1;
     current_pz = NaN
-    skip_one_pos_pz = false;
     pz = [im_pz_sorted.value];
-    positive_idx = find(pz >= 0,1,'first');
-    positive_pz_remain = length(pz)-positive_idx+1;
+    first_positive_idx = find(pz >= 0,1,'first');
+    last_negative_idx = find(pz < 0,1,'last');
+    positive_pz_remain = length(pz)-first_positive_idx+1;
     prev_upper_bound = 0;
     
     if any([im_pz_sorted.neg_overlapping])
             interval_list(1).q(1) = 0;
             
-            current_pz = find(pz < 0,1,'last');
+            current_pz = last_negative_idx;
             arc_length_overlapping_pole = radii.detour_pole * (asin(-im_pz_sorted(current_pz).value/radii.detour_pole) + angles.detour_pole_phi0);
             arc_length_overlapping_zero = radii.detour_zero * (asin(-im_pz_sorted(current_pz).value/radii.detour_zero) + angles.detour_zero_phi0);
             interval_length = im_pz_sorted(current_pz).pole*(arc_lengths.detour_pole - arc_length_overlapping_pole) + im_pz_sorted(current_pz).zero*(arc_lengths.detour_pole - arc_length_overlapping_zero);
@@ -87,7 +87,7 @@ function interval_list = test_fill_interval_list
         
         
     elseif any([im_pz_sorted.pos_overlapping])
-            current_pz = positive_idx;
+            current_pz = first_positive_idx;
             
             interval_list(1).q(1) = 0;
             
@@ -116,7 +116,7 @@ function interval_list = test_fill_interval_list
         
         
     elseif any([im_pz_sorted.pos_on_origin])
-            current_pz = positive_idx;
+            current_pz = first_positive_idx;
             
             interval_list(1).q(1) = 0;
             
@@ -135,7 +135,7 @@ function interval_list = test_fill_interval_list
         fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear\n',interval_list(1).q(1),interval_list(1).q(2),interval_length);
         
         
-    elseif  ~isempty(positive_idx)
+    elseif  ~isempty(first_positive_idx)
             prev_upper_bound = 0;
 %             interval_list(1).q(1) = 0;
 %             
@@ -166,7 +166,7 @@ function interval_list = test_fill_interval_list
         interval_list(interval_ii).q(1) = prev_upper_bound;
         
         if isnan(current_pz)
-            current_pz = positive_idx;
+            current_pz = first_positive_idx;
             interval_length = separation_pole*im_pz_sorted(current_pz).pole + separation_zero*im_pz_sorted(current_pz).zero;
             za = 0;
         else
@@ -182,7 +182,7 @@ function interval_list = test_fill_interval_list
         zb = im_pz_sorted(current_pz).value - im_pz_sorted(current_pz).pole*separation_pole - im_pz_sorted(current_pz).zero*separation_zero;
         interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
         
-        fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+        fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
         interval_ii = interval_ii + 1;
         
         % treat the pz
@@ -201,7 +201,7 @@ function interval_list = test_fill_interval_list
                 interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_zero),radii.detour_zero,secant_zero,im_pz_sorted(current_pz).value);
         end
         
-        fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+        fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
         interval_ii = interval_ii + 1;
         
         positive_pz_remain = positive_pz_remain - 1;
@@ -209,17 +209,22 @@ function interval_list = test_fill_interval_list
     
     % do the last linear interval before crop1
     interval_list(interval_ii).q(1) = prev_upper_bound;
-
-    interval_length = positions.crop_y0 - (im_pz_sorted(current_pz).value + im_pz_sorted(current_pz).pole*separation_pole + im_pz_sorted(current_pz).zero*separation_zero);
+    
+    if isnan(current_pz)
+        interval_length = positions.crop_y0;
+        za = 0;
+    else
+        interval_length = positions.crop_y0 - (im_pz_sorted(current_pz).value + im_pz_sorted(current_pz).pole*separation_pole + im_pz_sorted(current_pz).zero*separation_zero);
+        za = im_pz_sorted(current_pz).value + im_pz_sorted(current_pz).pole*separation_pole + im_pz_sorted(current_pz).zero*separation_zero;
+    end
     interval_list(interval_ii).q_len = interval_length;
-
+    
     interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
-
-    za = im_pz_sorted(current_pz).value + im_pz_sorted(current_pz).pole*separation_pole + im_pz_sorted(current_pz).zero*separation_zero;
+    
     zb = positions.crop_y0;
     interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
-
-    fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_last_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+    
+    fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_last_pos_before_crop1\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
     interval_ii = interval_ii + 1;
     
     
@@ -230,7 +235,7 @@ function interval_list = test_fill_interval_list
     
     interval_list(interval_ii).input_fct_handle = @(q) circ_normal(-map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.crop),radii.crop,pi,positions.crop_x0,positions.crop_y0);
     
-    fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tcrop\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),arc_lengths.crop);
+    fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tcrop1\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),arc_lengths.crop);
     interval_ii = interval_ii + 1;
     
     % inf
@@ -250,13 +255,78 @@ function interval_list = test_fill_interval_list
     
     interval_list(interval_ii).input_fct_handle = @(q) circ_normal(-map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.crop),radii.crop,-pi/2+angles.crop,positions.crop_x0,-positions.crop_y0);
     
-    fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tcrop\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),arc_lengths.crop);
+    fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tcrop2\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),arc_lengths.crop);
+    interval_ii = interval_ii + 1;
+
+    
+    % do the first linear interval after crop2
+    interval_list(interval_ii).q(1) = interval_list(interval_ii-1).q(2);
+    
+    if any([[im_pz_sorted.value] < 0,[im_pz_sorted.pos_overlapping]])
+        current_pz = 1;
+        interval_length = positions.crop_y0 - (-im_pz_sorted(current_pz).value + im_pz_sorted(current_pz).pole*separation_pole + im_pz_sorted(current_pz).zero*separation_zero);
+        zb = im_pz_sorted(current_pz).value - im_pz_sorted(current_pz).pole*separation_pole - im_pz_sorted(current_pz).zero*separation_zero;
+    else
+        current_pz = NaN;
+        interval_length = positions.crop_y0;
+    end
+    interval_list(interval_ii).q_len = interval_length;
+    
+    interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
+    prev_upper_bound = interval_list(interval_ii).q(2);
+    
+    za = -positions.crop_y0;
+    interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
+    
+    fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_first_pos_after_crop2\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
     interval_ii = interval_ii + 1;
     
     % treat negative p/z
+    negative_pz_remain = sum(pz<0) - any([[im_pz_sorted.neg_on_origin],[im_pz_sorted.neg_overlapping]]);
+    
+    while(negative_pz_remain)
+        % there are negative poles/zeros left to treat
+                
+        interval_list(interval_ii).q(1) = prev_upper_bound;
+        
+        interval_length = im_pz_sorted(current_pz).pole*arc_lengths.detour_pole + im_pz_sorted(current_pz).zero*arc_lengths.detour_zero;
+        interval_list(interval_ii).q_len = interval_length;
+        
+        interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
+        prev_upper_bound = interval_list(interval_ii).q(2);
+        
+        switch im_pz_sorted(current_pz).type
+            case 'p'
+                interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_pole),radii.detour_pole,secant_pole,im_pz_sorted(current_pz).value);
+            case 'z'
+                interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_zero),radii.detour_zero,secant_zero,im_pz_sorted(current_pz).value);
+        end
+        
+        fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+        interval_ii = interval_ii + 1;
+        
 
-    % then: for-loop through every element with lower index than the border
-    % case
+        if negative_pz_remain > 1
+            interval_list(interval_ii).q(1) = prev_upper_bound;
+            
+            interval_length = pole_zero_combinations(current_pz).distance - separation_pole*(im_pz_sorted(current_pz).pole + im_pz_sorted(current_pz+1).pole) - separation_zero*(im_pz_sorted(current_pz).zero + im_pz_sorted(current_pz+1).zero);            
+            interval_list(interval_ii).q_len = interval_length;
+            
+            interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
+            prev_upper_bound = interval_list(interval_ii).q(2);
+            
+            za = im_pz_sorted(current_pz).value + im_pz_sorted(current_pz).pole*separation_pole + im_pz_sorted(current_pz).zero*separation_zero;
+            zb = im_pz_sorted(current_pz+1).value - im_pz_sorted(current_pz+1).pole*separation_pole - im_pz_sorted(current_pz+1).zero*separation_zero;
+            interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
+
+            fprintf('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+            current_pz = current_pz + 1;
+            interval_ii = interval_ii + 1;
+            negative_pz_remain = negative_pz_remain - 1;
+        else
+            break;
+        end
+    end
     
     if any([im_pz_sorted.pos_overlapping])
         fprintf('treating a positive and overlapping p/z\n');
@@ -267,7 +337,7 @@ function interval_list = test_fill_interval_list
     end
     
     
-    for kk = 1:15
+    for kk = 1:24
         t = intvl(interval_list(kk).q);
         plot(interval_list(kk).input_fct_handle(t));
         hold on;
