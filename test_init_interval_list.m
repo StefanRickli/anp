@@ -3,10 +3,8 @@ function [interval_list,pole_zero_combinations,separation_pole,separation_zero] 
     
     [separation_pole,separation_zero] = determine_separations(pole_zero_combinations,separation_max_pole,separation_max_zero);
     
-    im_poles = poles(real(poles) == 0);
-    im_zeros = zeros(real(zeros) == 0);
-    im_poles = imag(im_poles);
-    im_zeros = imag(im_zeros);
+    im_poles = [imaginary_PolesZeros_sorted([imaginary_PolesZeros_sorted.pole] == 1).value];%poles(real(poles) == 0);
+    im_zeros = [imaginary_PolesZeros_sorted([imaginary_PolesZeros_sorted.zero] == 1).value];%zeros(real(zeros) == 0);
     
     pz_interval_border_on_origin = any(  [(im_poles+separation_pole)==0 , (im_poles-separation_pole)==0 , (im_zeros+separation_zero)==0 , (im_zeros+separation_zero)==0]  );
     n_intervals = 5 + 2*length([im_poles,im_zeros]) - pz_interval_border_on_origin;

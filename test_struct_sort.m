@@ -50,6 +50,7 @@ function poles_zeros_sorted = test_struct_sort(poles,zeros)
     % imaginary axis.
     if npoles+nzeros > 1
         poles_zeros_sorted = sort_struct_array_by_field_index(poles_zeros_sorted,4);
+        poles_zeros_sorted = check_for_multiple_pz_at_same_value(poles_zeros_sorted);
     end
 end
 
@@ -84,34 +85,20 @@ function sorted_struct_array = sort_struct_array_by_field_index(array_in,ind)
 
 end
 
-function original_sort_example
-    % http://blogs.mathworks.com/pick/2010/09/17/sorting-structure-arrays-based-on-fields/
-
-    A = struct(...
-        'name', {'mike', 'doug', 'steve', 'loren', 'jiro', 'brett', 'seth'}, ...
-        'year', {2005, 2001, 1993, 1987, 2006, 2005, 1998}, ...
-        'day', {'Mon', 'Fri', 'Wed', 'Fri', 'Mon', 'Mon', 'Mon'})
-
-    tic
-    Afields = fieldnames(A);
-    Acell = struct2cell(A);
-    sz = size(Acell)            % Notice that the this is a 3 dimensional array.
-                                % For MxN structure array with P fields, the size
-                                % of the converted cell array is PxMxN
-
-    % Convert to a matrix
-    Acell = reshape(Acell, sz(1), []);      % Px(MxN)
-
-    % Make each field a column
-    Acell = Acell';                         % (MxN)xP
-
-    % Sort by first field "name"
-    Acell = sortrows(Acell, 1)
-
-    % Put back into original cell array format
-    Acell = reshape(Acell', sz);
-
-    % Convert to Struct
-    Asorted = cell2struct(Acell, Afields, 1)
-    toc
+function poles_zeros_sorted = check_for_multiple_pz_at_same_value(poles_zeros_sorted)
+    start_over = false;
+    while(true)
+        for ii = 2:length(poles_zeros_sorted)
+            if poles_zeros_sorted(ii-1).value == poles_zeros_sorted(ii).value
+                poles_zeros_sorted(ii-1) = [];
+                start_over = true;
+                break;
+            end
+        end
+        if start_over
+            start_over = false;
+            continue;
+        end
+        break;
+    end
 end
