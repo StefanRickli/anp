@@ -9,7 +9,7 @@ function [interval_list,pole_zero_combinations,separation_pole,separation_zero] 
     pz_interval_border_on_origin = any(  [(im_poles+separation_pole)==0 , (im_poles-separation_pole)==0 , (im_zeros+separation_zero)==0 , (im_zeros+separation_zero)==0]  );
     n_intervals = 5 + 2*length([im_poles,im_zeros]) - pz_interval_border_on_origin;
     
-    interval_list = repmat(struct('t',[NaN,NaN],'t_len',NaN,'q',[NaN,NaN],'q_len',NaN,'density_fct_handle',[],'input_fct_handle',[]),n_intervals,1);
+    interval_list = repmat(struct('type',[],'t',[NaN,NaN],'t_len',NaN,'q',[NaN,NaN],'q_len',NaN,'density_fct_handle',[],'input_fct_handle',[]),n_intervals,1);
 end
 
 
