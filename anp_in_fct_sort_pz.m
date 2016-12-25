@@ -1,7 +1,10 @@
 % Accepts two arrays containing the pole and zero values.
 % Returns a struct that contains the sorted pole and zero location and
 % denotes which is of which type.
-function poles_zeros_sorted = test_struct_sort(poles,zeros)
+function poles_zeros_sorted = anp_in_fct_sort_pz(in_params)
+    poles = in_params.poles;
+    zeros = in_params.zeros;
+    
     % first find all the pure imaginary poles and zeros
     poles = poles(real(poles) == 0);
     zeros = zeros(real(zeros) == 0);

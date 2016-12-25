@@ -1,15 +1,12 @@
-function pole_zero_combinations = test_pole_zero_combinations(imaginary_PolesZeros_sorted,separation_max_pole,separation_max_zero)
-%     poles = [2-3i,10i,3i,-1i];
-%     zeros = [-12,2i,-5i];
-%     
-%     separation_max_pole = 1/2;
-%     separation_max_zero = 1/10;
-%     
-%     imaginary_PolesZeros_sorted = test_struct_sort(poles,zeros);
+function pole_zero_combinations = anp_in_fct_pz_combinations(in_params,in_data)
+    
+    imaginary_PolesZeros_sorted =   in_data.im_pz_sorted;
+    separation_pole_max =           in_params.separation_pole_max;
+    separation_zero_max =           in_params.separation_zero_max;
     
     % this ratio determines which fraction of the distance between the
     % neighboring pole/zero is used for the separation of its detour
-    separation_max_ratio = separation_max_pole/separation_max_zero;
+    separation_max_ratio = separation_pole_max/separation_zero_max;
 
     % initialize the struct array to hold the information
     pole_zero_combinations = repmat(struct('type','xx','distance',NaN,'separation_pole',NaN,'separation_zero',NaN), length(imaginary_PolesZeros_sorted)-1, 1 );

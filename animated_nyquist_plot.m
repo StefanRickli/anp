@@ -147,80 +147,80 @@ function [] = animated_nyquist_plot_new(varargin)
         fprintf('animated_nyquist_plot([zeros],[poles])\twhere ''zeros'' and ''poles'' are 2D row vectors with roots of [num] and [denum]\n');
         fprintf('animated_nyquist_plot(__,Name,Value)\tsee documentation\n');
         
-        functionParams.tf_zeros = [-0.7];
-        functionParams.tf_poles = [-3,-2,-1+1i,-1-1i];
+        main_args.tf_zeros = [-0.7];
+        main_args.tf_poles = [-3,-2,-1+1i,-1-1i];
         
     elseif ~isempty(regexp(arg_types,'^tk{0,2}$', 'once'))
         % we only take the first transfer function if there multiple have
         % been provided
-        functionParams.tf_zeros = roots(ip.Results.arg1.Numerator{1})';         % zeros of transfer function
-        functionParams.tf_poles = roots(ip.Results.arg1.Denominator{1})';       % poles of transfer function
+        main_args.tf_zeros = roots(ip.Results.arg1.Numerator{1})';         % zeros of transfer function
+        main_args.tf_poles = roots(ip.Results.arg1.Denominator{1})';       % poles of transfer function
         
     elseif ~isempty(regexp(arg_types,'^vvk{0,2}$', 'once'))
         if ~isempty(ip.Results.arg1) && length(ip.Results.arg1(:,1)) > 1
-            functionParams.tf_zeros = ip.Results.arg1';
+            main_args.tf_zeros = ip.Results.arg1';
         else
-            functionParams.tf_zeros = ip.Results.arg1;
+            main_args.tf_zeros = ip.Results.arg1;
         end
         
         if ~isempty(ip.Results.arg2) && length(ip.Results.arg2(:,1)) > 1
-            functionParams.tf_poles = ip.Results.arg2';
+            main_args.tf_poles = ip.Results.arg2';
         else
-            functionParams.tf_poles = ip.Results.arg2
+            main_args.tf_poles = ip.Results.arg2
         end
     else
         error('Error: oops, we shouldn''t be here... sorry about that. Please send me an email about this and provide me with the input arguments you used.');
     end
     
     if ~isequal(ip.Results.left_x0,[0;0]) || ~isequal(ip.Results.left_dims,[5;5])
-        functionParams.in_auto_size = false;        % values below are only active if auto = false
+        main_args.in_auto_size = false;        % values below are only active if auto = false
 
         if ~isempty(ip.Results.left_x0) && length(ip.Results.left_x0(1,:)) > 1
-            functionParams.in_x0 = ip.Results.left_x0';
+            main_args.in_x0 = ip.Results.left_x0';
         else
-            functionParams.in_x0 = ip.Results.left_x0;
+            main_args.in_x0 = ip.Results.left_x0;
         end
         
         if ~isempty(ip.Results.left_dims) && length(ip.Results.left_dims(1,:)) > 1
-            functionParams.in_dims = ip.Results.left_dims';
+            main_args.in_dims = ip.Results.left_dims';
         else
-            functionParams.in_dims = ip.Results.left_dims;
+            main_args.in_dims = ip.Results.left_dims;
         end
     else
-        functionParams.in_auto_size = true;
+        main_args.in_auto_size = true;
     end
     
     if ~isequal(ip.Results.right_x0,[0;0]) || ~isequal(ip.Results.right_dims,[2;2])
-        functionParams.out_auto_size = false;       % values below are only active if auto = false
+        main_args.out_auto_size = false;       % values below are only active if auto = false
         
         if ~isempty(ip.Results.right_x0) && length(ip.Results.right_x0(1,:)) > 1
-            functionParams.out_x0 = ip.Results.right_x0';
+            main_args.out_x0 = ip.Results.right_x0';
         else
-            functionParams.out_x0 = ip.Results.right_x0;
+            main_args.out_x0 = ip.Results.right_x0;
         end
         
         if ~isempty(ip.Results.right_dims) && length(ip.Results.right_dims(1,:)) > 1        
-            functionParams.out_dims = ip.Results.right_dims';
+            main_args.out_dims = ip.Results.right_dims';
         else
-            functionParams.out_dims = ip.Results.right_dims;
+            main_args.out_dims = ip.Results.right_dims;
         end
     else
-        functionParams.out_auto_size = true;
+        main_args.out_auto_size = true;
     end
     
-    functionParams.duration = ip.Results.duration;
-    functionParams.FPS = ip.Results.FPS;
-    functionParams.trail_length = ip.Results.trail_length;
-    functionParams.plotSize = ip.Results.plot_size;
-    functionParams.border = 20;                    % pixel   
-    functionParams.noPlayer = keywords{1,2};
-    functionParams.export = keywords{2,2};
-    functionParams.filename = ip.Results.filename;
-    functionParams.R = ip.Results.R;
-    functionParams.min_angle_contribution_at_R = 65;
-    functionParams.resolution_factor = 3;
+    main_args.duration = ip.Results.duration;
+    main_args.FPS = ip.Results.FPS;
+    main_args.trail_length = ip.Results.trail_length;
+    main_args.plotSize = ip.Results.plot_size;
+    main_args.border = 20;                    % pixel   
+    main_args.noPlayer = keywords{1,2};
+    main_args.export = keywords{2,2};
+    main_args.filename = ip.Results.filename;
+    main_args.R = ip.Results.R;
+    main_args.min_angle_contribution_at_R = 65;
+    main_args.resolution_factor = 3;
     
-    main(functionParams);
+    main(main_args);
 end
 
 function res = checkOptArg(x)
@@ -280,26 +280,26 @@ end
 
 %% main function
 
-function [] = main(animationParams)
+function [] = main(main_params)
     %% debug
     global debug;
     debug = false;
             
     % put the transfer function to the text output
-    transfer_function = tf(poly(animationParams.tf_zeros),poly(animationParams.tf_poles))
+    transfer_function = tf(poly(main_params.tf_zeros),poly(main_params.tf_poles))
     fprintf('with\n');
-    poles = animationParams.tf_poles
+    poles = main_params.tf_poles
     fprintf('and\n');
-    zeros = animationParams.tf_zeros
+    zeros = main_params.tf_zeros
             
     %% initialization
-    animationParams.phi = 7;                                    % [°], roundoff-parameter of the D-curve, usually not necessary to change
-    if isnan(animationParams.R)
+    main_params.phi = 7;                                    % [°], roundoff-parameter of the D-curve, usually not necessary to change
+    if isnan(main_params.R)
         pz_all = [poles,zeros];
-        R1 = imag(pz_all) - real(pz_all) * tan(deg2rad(animationParams.min_angle_contribution_at_R));
-        R2 = imag(pz_all) - real(pz_all) * tan(-deg2rad(animationParams.min_angle_contribution_at_R));
+        R1 = imag(pz_all) - real(pz_all) * tan(deg2rad(main_params.min_angle_contribution_at_R));
+        R2 = imag(pz_all) - real(pz_all) * tan(-deg2rad(main_params.min_angle_contribution_at_R));
         pz_im = pz_all(real(pz_all) == 0);
-        animationParams.R = max([abs(R1),abs(R2),abs(pz_im)*1.5]);
+        main_params.R = max([abs(R1),abs(R2),abs(pz_im)*1.5]);
     end
     
     % prepare the transfer function
@@ -307,58 +307,65 @@ function [] = main(animationParams)
 
     %% preparations
     % prepare frame buffer
-    animationParams.N_frames = animationParams.duration * animationParams.FPS;
-    animationParams.N_trail = fix(animationParams.N_frames * animationParams.trail_length);
+    main_params.N_frames = main_params.duration * main_params.FPS;
+    main_params.N_trail = fix(main_params.N_frames * main_params.trail_length);
     
-    animationParams.N_function_points = animationParams.resolution_factor * (animationParams.N_frames+1);
+    main_params.N_function_points = main_params.resolution_factor * (main_params.N_frames+1);
     
     % set up parametrisation according to duration and FPS
-    animationParams.t_step = 1/(animationParams.N_function_points-1);
-    t = 0:animationParams.t_step:1;
+    main_params.t_step = 1/(main_params.N_function_points-1);
+    t = 0:main_params.t_step:1;
     
     % prepare t-intervals that are plotted on each frame, considering the
     % set number of trail-values
-    t_indexes = cell(animationParams.N_frames,1);
-    for ii = 1:animationParams.N_frames
-        t_indexes{ii} = max(1,(ii-animationParams.N_trail)*animationParams.resolution_factor):ii*animationParams.resolution_factor;
+    t_indexes = cell(main_params.N_frames,1);
+    for ii = 1:main_params.N_frames
+        t_indexes{ii} = max(1,(ii-main_params.N_trail)*main_params.resolution_factor):ii*main_params.resolution_factor;
     end
     
     %% calculate the function values
-    radii.inf = animationParams.R;
-    angles.crop = animationParams.phi*pi/180;
-    angles.detour = 45*pi/180;
+    in_args.poles = poles;
+    in_args.zeros = zeros;
+    in_args.radii.inf = main_params.R;
+    in_args.angles.crop = main_params.phi*pi/180;
+    in_args.angles.detour = 45*pi/180;
+    in_args.separation_pole_max = 1/4;
+    in_args.separation_zero_max = 1/8;
+    in_args.separation_margin = 0.05;               % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
     
-    in_values = test_evaluate_input_function(t,poles,zeros,radii,angles);
+    tic
+    in_values = anp_in_fct_init_and_evaluate(t,in_args);
+    toc
     out_values = g(in_values);
     
     %% calculation of the plot(s)
-    frames = drawFunctions(in_values, out_values, animationParams.tf_zeros, animationParams.tf_poles, animationParams.R, t, t_indexes, animationParams);
+    frames = drawFunctions(in_values, out_values, main_params.tf_zeros, main_params.tf_poles, main_params.R, t, t_indexes, main_params);
     
     if ~isstruct(frames) && frames == -1
         return;
     end
     
     %% display the movie player
-    if ~animationParams.noPlayer && ~animationParams.export && exist('implay') == 2
-        implay(frames,animationParams.FPS);
+    if ~main_params.noPlayer && ~main_params.export && exist('implay') == 2
+        implay(frames,main_params.FPS);
         set(findall(0,'tag','spcui_scope_framework'),'position',[150 150 length(frames(1).cdata(1,:,1))+20 length(frames(1).cdata(:,1,1))+30]);
     elseif ~(exist('implay') == 2)
         fprintf('Video player could not be found. Please install Matlabs'' ''Image Processing Toolbox'' in order to use this function\n');
     end
     
     % export the frames as a .mp4 file
-    if animationParams.export
-        if exist([animationParams.filename,'.mp4'],'file') == 2
+    if main_params.export
+        if exist([main_params.filename,'.mp4'],'file') == 2
             ii = 1;
-            while exist([animationParams.filename,'_',num2str(ii),'.mp4'],'file') == 2
+            while exist([main_params.filename,'_',num2str(ii),'.mp4'],'file') == 2
                 ii = ii + 1;
             end
-            filename = [animationParams.filename,'_',num2str(ii),'.mp4'];
+            filename = [main_params.filename,'_',num2str(ii),'.mp4'];
         else
-            filename = [animationParams.filename,'.mp4'];
+            filename = [main_params.filename,'.mp4'];
         end
         v = VideoWriter(filename,'MPEG-4');
-        v.FrameRate = animationParams.FPS;
+        v.FrameRate = main_params.FPS;
         open(v);
         for ii = 1:length(frames)
             writeVideo(v,frames(ii));
@@ -369,7 +376,7 @@ function [] = main(animationParams)
 end
 
 %% drawing function, returns a movie frame struct
-function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_indexes, animationParams)
+function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_indexes, main_params)
     % remember how many zeros and poles we have
     zeros_N = length(zeros);
     poles_N = length(poles);
@@ -378,14 +385,14 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
     % decide if he chose to set either 'auto_size' to false
     [in_axis_xlim,in_axis_ylim,out_axis_xlim,out_axis_ylim] = autoZoom([zeros,poles],R,out_values);
     
-    if ~animationParams.in_auto_size
-       in_axis_xlim = [(animationParams.in_x0(1) - animationParams.in_dims(1)/2),(animationParams.in_x0(1) + animationParams.in_dims(1)/2)];
-       in_axis_ylim = [(animationParams.in_x0(2) - animationParams.in_dims(2)/2),(animationParams.in_x0(2) + animationParams.in_dims(2)/2)];
+    if ~main_params.in_auto_size
+       in_axis_xlim = [(main_params.in_x0(1) - main_params.in_dims(1)/2),(main_params.in_x0(1) + main_params.in_dims(1)/2)];
+       in_axis_ylim = [(main_params.in_x0(2) - main_params.in_dims(2)/2),(main_params.in_x0(2) + main_params.in_dims(2)/2)];
     end
     
-    if ~animationParams.out_auto_size
-       out_axis_xlim = [(animationParams.out_x0(1) - animationParams.out_dims(1)/2),(animationParams.out_x0(1) + animationParams.out_dims(1)/2)];
-       out_axis_ylim = [(animationParams.out_x0(2) - animationParams.out_dims(2)/2),(animationParams.out_x0(2) + animationParams.out_dims(2)/2)];
+    if ~main_params.out_auto_size
+       out_axis_xlim = [(main_params.out_x0(1) - main_params.out_dims(1)/2),(main_params.out_x0(1) + main_params.out_dims(1)/2)];
+       out_axis_ylim = [(main_params.out_x0(2) - main_params.out_dims(2)/2),(main_params.out_x0(2) + main_params.out_dims(2)/2)];
     end
     
     % derive the arrow length relative to subplot axis dimensions
@@ -401,7 +408,7 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
     end
     
     % preallocate space for frames to be stored
-    frames(animationParams.N_frames) = struct('cdata',[],'colormap',[]);    
+    frames(main_params.N_frames) = struct('cdata',[],'colormap',[]);    
     
     try
         % create the figure with its two subplots and remember their handles
@@ -427,7 +434,7 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
         grid on;
 
         % calculate the correct positions (relative to interior of the figure)
-        fig_plot_height = 2*animationParams.border + animationParams.plotSize;              % plot + border above and below, pixel
+        fig_plot_height = 2*main_params.border + main_params.plotSize;              % plot + border above and below, pixel
         fig_annotation_textbox_height = 14;                                                 % one box, pixel
         fig_annotation_height_sum = (max(zeros_N,poles_N)+2)*fig_annotation_textbox_height; % cumulative, pixel
         switch(legacy)
@@ -437,17 +444,17 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
                 fig_legacy_correction = 3*fig_annotation_textbox_height;
         end
         fig_height = fig_plot_height + fig_annotation_height_sum + fig_legacy_correction;   % pixel
-        fig_width = 3*animationParams.border + 2*animationParams.plotSize;                                  % pixel
+        fig_width = 3*main_params.border + 2*main_params.plotSize;                                  % pixel
 
         % fig.Position expects pixels as unit
         fig.Position = [100 100 fig_width fig_height];
 
         % as subplot.Postion expects fractions of the inside of the figure, we
         % recalculate the pixel values
-        fig_border_horizontal_frac = animationParams.border/fig_width;                      % fraction
-        fig_border_vertical_frac = animationParams.border/fig_height;                       % fraction
-        fig_plot_width_frac = (fig_width - 3*animationParams.border)/(2*fig_width);         % fraction
-        fig_plot_height_frac = 1-(2*animationParams.border + fig_annotation_height_sum)/fig_height; % fraction
+        fig_border_horizontal_frac = main_params.border/fig_width;                      % fraction
+        fig_border_vertical_frac = main_params.border/fig_height;                       % fraction
+        fig_plot_width_frac = (fig_width - 3*main_params.border)/(2*fig_width);         % fraction
+        fig_plot_height_frac = 1-(2*main_params.border + fig_annotation_height_sum)/fig_height; % fraction
 
         % subX.Position expects fractions of the inside of the figure as unit
         sub1.Position = [fig_border_horizontal_frac, (1 - fig_border_vertical_frac - fig_plot_height_frac), fig_plot_width_frac, fig_plot_height_frac];
@@ -501,8 +508,8 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
 
         % We need to know the value of the head of the trail at the previous
         % frame in order to determine the arrow's direction.
-        in_values_head_prev = in_values(animationParams.resolution_factor-1);
-        out_values_head_prev = out_values(animationParams.resolution_factor-1);
+        in_values_head_prev = in_values(main_params.resolution_factor-1);
+        out_values_head_prev = out_values(main_params.resolution_factor-1);
 
         % prepare the annotations below the plots and remember their handles
 
@@ -528,19 +535,19 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
 
         % main loop where we update the plots and annotations and store the
         % figure in a movie frame after each iteration
-        for ii = 1:animationParams.N_frames        
+        for ii = 1:main_params.N_frames        
             % update the trail plot data
             set(in_plot_trail,'XData',real(in_values_truncated(t_indexes{ii})),'YData',imag(in_values_truncated(t_indexes{ii})));
             set(out_plot_trail,'XData',real(out_values_truncated(t_indexes{ii})),'YData',imag(out_values_truncated(t_indexes{ii})));        
 
             % draw the (arrow-)head of the trail
             delete(in_plot_arrow); delete(out_plot_arrow);
-            in_values_head = in_values(ii*animationParams.resolution_factor);
-            out_values_head = out_values(ii*animationParams.resolution_factor);
+            in_values_head = in_values(ii*main_params.resolution_factor);
+            out_values_head = out_values(ii*main_params.resolution_factor);
             in_phi = angle(in_values_head - in_values_head_prev);
             out_phi = angle(out_values_head - out_values_head_prev);
-            subplot(sub1); in_plot_arrow = drawArrow([real(in_values_truncated(ii*animationParams.resolution_factor)),imag(in_values_truncated(ii*animationParams.resolution_factor))],in_phi,in_arrow_length);
-            subplot(sub2); out_plot_arrow = drawArrow([real(out_values_truncated(ii*animationParams.resolution_factor)),imag(out_values_truncated(ii*animationParams.resolution_factor))],out_phi,out_arrow_length);
+            subplot(sub1); in_plot_arrow = drawArrow([real(in_values_truncated(ii*main_params.resolution_factor)),imag(in_values_truncated(ii*main_params.resolution_factor))],in_phi,in_arrow_length);
+            subplot(sub2); out_plot_arrow = drawArrow([real(out_values_truncated(ii*main_params.resolution_factor)),imag(out_values_truncated(ii*main_params.resolution_factor))],out_phi,out_arrow_length);
 
             % update the title
             title(sub1,['Current value of D-Curve: ',num2str(in_values_head,'%.1f'),': M = ',num2str(abs(in_values_head),'%.2f'),' p = ',num2str(rad2deg(angle(in_values_head)),'%.2f'),'°']);

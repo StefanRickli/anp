@@ -1,13 +1,4 @@
-function interval_list = test_fill_interval_list_t_to_q(poles,zeros,radii,angles,separation_max_pole,separation_max_zero)
-%     poles = 1i*[-1,1];
-%     zeros = 1i*[-2,2];
-    %poles = 1i*[0,7];
-    %zeros = 1i*[-5];
-%     radii.inf = 10;
-%     angles.crop = 7*pi/180;
-%     angles.detour = 45*pi/180;    
-%     separation_max_pole = 1/4;
-%     separation_max_zero = 1/20;
+function interval_list = anp_in_fct_fill_interval_list_t_to_q(in_params,in_data)
     
     if any(strcmp(who('global'),'debug'))
         global debug;
@@ -15,8 +6,10 @@ function interval_list = test_fill_interval_list_t_to_q(poles,zeros,radii,angles
         debug = false;
     end
 
-
-    [interval_list,im_pz_sorted,~] = test_fill_interval_list_q_to_z(poles,zeros,radii,angles,separation_max_pole,separation_max_zero);
+    poles =         in_params.poles;
+    zeros =         in_params.zeros;
+    im_pz_sorted =  in_data.im_pz_sorted;
+    interval_list = in_data.interval_list;
     
     n_im_poles_distinct = sum([im_pz_sorted.type] == 'p');
     n_im_zeros_distinct = sum([im_pz_sorted.type] == 'z');

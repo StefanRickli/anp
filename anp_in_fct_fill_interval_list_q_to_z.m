@@ -1,24 +1,18 @@
-% muss herausfinden, wo die linearen intervalle aufhören
-function [interval_list,im_pz_sorted,pole_zero_combinations] = test_fill_interval_list_q_to_z(poles,zeros,radii,angles,separation_max_pole,separation_max_zero)
+function interval_list = anp_in_fct_fill_interval_list_q_to_z(in_params,in_data)
+
     if any(strcmp(who('global'),'debug'))
         global debug;
     else
         debug = false;
     end
     
-%     poles = 1i*[0,0,-0.2,7];
-%     zeros = 1i*[0,0.1,-5,-5.2];
-%     radii.inf = 10;
-%     angles.crop = 7*pi/180;
-%     angles.detour = 45*pi/180;    
-%     separation_max_pole = 1/4;
-%     separation_max_zero = 1/20;
-    
-    im_pz_sorted = test_struct_sort(poles,zeros);
-    [interval_list,pole_zero_combinations,separation_pole,separation_zero] = test_init_interval_list(poles,zeros,im_pz_sorted,separation_max_pole,separation_max_zero);
-    
-%     im_pos_pz = im_pz_sorted([im_pz_sorted.value] >= 0);
-%     im_neg_pz = im_pz_sorted([im_pz_sorted.value] < 0);
+    radii =                     in_params.radii;
+    angles =                    in_params.angles;
+    separation_pole =           in_params.actual_separation_pole;
+    separation_zero =           in_params.actual_separation_zero;    
+    im_pz_sorted =              in_data.im_pz_sorted;
+    pole_zero_combinations =    in_data.im_pz_combinations;
+    interval_list =             in_data.interval_list;
     
     secant_pole = 2*separation_pole;
     secant_zero = 2*separation_zero;
@@ -36,19 +30,6 @@ function [interval_list,im_pz_sorted,pole_zero_combinations] = test_fill_interva
     if ~isempty(im_pz_sorted)
         im_pz_sorted = identify_border_cases(im_pz_sorted,separation_pole,separation_zero);
     end
-%     if ~isempty(im_pos_pz)
-%         im_pos_pz = identify_border_cases(im_pos_pz,separation_pole,separation_zero);
-%     end
-%     if ~isempty(im_neg_pz)
-%         im_neg_pz = identify_border_cases(im_neg_pz,separation_pole,separation_zero);
-%     end
-    
-%     'start'
-%     'end'
-%     'density_fct_handle'
-%     'density_fct_arguments'
-%     'input_fct_handle'
-%     'input_fct_arguments'
     
     interval_ii = 1;
     idx_current_pz = NaN;
