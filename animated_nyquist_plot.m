@@ -110,7 +110,7 @@ function [] = animated_nyquist_plot_new(varargin)
     
     default_R               = NaN;
     default_duration        = 20;               % length of animation in movie player, affects spatial resolution, [s]
-    default_FPS             = 18;               % speed of animation in movie player, affects spatial resolution, [frames/s]
+    default_FPS             = 6;               % speed of animation in movie player, affects spatial resolution, [frames/s]
     default_trail_length    = 0.15;             % how long should the trail be?, [0<trail_length<1]
     default_left_x0         = [0;0];            % center of left plot
     default_left_dims       = [5;5];            % width and heigth of left plot
@@ -304,7 +304,8 @@ function [] = main(animationParams)
         pz_all = [poles,zeros];
         R1 = imag(pz_all) - real(pz_all) * tan(deg2rad(animationParams.min_angle_contribution_at_R));
         R2 = imag(pz_all) - real(pz_all) * tan(-deg2rad(animationParams.min_angle_contribution_at_R));
-        animationParams.R = max([abs(R1),abs(R2)]);
+        pz_im = pz_all(real(pz_all) == 0);
+        animationParams.R = max([abs(R1),abs(R2),abs(pz_im)*1.5]);
     end
     g = polesZeros2fncHandle(animationParams.tf_zeros, animationParams.tf_poles);
     
@@ -327,11 +328,16 @@ function [] = main(animationParams)
     end
     
     %% calculate the function values
-    in = getInputFunctionHandle();
+%     in = getInputFunctionHandle();
     %out = @(t,R,phi) g(in(t,animationParams));
     
     %in_values = in(t,animationParams.R,animationParams.phi);
-    [ts,in_values] = get_t_and_shape(animationParams);
+%     [ts,in_values] = get_t_and_shape(animationParams);
+    radii.inf = animationParams.R;
+    angles.crop = animationParams.phi*pi/180;
+    angles.detour = 45*pi/180;
+    in_values = test_evaluate_input_function(t,poles,zeros,radii,angles);
+    
     out_values = g(in_values);
     
     %% calculation of the plot(s)
@@ -509,8 +515,8 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
         % For the debug case when t_min > 0 or t_max < 1 we simply
         % extrapolate from the second frame backwards.
         if t(1) == 0 && t(end) == 1
-            in_values_head_prev = in_values(animationParams.N_frames - 1);
-            out_values_head_prev = out_values(animationParams.N_frames - 1);
+            in_values_head_prev = in_values(animationParams.resolution_factor-1);
+            out_values_head_prev = out_values(animationParams.resolution_factor-1);
         else
             in_values_head_prev = 2*in_values(1) - in_values(2);
             out_values_head_prev = 2*out_values(1) - out_values(2);
@@ -547,12 +553,12 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
 
             % draw the (arrow-)head of the trail
             delete(in_plot_arrow); delete(out_plot_arrow);
-            in_values_head = in_values(ii);
-            out_values_head = out_values(ii);
+            in_values_head = in_values(ii*animationParams.resolution_factor);
+            out_values_head = out_values(ii*animationParams.resolution_factor);
             in_phi = angle(in_values_head - in_values_head_prev);
             out_phi = angle(out_values_head - out_values_head_prev);
-            subplot(sub1); in_plot_arrow = drawArrow([real(in_values_truncated(ii)),imag(in_values_truncated(ii))],in_phi,in_arrow_length);
-            subplot(sub2); out_plot_arrow = drawArrow([real(out_values_truncated(ii)),imag(out_values_truncated(ii))],out_phi,out_arrow_length);
+            subplot(sub1); in_plot_arrow = drawArrow([real(in_values_truncated(ii*animationParams.resolution_factor)),imag(in_values_truncated(ii*animationParams.resolution_factor))],in_phi,in_arrow_length);
+            subplot(sub2); out_plot_arrow = drawArrow([real(out_values_truncated(ii*animationParams.resolution_factor)),imag(out_values_truncated(ii*animationParams.resolution_factor))],out_phi,out_arrow_length);
 
             % update the title
             title(sub1,['Current value of D-Curve: ',num2str(in_values_head,'%.1f'),': M = ',num2str(abs(in_values_head),'%.2f'),' p = ',num2str(rad2deg(angle(in_values_head)),'%.2f'),'°']);
@@ -657,8 +663,8 @@ function [in_axis_xlim,in_axis_ylim,out_axis_xlim,out_axis_ylim] = autoZoom(zp, 
     
     % for the right subplot it's fairly easy. Have the Plot such that the
     % whole nyquist curve fits into it.
-    out_axis_xlim = stretch_centered([min([real(out_values);0]),max([real(out_values);0])],1.15);
-    out_axis_ylim = stretch_centered([min([imag(out_values);0]),max([imag(out_values);0])],1.15);
+    out_axis_xlim = stretch_centered([min([real(out_values),0]),max([real(out_values),0])],1.15);
+    out_axis_ylim = stretch_centered([min([imag(out_values),0]),max([imag(out_values),0])],1.15);
     
     width = out_axis_xlim(2) - out_axis_xlim(1);
     height = out_axis_ylim(2) - out_axis_ylim(1);

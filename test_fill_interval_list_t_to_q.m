@@ -82,7 +82,9 @@ function interval_list = test_fill_interval_list_t_to_q(poles,zeros,radii,angles
             
             
             [c_lorentz,gamma_star,r1,r2,c1,c2] = fit_mixed_exp_lorentz(ta,tb,qa,qb,va,vb);
-            interval_list(ii).density_fct_handle = @(t) exp_Lorentz(t,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
+            qa_real = exp_Lorentz(ta,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
+            qb_real = exp_Lorentz(tb,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
+            interval_list(ii).density_fct_handle = @(t) map(exp_Lorentz(t,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2),qa_real,qb_real,qa,qb);
             
         elseif any(strcmp(interval_list(ii).type,{'detour_pole','detour_zero','detour_pole_part','detour_zero_part','crop','inf'}))
             interval_list(ii).density_fct_handle = @(t) map(t,ta,tb,qa,qb);
@@ -95,10 +97,10 @@ end
 function shares = get_shares(tf_relative_degree,n_im_poles_distinct,n_im_zeros_distinct)
     assert(tf_relative_degree >= 0);
     
-    weights.crop_inf = 1/sqrt(tf_relative_degree+1);
-    weights.interpolation = 8;
+    weights.crop_inf = 3/sqrt(tf_relative_degree+1);
+    weights.interpolation = 9;
     weights.pole = n_im_poles_distinct*1;
-    weights.zero = n_im_zeros_distinct*1/2;
+    weights.zero = n_im_zeros_distinct*1/3;
     temp = struct2cell(weights);
     weight_sum = sum([temp{:}]);
     
