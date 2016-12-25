@@ -224,7 +224,7 @@ function [] = animated_nyquist_plot_new(varargin)
     functionParams.filename = ip.Results.filename;
     functionParams.R = ip.Results.R;
     functionParams.min_angle_contribution_at_R = 65;
-    
+    functionParams.resolution_factor = 3;
     
     main(functionParams);
 end
@@ -288,26 +288,23 @@ end
 
 function [] = main(animationParams)
     %% debug
-    animationParams.t_min = 0;
-    animationParams.t_max = 1;
-        
+    global debug;
+    debug = false;
+            
     % put the transfer function to the text output
     transfer_function = tf(poly(animationParams.tf_zeros),poly(animationParams.tf_poles))
     fprintf('with\n');
     poles = animationParams.tf_poles
     fprintf('and\n');
     zeros = animationParams.tf_zeros
-    
-    %keyboard;
-    
+            
     %% initialization
     animationParams.phi = 7;                                    % [°], roundoff-parameter of the D-curve, usually not necessary to change
     if isnan(animationParams.R)
-        pz_non_only_imaginary = [poles,zeros];
-        R1 = imag(pz_non_only_imaginary) - real(pz_non_only_imaginary) * tan(deg2rad(animationParams.min_angle_contribution_at_R));
-        R2 = imag(pz_non_only_imaginary) - real(pz_non_only_imaginary) * tan(-deg2rad(animationParams.min_angle_contribution_at_R));
+        pz_all = [poles,zeros];
+        R1 = imag(pz_all) - real(pz_all) * tan(deg2rad(animationParams.min_angle_contribution_at_R));
+        R2 = imag(pz_all) - real(pz_all) * tan(-deg2rad(animationParams.min_angle_contribution_at_R));
         animationParams.R = max([abs(R1),abs(R2)]);
-        %animationParams.R = 2*max([abs(animationParams.tf_zeros) abs(animationParams.tf_poles)]);     % radius of the D-curve. auto value is such that one can oftentimes see what happens in origin of nyquist curve
     end
     g = polesZeros2fncHandle(animationParams.tf_zeros, animationParams.tf_poles);
     
@@ -316,15 +313,17 @@ function [] = main(animationParams)
     animationParams.N_frames = animationParams.duration * animationParams.FPS;
     animationParams.N_trail = fix(animationParams.N_frames * animationParams.trail_length);
     
+    animationParams.N_function_points = animationParams.resolution_factor * (animationParams.N_frames+1);
+    
     % set up parametrisation according to duration and FPS
-    animationParams.t_step = (animationParams.t_max-animationParams.t_min)/(animationParams.N_frames-1);
-    t = animationParams.t_min:animationParams.t_step:animationParams.t_max;
+    animationParams.t_step = 1/(animationParams.N_function_points-1);
+    t = 0:animationParams.t_step:1;
     
     % prepare t-intervals that are plotted on each frame, considering the
     % set number of trail-values
     t_indexes = cell(animationParams.N_frames,1);
     for ii = 1:animationParams.N_frames
-        t_indexes{ii} = max(1,ii-animationParams.N_trail):ii;
+        t_indexes{ii} = max(1,(ii-animationParams.N_trail)*animationParams.resolution_factor):ii*animationParams.resolution_factor;
     end
     
     %% calculate the function values

@@ -1,10 +1,10 @@
 function test_interval_list_test
     clc;
     global debug
-    debug = false;
+    debug = true;
     
-    poles = 1i*[];
-    zeros = 1i*[];
+    poles = 1i*[-2,-1,-0.6,0.6,1,2];
+    zeros = 1i*[0];
     %poles = 1i*[0,7];
     %zeros = 1i*[-5];
     radii.inf = 10;
@@ -13,14 +13,18 @@ function test_interval_list_test
     separation_max_pole = 1/4;
     separation_max_zero = 1/20;
 
+    tic
     interval_list = test_fill_interval_list_t_to_q(poles,zeros,radii,angles,separation_max_pole,separation_max_zero);
+    toc
     
 %     q_max = interval_list(end).q(2);
 %     t = 0:1/1000:1;
 %     q = map(t,0,1,0,q_max);
 %     z = evaluate_interval_q(interval_list,q);
     t = 0:1/1000:1;
+    tic
     z = evaluate_interval_t(interval_list,t(1:end-1));
+    toc
     
     figure;
     scatter(real(z),imag(z));
