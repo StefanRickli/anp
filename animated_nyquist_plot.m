@@ -503,8 +503,8 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
 
         % prepare the arrows annotations that mark the value of the head of the
         % trail at the current frame and remember their handle for later use
-        subplot(sub1); in_plot_arrow = annotation('line',[0 0],[1 0]);
-        subplot(sub2); out_plot_arrow = annotation('line',[0 0],[1 0]);
+        subplot(sub1); in_plot_arrow = annotation('Arrow',[0 0],[1 0]);
+        subplot(sub2); out_plot_arrow = annotation('Arrow',[0 0],[1 0]);
 
         % We need to know the value of the head of the trail at the previous
         % frame in order to determine the arrow's direction.
