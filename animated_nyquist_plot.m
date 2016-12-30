@@ -318,7 +318,7 @@ function [] = main(main_params)
     
     % prepare t-intervals that are plotted on each frame, considering the
     % set number of trail-values
-    t_indexes = cell(main_params.N_frames,1);
+    t_indexes = cell(1,main_params.N_frames);
     for ii = 1:main_params.N_frames
         t_indexes{ii} = max(1,(ii-main_params.N_trail)*main_params.resolution_factor):ii*main_params.resolution_factor;
     end
