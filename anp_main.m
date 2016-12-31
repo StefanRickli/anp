@@ -4,6 +4,7 @@ function [] = anp_main(varargin)
         debug = true;
 
         addpath('anp_files');
+        addpath('anp_icons');
 
         checked_args = anp_parse_arguments(varargin{:});
 
@@ -41,7 +42,8 @@ function [] = anp_main(varargin)
                           'zeros',[],...
                           'radii',[],...
                           'border',[],...
-                          'plot_size',[]);
+                          'plot_size',[],...
+                          'trail_length',[]);
         
         h_gui.set_anp_tf_processor(h_tf_processor);
         gui_args.z_x0 =         checked_args.z_plot_x0;
@@ -52,18 +54,20 @@ function [] = anp_main(varargin)
         gui_args.w_auto_lims =  checked_args.w_plot_auto_lims;
         gui_args.poles =        roots(checked_args.tf_obj.Numerator{1})';
         gui_args.zeros =        roots(checked_args.tf_obj.Denominator{1})';
-        gui_args.radii =        checked_args.radii;
+        gui_args.radii.R =        5;% TODO checked_args.radii;
         gui_args.border =       checked_args.border;
         gui_args.plot_size =    checked_args.plot_size;
+        gui_args.trail_length =    checked_args.trail_length;
         
         h_gui.set_z_plot_limits(gui_args);
         h_gui.set_w_plot_limits(gui_args);
         h_gui.set_poles_zeros(gui_args);
+        % TODO radii comes from tf_processor!
         h_gui.set_radii(gui_args);
         h_gui.set_window_props(gui_args);
+        h_gui.set_plot_props(gui_args);
         
         h_gui.init_visuals();
-        
         
         
         

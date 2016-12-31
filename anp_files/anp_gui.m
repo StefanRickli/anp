@@ -7,7 +7,10 @@ classdef anp_gui < handle
         g_legacy            string;
         
         % s: state
+        s_data_ready        logical;
+        s_draw_allowed      logical;
         s_draw_busy         logical;
+        s_check_limits      logical;
         
         % h: handles
         h_anp_tf_processor
@@ -15,6 +18,7 @@ classdef anp_gui < handle
         h_fig               matlab.ui.Figure;
         h_sub1              matlab.graphics.axis.Axes;
         h_sub2              matlab.graphics.axis.Axes;
+        h_zoom              matlab.graphics.interaction.internal.zoom
         
         h_text_z_annot      matlab.graphics.shape.TextBox
         h_text_p_annot      matlab.graphics.shape.TextBox
@@ -28,7 +32,19 @@ classdef anp_gui < handle
         h_w_plot_full       matlab.graphics.chart.primitive.Line
         h_w_plot_trail      matlab.graphics.chart.primitive.Line
         h_w_plot_arrow      matlab.graphics.shape.Arrow
+                
+        % ui: GUI elements
+        ui_icons
+        ui_toolbar
+        ui_run_switches     matlab.ui.container.toolbar.ToggleTool
+        ui_sw_pause
+        ui_btn_prev
+        ui_btn_next
         
+        % a: animation
+        a_direction         double
+        a_time_ii           double
+
         % w: window properties
         w_fig_position      double
         w_sub1_position     double
@@ -44,12 +60,16 @@ classdef anp_gui < handle
         
         % p: plot properties (z: left, w=f(z): right)
         p_time
+        p_trail_length      double
+        p_n_trail           double
         
         p_z_x0              double
         p_z_dims            double
         p_z_auto_lims       logical
         p_z_xlim            double
+        p_z_xspan           double
         p_z_ylim            double
+        p_z_yspan           double
         p_z_width           double
         p_z_height          double
         p_z_arrow_length    double
@@ -58,7 +78,9 @@ classdef anp_gui < handle
         p_w_dims            double
         p_w_auto_lims       logical
         p_w_xlim            double
+        p_w_xspan           double
         p_w_ylim            double
+        p_w_yspan           double
         p_w_width           double
         p_w_height          double
         p_w_arrow_length    double
@@ -72,13 +94,16 @@ classdef anp_gui < handle
         
         d_t_values              double
         d_t_oversampled         double
+        d_t_trails
         
         d_z_values              double
         d_z_values_truncated    double
+        d_z_values_head         double
         d_z_values_head_prev    double
         
         d_w_values              double
         d_w_values_truncated    double
+        d_w_values_head         double
         d_w_values_head_prev    double
         
         d_radii
@@ -88,19 +113,39 @@ classdef anp_gui < handle
         function this = anp_gui()
             this.g_uid =        java.util.UUID.randomUUID.toString;
             this.g_legacy =     anp_check_Matlab_version();
+            this.s_data_ready = false;
+            this.s_draw_allowed = false;
+            this.s_draw_busy =  false;
+            this.a_time_ii =    1;
+            
             this.h_fig =        figure('CloseRequestFcn',@this.on_figure_delete);
             this.h_sub1 =       subplot(1,2,1);
             hold on;
             this.h_sub2 =       subplot(1,2,2);
             hold on;
+            
+            this.ui_toolbar =   findall(this.h_fig,'Type','uitoolbar');
+            this.load_icons();
+            this.ui_run_switches(1) =   uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,1),'TooltipString','Fast Backward','OnCallback',{@this.cb_run,-3},'Enable','off','Separator','on');
+            this.ui_run_switches(2) =   uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,2),'TooltipString','Play Backward','OnCallback',{@this.cb_run,-1},'Enable','off');
+            this.ui_btn_prev =          uipushtool  (this.ui_toolbar,'CData',this.ui_icons(:,:,:,3),'TooltipString','Step Back',    'ClickedCallback',{@this.cb_step,-1},'Enable','off');
+            this.ui_sw_pause =          uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,4),'TooltipString','Pause',        'ClickedCallback',{@this.cb_pause},'Enable','off','State','on');
+            this.ui_btn_next =          uipushtool  (this.ui_toolbar,'CData',this.ui_icons(:,:,:,5),'TooltipString','Step Forward', 'ClickedCallback',{@this.cb_step,1},'Enable','off');
+            this.ui_run_switches(3) =   uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,6),'TooltipString','Play Forward', 'OnCallback',{@this.cb_run,1},'Enable','off');
+            this.ui_run_switches(4) =   uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,7),'TooltipString','Fast Forward', 'OnCallback',{@this.cb_run,3},'Enable','off');
+            
+            
+            
             fprintf('anp_gui\t\t\t\t%s: Instance created.\n',this.g_uid);
         end
         
         function [] = set_window_props(this,new_props)
             this.w_border =     new_props.border;
             this.w_plot_size =  new_props.plot_size;
-            % TODO everything window and generally GUI related, NOT
-            % plotting
+        end
+        
+        function [] = set_plot_props(this,new_props)
+            this.p_trail_length =     new_props.trail_length;
         end
         
         function [] = set_z_plot_limits(this,new_props)
@@ -121,7 +166,7 @@ classdef anp_gui < handle
         
         function [] = set_radii(this,new_props)
             % TODO check for proper array dimensions
-            
+            % TODO radii comes from tf_processor!
             this.d_radii =          new_props.radii;
         end
         
@@ -143,19 +188,29 @@ classdef anp_gui < handle
             this.fetch_data();
             this.calc_gui_positions();
             this.calc_plot_axis_limits();
-            this.calc_plot_w_arrow_length();
             this.calc_plot_z_arrow_length();
+            this.calc_plot_w_arrow_length();
             this.calc_truncated_z_values();
             this.calc_truncated_w_values();
+            this.calc_trail_indexes();
             this.draw_init_gui_statics();
             this.draw_init_gui_text_objects();
             this.draw_init_plot_axes();
+            this.draw_init_line_plots();
             this.draw_init_plot_arrows();
             this.draw_init_z_plot_poles_zeros();
+            this.draw_update_full_z_plot();
+            this.draw_update_full_w_plot();
+            this.draw_one_frame();
+            
+            this.s_data_ready =     true;
+            this.ui_control_enable();
         end
+        
         
         function delete(this)
             fprintf('anp_gui\t\t\t\t%s: Deletion requested.\n',this.g_uid);
+            
             if isvalid(this.h_fig)
                 close(this.h_fig);
             end
@@ -165,8 +220,21 @@ classdef anp_gui < handle
         function on_figure_delete(this,src,~) % last argument is 'evt'
             % TODO remove all event listeners here!
             disp('Deleting figure window.');
+            
             delete(src);
             this.delete();
+        end
+        
+        function [] = load_icons(this)
+            this.ui_icons = zeros(16,16,3,5);
+            this.ui_icons(:,:,:,1) = imread('Fast Backward.png');
+            this.ui_icons(:,:,:,2) = imread('Backward.png');
+            this.ui_icons(:,:,:,3) = imread('Step Backward.png');
+            this.ui_icons(:,:,:,4) = imread('Pause.png');
+            this.ui_icons(:,:,:,5) = imread('Step Forward.png');
+            this.ui_icons(:,:,:,6) = imread('Forward.png');
+            this.ui_icons(:,:,:,7) = imread('Fast Forward.png');
+            this.ui_icons = this.ui_icons/255;
         end
         
         function [] = fetch_data(this)
@@ -180,83 +248,6 @@ classdef anp_gui < handle
             function_data = this.h_anp_tf_processor.get_data();
             this.d_z_values =       function_data.z_values;
             this.d_w_values =       function_data.w_values;
-        end
-        
-        function [] = draw_init_gui_statics(this)
-            % TODO 
-            this.h_fig.Position =   this.w_fig_position;
-            
-            this.h_sub1.Position =  this.w_sub1_position;
-            this.h_sub2.Position =  this.w_sub2_position;
-        end
-        
-        function [] = draw_init_line_plots(this)
-            % plot the full input- and output curves with some transparency
-            this.h_z_plot_full =            plot(this.h_sub1,0,0);
-            set(this.h_z_plot_full,'Color',[0.05 0.4970 0.7410]);
-            this.h_z_plot_full.Color(4) =   0.3;
-            
-            this.h_w_plot_full =            plot(this.h_sub2,0,0);
-            set(this.h_w_plot_full,'Color',[0.05 0.4970 0.7410]);
-            this.h_w_plot_full.Color(4) =   0.3;
-
-            % prepare the curves' trail plots and remember their handle for later
-            % use
-            this.h_z_plot_trail =           plot(sub1,0,0);
-            set(this.h_z_plot_trail,'Color',[255 215 0]/255,'linewidth',2);
-            this.h_w_plot_trail =           plot(sub2,0,0);
-            set(this.h_w_plot_trail,'Color',[255 215 0]/255,'linewidth',2);
-        end
-        
-        function [] = draw_update_full_z_plot(this)
-            set(this.h_z_plot_full,'XData',real(this.d_z_values_truncated),'YData',imag(this.d_z_values_truncated));
-        end
-        function [] = draw_update_full_w_plot(this)
-            set(this.h_w_plot_full,'XData',real(this.d_w_values_truncated),'YData',imag(this.d_w_values_truncated));
-        end
-        
-        function [] = draw_init_plot_arrows(this)
-            % prepare the arrows annotations that mark the value of the head of the
-            % trail at the current frame and remember their handle for later use
-            subplot(this.h_sub1);
-            this.h_z_plot_arrow =       annotation('Arrow',[0 0],[1 0]);
-
-            subplot(this.h_sub2);
-            this.h_w_plot_arrow =       annotation('Arrow',[0 0],[1 0]);
-            
-            % We need to know the value of the head of the trail at the previous
-            % frame in order to determine the arrow's direction.
-            this.d_z_values_head_prev = this.d_z_values(this.p_time.oversampling_factor-1);
-            this.d_w_values_head_prev = this.d_w_values(this.p_time.oversampling_factor-1);
-        end
-        
-        
-        % prepare the annotations below the plots and remember their handles
-        function [] = draw_init_gui_text_objects(this)
-            % parameters get set in 'calc_gui_positions'
-            
-            for ii = 1:length(this.h_text_z_annot)
-                this.h_text_z_annot(ii).delete
-            end
-            for ii = 1:length(this.h_text_p_annot)
-                this.h_text_p_annot(ii).delete
-            end
-            
-            % zero and pole contributions
-            annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the zeros:','LineStyle','none','FontSize',9);
-            for ii = 1:this.d_n_zeros
-                this.h_text_z_annot(ii) = annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['zero ',num2str(ii)],'LineStyle','none','FontSize',9);
-            end
-            annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the poles:','LineStyle','none','FontSize',9);
-            for ii = 1:this.d_n_poles
-                this.h_text_p_annot(ii) = annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['pole ',num2str(ii)],'LineStyle','none','FontSize',9);
-            end
-
-            % cumulative calculations
-            annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','Resulting value of G:','LineStyle','none','FontSize',9);
-            this.h_text_res_annot(1) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 2*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 1','LineStyle','none','FontSize',9);
-            this.h_text_res_annot(2) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 3*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 2','LineStyle','none','FontSize',9);
-            
         end
         
         function [] = calc_gui_positions(this)
@@ -293,24 +284,174 @@ classdef anp_gui < handle
             this.w_annotation_textbox_frac = fig_annotation_textbox_height/fig_height;     % fraction
         end
         
+        function [] = calc_plot_axis_limits(this)
+            % TODO make sure that all props and data are set before calling
+            % this method
+            
+            % TODO set maximal zoomed out state to max values!
+            % http://stackoverflow.com/questions/32540473/change-figure-limits-without-changing-zoom
+            
+            assert(~any([isempty(this.d_zeros),...
+                         isempty(this.d_poles),...
+                         isempty(this.d_radii) || isnan(this.d_radii.R),...
+                         isempty(this.d_w_values),...
+                         isempty(this.p_z_auto_lims),...
+                         isempty(this.p_w_auto_lims)]));
+            
+            if this.p_z_auto_lims
+                % try to find optimal axis limits for the two plots, or let the user
+                % decide if he chose to set either 'auto_size' to false
+                
+                [this.p_z_xlim,this.p_z_ylim] = anp_plot_auto_zoom_z([this.d_zeros,this.d_poles],this.d_radii.R);
+            else
+               this.p_z_xlim = [(this.p_z_x0(1) - this.p_z_dims(1)/2),(this.p_z_x0(1) + this.p_z_dims(1)/2)];
+               this.p_z_ylim = [(this.p_z_x0(2) - this.p_z_dims(2)/2),(this.p_z_x0(2) + this.p_z_dims(2)/2)];
+            end
+            
+            [this.p_z_xspan,this.p_z_yspan] = anp_plot_find_span([this.d_zeros,this.d_poles,this.d_z_values]);
+            
+            
+            if this.p_w_auto_lims
+                [this.p_w_xlim,this.p_w_ylim] = anp_plot_auto_zoom_w(this.d_w_values);
+            else
+               this.p_w_xlim = [(this.p_w_x0(1) - this.p_w_dims(1)/2),(this.p_w_x0(1) + this.p_w_dims(1)/2)];
+               this.p_w_ylim = [(this.p_w_x0(2) - this.p_w_dims(2)/2),(this.p_w_x0(2) + this.p_w_dims(2)/2)];
+            end
+            
+            [this.p_w_xspan,this.p_w_yspan] = anp_plot_find_span(this.d_w_values);
+        end
+        
+        function [] = calc_plot_z_arrow_length(this)
+            in_axis_width = diff(this.p_z_xlim);        % [1]
+            in_axis_height = diff(this.p_z_ylim);       % [1]
+            this.p_z_arrow_length = 0.04 * sqrt(in_axis_width^2 + in_axis_height^2);      % [1]
+        end
+        
+        function [] = calc_plot_w_arrow_length(this)
+            % TODO handle very short arrow lengths better
+            out_axis_width = diff(this.p_w_xlim);     % [1]
+            out_axis_height = diff(this.p_w_ylim);    % [1]
+            this.p_w_arrow_length = 0.04 * sqrt(out_axis_width^2 + out_axis_height^2);   % [1]
+            if this.p_w_arrow_length < 0.05
+                this.p_w_arrow_length = 0.0001;
+            end
+        end
+        
+        function [] = calc_truncated_z_values(this)
+            this.d_z_values_truncated =  this.trunc(this.d_z_values,this.p_z_xlim,this.p_z_ylim);
+        end
+        function [] = calc_truncated_w_values(this)
+            this.d_w_values_truncated =  this.trunc(this.d_w_values,this.p_w_xlim,this.p_w_ylim);
+        end
+        
+        % prepare t-intervals that are plotted on each frame, considering the
+        % set number of trail-values
+        function [] = calc_trail_indexes(this) % TODO
+            this.p_n_trail = fix(this.p_time.n_time_steps * this.p_trail_length);
+            this.d_t_trails = cell(1,this.p_time.n_time_steps);
+            for ii = 1:this.p_time.n_time_steps
+                this.d_t_trails{ii} = max(1,(ii-this.p_n_trail)*this.p_time.oversampling_factor):ii*this.p_time.oversampling_factor;
+            end
+        end
+        
+        function [] = draw_init_gui_statics(this)
+            % TODO 
+            this.h_fig.Position =   this.w_fig_position;
+            
+            this.h_sub1.Position =  this.w_sub1_position;
+            this.h_sub2.Position =  this.w_sub2_position;
+        end
+        
+        % prepare the annotations below the plots and remember their handles
+        function [] = draw_init_gui_text_objects(this)
+            % parameters get set in 'calc_gui_positions'
+            
+            for ii = 1:length(this.h_text_z_annot)
+                this.h_text_z_annot(ii).delete
+            end
+            for ii = 1:length(this.h_text_p_annot)
+                this.h_text_p_annot(ii).delete
+            end
+            
+            % zero and pole contributions
+            annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the zeros:','LineStyle','none','FontSize',9);
+            for ii = 1:this.d_n_zeros
+                this.h_text_z_annot(ii) = annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['zero ',num2str(ii)],'LineStyle','none','FontSize',9);
+            end
+            annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the poles:','LineStyle','none','FontSize',9);
+            for ii = 1:this.d_n_poles
+                this.h_text_p_annot(ii) = annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['pole ',num2str(ii)],'LineStyle','none','FontSize',9);
+            end
+
+            % cumulative calculations
+            annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','Resulting value of G:','LineStyle','none','FontSize',9);
+            this.h_text_res_annot(1) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 2*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 1','LineStyle','none','FontSize',9);
+            this.h_text_res_annot(2) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 3*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 2','LineStyle','none','FontSize',9);
+            
+        end
+        
         function [] = draw_init_plot_axes(this)
             % TODO maybe separate into two separate functions for z and w
             % plot
             
             subplot(this.h_sub1);
             axis equal; % for 1:1 aspect ratio
+            xlim manual, ylim manual;
+            xlim(anp_stretch_centered(this.p_z_xspan,1.05)), ylim(anp_stretch_centered(this.p_z_yspan,1.05));
+            zoom reset;
             xlim(this.p_z_xlim), ylim(this.p_z_ylim);
             anp_plot_axes_origin(this.g_legacy);
             grid on;
             
             subplot(this.h_sub2);
             axis equal;
+            xlim manual, ylim manual;
+            xlim(anp_stretch_centered(this.p_w_xspan,1.05)), ylim(anp_stretch_centered(this.p_w_yspan,1.05));
+            zoom reset;
             xlim(this.p_w_xlim), ylim(this.p_w_ylim);
             anp_plot_axes_origin(this.g_legacy);
             grid on;
+            
+            this.h_zoom = zoom;
+            this.h_zoom.ActionPostCallback = @this.cb_on_zoom;
         end
         
-        % draw the poles and zeros in the left (input function) subplot
+        function [] = draw_init_line_plots(this)
+            % plot the full input- and output curves with some transparency
+            this.h_z_plot_full =            plot(this.h_sub1,0,0);
+            set(this.h_z_plot_full,'Color',[0.05 0.4970 0.7410]);
+            this.h_z_plot_full.Color(4) =   0.3;
+            
+            this.h_w_plot_full =            plot(this.h_sub2,0,0);
+            set(this.h_w_plot_full,'Color',[0.05 0.4970 0.7410]);
+            this.h_w_plot_full.Color(4) =   0.3;
+
+            % prepare the curves' trail plots and remember their handle for later
+            % use
+            this.h_z_plot_trail =           plot(this.h_sub1,0,0);
+            set(this.h_z_plot_trail,'Color',[255 215 0]/255,'linewidth',2);
+            this.h_w_plot_trail =           plot(this.h_sub2,0,0);
+            set(this.h_w_plot_trail,'Color',[255 215 0]/255,'linewidth',2);
+        end
+        
+        function [] = draw_init_plot_arrows(this)
+            % prepare the arrows annotations that mark the value of the head of the
+            % trail at the current frame and remember their handle for later use
+            subplot(this.h_sub1);
+            this.h_z_plot_arrow =       annotation('Arrow',[0 0],[1 0]);
+
+            subplot(this.h_sub2);
+            this.h_w_plot_arrow =       annotation('Arrow',[0 0],[1 0]);
+            
+            % We need to know the value of the head of the trail at the previous
+            % frame in order to determine the arrow's direction.
+            this.d_z_values_head = this.d_z_values(this.p_time.oversampling_factor-1);
+            this.d_w_values_head = this.d_w_values(this.p_time.oversampling_factor-1);
+            this.d_z_values_head_prev = this.d_z_values_head;
+            this.d_w_values_head_prev = this.d_w_values_head;
+        end
+        
+        % draw the this.d_poles and this.d_zeros in the left (input function) subplot
         function [] = draw_init_z_plot_poles_zeros(this)
             for ii = 1:length(this.h_z_pz_objcts)
                 this.h_z_pz_objcts.delete();
@@ -344,63 +485,218 @@ classdef anp_gui < handle
             end
         end
         
-        function h_arrow = draw_text_arrow(x0,phi,l,text,color)
+        % -----------------------------------------------------------------
+        % GUI methods
+        % -----------------------------------------------------------------
+        function [] = ui_control_enable(this)
+            this.ui_btn_prev.Enable = 'on';
+            this.ui_sw_pause.Enable = 'on';
+            this.ui_btn_next.Enable = 'on';
+            
+            for ii = 1:length(this.ui_run_switches)
+                this.ui_run_switches(ii).Enable = 'on';
+            end
+
+        end
+        
+        % -----------------------------------------------------------------
+        % methods for the running plot
+        % -----------------------------------------------------------------
+        function [] = draw_run_continuous_animation(this)
+            try
+                this.s_draw_busy = true;
+                tools.dbg('draw_run_continuous_animation:\tStarting animation\n');
+
+                while this.s_draw_allowed
+                    if this.s_check_limits
+                        this.draw_update_limits_and_plots();
+                        this.calc_plot_z_arrow_length();
+                        this.calc_plot_w_arrow_length();
+                        this.draw_one_frame();
+                        this.s_check_limits = false;
+                    end
+                    
+                    this.d_z_values_head_prev =     this.d_z_values_head;
+                    this.d_w_values_head_prev =     this.d_w_values_head;
+                    this.a_time_ii = tools.iterator_modulo(this.a_time_ii + this.a_direction,this.p_time.n_time_steps);
+
+                    this.draw_one_frame();
+
+                    tools.dbg('draw_run_continuous_animation:\tdrawing %d :-)\n',this.a_time_ii);
+                    pause(1/10);
+                end
+                tools.dbg('draw_run_continuous_animation:\tStopping animation\n');
+
+                this.s_draw_busy = false;
+            catch err
+                if ~strcmp(err.message,'Invalid or deleted object.')
+                    rethrow(err);
+                end
+            end
+        end
+        
+        function [] = draw_one_frame(this)
+            this.draw_update_trails();
+            this.draw_update_trail_head_arrows();
+            this.draw_update_plot_titles();
+            this.draw_update_textboxes();
+        end
+        
+        function [] = draw_update_trails(this)
+            % update the trail plot data
+            set(this.h_z_plot_trail,'XData',real(this.d_z_values_truncated(this.d_t_trails{this.a_time_ii})),'YData',imag(this.d_z_values_truncated(this.d_t_trails{this.a_time_ii})));
+            set(this.h_w_plot_trail,'XData',real(this.d_w_values_truncated(this.d_t_trails{this.a_time_ii})),'YData',imag(this.d_w_values_truncated(this.d_t_trails{this.a_time_ii})));        
+        end
+        
+        function [] = draw_update_trail_head_arrows(this)
+            % draw the (arrow-)head of the trail
+            delete(this.h_z_plot_arrow); delete(this.h_w_plot_arrow);
+            
+            this.d_z_values_head =  this.d_z_values_truncated(this.a_time_ii*this.p_time.oversampling_factor);
+            this.d_w_values_head =  this.d_w_values_truncated(this.a_time_ii*this.p_time.oversampling_factor);
+            in_phi =                angle(this.d_z_values_head - this.d_z_values_head_prev);
+            out_phi =               angle(this.d_w_values_head - this.d_w_values_head_prev);
+            
+            this.h_z_plot_arrow =       this.drawArrow(this.h_sub1,[real(this.d_z_values_truncated(this.a_time_ii*this.p_time.oversampling_factor)),imag(this.d_z_values_truncated(this.a_time_ii*this.p_time.oversampling_factor))],in_phi,this.p_z_arrow_length);
+            this.h_w_plot_arrow =       this.drawArrow(this.h_sub2,[real(this.d_w_values_truncated(this.a_time_ii*this.p_time.oversampling_factor)),imag(this.d_w_values_truncated(this.a_time_ii*this.p_time.oversampling_factor))],out_phi,this.p_w_arrow_length);
+            
+        end
+        
+        function [] = draw_update_plot_titles(this)
+            % update the title
+            title(this.h_sub1,['Current value of D-Curve: ',num2str(this.d_z_values_head,'%.1f'),': M = ',num2str(abs(this.d_z_values_head),'%.2f'),' p = ',num2str(rad2deg(angle(this.d_z_values_head)),'%.2f'),'°']);
+            title(this.h_sub2,['Nyquist: G(',num2str(this.d_z_values_head,'%.1f'),') = ',num2str(this.d_w_values_head,'%.1f'),': M = ',num2str(abs(this.d_w_values_head),'%.2f'),' p = ',num2str(rad2deg(angle(this.d_w_values_head)),'%.2f'),'°']);
+        end
+        
+        function [] = draw_update_textboxes(this)
+            % update the zero- and pole contribution and the cumulative values
+            res_magnitude =                     '(';
+            res_phase =                         '';
+            
+            for z = 1:this.d_n_zeros
+                z_contribution =                this.d_z_values(this.a_time_ii) - this.d_zeros(z);
+                this.h_text_z_annot(z).String = ['Z',num2str(z),': (',num2str(this.d_z_values(this.a_time_ii),           '%.1f'),') - (',num2str(this.d_zeros(z),'%.1f'),'): M=',num2str(abs(z_contribution),'%.1f'),' p=',num2str(rad2deg(angle(z_contribution)),'%.1f'),'°'];
+                res_magnitude =                 [res_magnitude, '*',  num2str(abs(z_contribution),           '%.2f')];
+                res_phase =                     [res_phase,     '+',  num2str(rad2deg(angle(z_contribution)),'%.2f')];
+            end
+            
+            res_magnitude =                     [res_magnitude, ')/('];
+            
+            for p = 1:this.d_n_poles
+                p_contribution =                this.d_z_values(this.a_time_ii) - this.d_poles(p);
+                this.h_text_p_annot(p).String = ['P',num2str(p),': (',num2str(this.d_z_values(this.a_time_ii),           '%.1f'),') - (',num2str(this.d_poles(p),'%.1f'),'): M=',num2str(abs(p_contribution),'%.1f'),' p=',num2str(rad2deg(angle(p_contribution)),'%.1f'),'°'];            
+                res_magnitude =                 [res_magnitude, '*',  num2str(abs(p_contribution),           '%.2f')];
+                res_phase =                     [res_phase,     '-',  num2str(rad2deg(angle(p_contribution)),'%.2f')];
+            end
+            
+            res_magnitude =                     [res_magnitude,') = ',num2str(abs(this.d_w_values(this.a_time_ii)),      '%.3f')];
+            res_phase =                         [res_phase,    ') = ',num2str(rad2deg(angle(this.d_w_values(this.a_time_ii))),'%.3f')];
+
+            this.h_text_res_annot(1).String =   ['Magnitude: ',  res_magnitude];
+            this.h_text_res_annot(2).String =   ['Phase:       ',res_phase];
+        end
+        
+        function [] = draw_update_limits_and_plots(this)
+            subplot(this.h_sub1);
+            this.p_z_xlim = xlim;
+            this.p_z_ylim = ylim;
+
+            this.calc_truncated_z_values();
+            this.draw_update_full_z_plot();
+
+            subplot(this.h_sub2);
+            this.p_w_xlim = xlim;
+            this.p_w_ylim = ylim;
+
+            this.calc_truncated_w_values();
+            this.draw_update_full_w_plot();
+        end
+        
+        function [] = draw_update_full_z_plot(this)
+            set(this.h_z_plot_full,'XData',real(this.d_z_values_truncated),'YData',imag(this.d_z_values_truncated));
+        end
+        
+        function [] = draw_update_full_w_plot(this)
+            set(this.h_w_plot_full,'XData',real(this.d_w_values_truncated),'YData',imag(this.d_w_values_truncated));
+        end
+        
+        
+        % -----------------------------------------------------------------
+        % Callback methods
+        % -----------------------------------------------------------------
+        
+        function [] = cb_step(this,~,~,dir)
+            this.s_draw_busy = true;
+            tools.dbg('Stepping button.\n');
+            
+            this.a_time_ii = tools.iterator_modulo(this.a_time_ii + dir,this.p_time.n_time_steps);
+            this.d_z_values_head_prev =     this.d_z_values_head;
+            this.d_w_values_head_prev =     this.d_w_values_head;
+            this.draw_one_frame();
+            this.s_draw_busy = false;
+        end
+        
+        
+        function [] = cb_run(this,src,~,dir) % ignored parameters are src,evt
+            tools.dbg('Start requested.\n');
+            if this.s_data_ready
+                this.ui_sw_pause.State =    'off';
+                this.ui_btn_prev.Enable =   'off';
+                this.ui_btn_next.Enable =   'off';
+                for ii = 1:length(this.ui_run_switches)
+                    if ~isequal(src,this.ui_run_switches(ii))
+                        this.ui_run_switches(ii).State = 'off';
+                    end
+                end
+                this.a_direction =          dir;
+                this.s_draw_allowed =       true;
+                this.draw_run_continuous_animation();
+            else
+                warning('Data not ready!');
+                src.State =  'off';
+            end
+        end
+        
+        function [] = cb_pause(this,src,~)
+            tools.dbg('Pause requested.\n');
+            this.s_draw_allowed =   false;
+            src.State =             'on';
+            for ii = 1:length(this.ui_run_switches)
+                this.ui_run_switches(ii).State = 'off';
+            end
+            this.ui_btn_prev.Enable =   'on';
+            this.ui_btn_next.Enable =   'on';
+        end
+        
+        function cb_on_zoom(this,~,~)
+            if ~this.s_draw_busy
+                
+                this.draw_update_limits_and_plots();
+                this.calc_plot_z_arrow_length();
+                this.calc_plot_w_arrow_length();
+                this.draw_one_frame();
+            else
+                this.s_check_limits =   true;
+            end
+        end
+        
+        % -----------------------------------------------------------------
+        % utility functions
+        % -----------------------------------------------------------------
+        function arrowHandle = drawArrow(~,parent,x0,phi,l)
+            r = l*[cos(phi),sin(phi)];
+            
+            arrowHandle = annotation('Arrow');
+            set(arrowHandle,'parent',parent,'position',[x0-r,r]);
+        end
+        
+        function h_arrow = draw_text_arrow(~,x0,phi,l,text,color)
             r = l*[cos(phi),sin(phi)];
 
             h_arrow = annotation('TextArrow');
             set(h_arrow,'parent',gca,'position',[x0-r,r],'String',text,'Color',color);
         end
-        
-        function [] = calc_plot_axis_limits(this)
-            % TODO make sure that all props and data are set before calling
-            % this method
-            
-            assert(~any([isempty(this.d_zeros),...
-                         isempty(this.d_poles),...
-                         isempty(this.d_radii),...
-                         isempty(this.d_w_values),...
-                         isempty(this.p_z_auto_lims),...
-                         isempty(this.p_w_auto_lims)]));
-            
-            if this.p_z_auto_lims
-                % try to find optimal axis limits for the two plots, or let the user
-                % decide if he chose to set either 'auto_size' to false
-                
-                [this.p_z_xlim,this.p_z_ylim] = anp_plot_auto_zoom_z([this.d_zeros,this.d_poles],this.d_radii.R);
-            else
-               this.p_z_xlim = [(this.p_z_x0(1) - this.p_z_dims(1)/2),(this.p_z_x0(1) + this.p_z_dims(1)/2)];
-               this.p_z_ylim = [(this.p_z_x0(2) - this.p_z_dims(2)/2),(this.p_z_x0(2) + this.p_z_dims(2)/2)];
-            end
-            
-            if this.p_w_auto_lims
-                [this.p_w_xlim,this.p_w_ylim] = anp_plot_auto_zoom_w(this.d_w_values);
-            else
-               this.p_w_xlim = [(this.p_w_x0(1) - this.p_w_dims(1)/2),(this.p_w_x0(1) + this.p_w_dims(1)/2)];
-               this.p_w_ylim = [(this.p_w_x0(2) - this.p_w_dims(2)/2),(this.p_w_x0(2) + this.p_w_dims(2)/2)];
-            end
-        end
-        
-        function [] = calc_plot_z_arrow_length(this)
-            in_axis_width = diff(this.p_z_xlim);        % [1]
-            in_axis_height = diff(this.p_z_ylim);       % [1]
-            this.p_z_arrow_length = 0.04 * sqrt(in_axis_width^2 + in_axis_height^2);      % [1]
-        end
-        function [] = calc_plot_w_arrow_length(this)
-            % TODO handle very short arrow lengths better
-            out_axis_width = diff(this.p_w_xlim);     % [1]
-            out_axis_height = diff(this.p_w_ylim);    % [1]
-            this.p_w_arrow_length = 0.04 * sqrt(out_axis_width^2 + out_axis_height^2);   % [1]
-            if this.p_w_arrow_length < 0.05
-                this.p_w_arrow_length = 0.0001;
-            end
-        end
-        
-        function [] = calc_truncated_z_values(this)
-            this.d_z_values_truncated =  this.trunc(this.d_z_values,this.p_z_xlim,this.p_z_ylim);
-        end
-        function [] = calc_truncated_w_values(this)
-            this.d_w_values_truncated =  this.trunc(this.d_w_values,this.p_w_xlim,this.p_w_ylim);
-        end
+
         % this function clips the input values to the maximum value allowed inside
         % the plot
         function values_truncated = trunc(~,values,xlim,ylim)

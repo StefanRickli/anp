@@ -177,7 +177,7 @@ classdef anp_tf_processor < handle
         end
         
         function [] = calc_time_params(this)
-            this.p_time.N_time_steps =          120; % TODO include this in argument parsing, don't hardcode!
+            this.p_time.n_time_steps =          120; % TODO include this in argument parsing, don't hardcode!
             
             p = this.tf_poles;
             z = this.tf_zeros;
@@ -190,11 +190,11 @@ classdef anp_tf_processor < handle
             
             total_tf_rel_deg =                  p_neg_real - z_neg_real - p_pos_real + z_pos_real;
             this.p_time.oversampling_factor =   ceil(total_tf_rel_deg + this.p_weights.pole * p_pure_imag + this.p_weights.zero * z_pure_imag);
-            this.p_time.N_data_points =         this.p_time.N_time_steps * this.p_time.oversampling_factor;
+            this.p_time.n_data_points =         this.p_time.n_time_steps * this.p_time.oversampling_factor;
             
-            this.d_time_points =    linspace(0,1,this.p_time.N_time_steps+1);
+            this.d_time_points =    linspace(0,1,this.p_time.n_time_steps+1);
             this.d_time_points =    this.d_time_points(1:end-1);
-            this.d_data_points =    linspace(0,1,this.p_time.N_data_points);
+            this.d_data_points =    linspace(0,1,this.p_time.n_data_points);
         end
     end
     events
