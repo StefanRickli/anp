@@ -74,7 +74,7 @@ function interval_list = anp_in_fct_fill_interval_list_t_to_q(in_params,in_data)
             vb = (qb_next - qa_next)/(tb_next - ta_next);
             
             
-            [c_lorentz,gamma_star,r1,r2,c1,c2] = fit_mixed_exp_lorentz(ta,tb,qa,qb,va,vb);
+            [c_lorentz,gamma_star,r1,r2,c1,c2] = anp_in_fit_mixed_exp_lorentz(ta,tb,qa,qb,va,vb);
             qa_real = exp_Lorentz(ta,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
             qb_real = exp_Lorentz(tb,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
             interval_list(ii).density_fct_handle = @(t) map(exp_Lorentz(t,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2),qa_real,qb_real,qa,qb);
