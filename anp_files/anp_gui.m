@@ -478,13 +478,17 @@ classdef anp_gui < handle
         
         % draw the this.d_poles and this.d_zeros in the left (input function) subplot
         function [] = draw_init_z_plot_poles_zeros(this)
+            
+            
             for ii = 1:length(this.h_z_pz_objcts)
-                this.h_z_pz_objcts.delete();
+                this.h_z_pz_objcts{ii}.delete();
             end
-            this.h_z_pz_objcts = [];
+            this.h_z_pz_objcts = cell(1,this.d_n_poles + this.d_n_zeros);
             
             subplot(this.h_sub1);
+            plot_center = mean(xlim) + 1i*mean(ylim);
             
+            objct_ii = 1;
             for p_ii = 1:this.d_n_poles
                 current_pole = this.d_poles(p_ii);
                 pole_trunc = this.trunc(current_pole, this.p_z_xlim, this.p_z_ylim);
@@ -493,20 +497,22 @@ classdef anp_gui < handle
                     % means that it lies outside the current subplot limits.
                     % Instead of drawing just a circle at the border, plot an
                     % arrow, indicating that there's an outlier.
-                    this.h_z_pz_objcts = drawTextArrow([real(pole_trunc),imag(pole_trunc)],angle(current_pole),in_arrow_length,' x',[255 140 0]/255);
+                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow([real(pole_trunc),imag(pole_trunc)],angle(current_pole - plot_center),this.p_z_arrow_length,' x',[255 140 0]/255);
                 else
-                    this.h_z_pz_objcts = scatter(real(current_pole),imag(current_pole),60,'x','MarkerEdgeColor',[255 140 0]/255,'LineWidth',1.5);
+                    this.h_z_pz_objcts{objct_ii} = scatter(real(current_pole),imag(current_pole),60,'x','MarkerEdgeColor',[255 140 0]/255,'LineWidth',1.5);
                 end
+                objct_ii = objct_ii + 1;
             end
             
             for z_ii = 1:this.d_n_zeros
                 current_zero = this.d_zeros(z_ii);
                 zero_trunc = this.trunc(current_zero, this.p_z_xlim, this.p_z_ylim);
                 if current_zero ~= zero_trunc
-                    this.h_z_pz_objcts = drawTextArrow([real(zero_trunc),imag(zero_trunc)],angle(current_zero),in_arrow_length,' o',[95 158 160]/255);
+                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow([real(zero_trunc),imag(zero_trunc)],angle(current_zero - plot_center),this.p_z_arrow_length,' o',[95 158 160]/255);
                 else
-                    this.h_z_pz_objcts = scatter(real(current_zero),imag(current_zero),60,'o','MarkerEdgeColor',[70 130 180]/255,'LineWidth',1.5);
+                    this.h_z_pz_objcts{objct_ii} = scatter(real(current_zero),imag(current_zero),60,'o','MarkerEdgeColor',[70 130 180]/255,'LineWidth',1.5);
                 end
+                objct_ii = objct_ii + 1;
             end
         end
         
@@ -537,6 +543,7 @@ classdef anp_gui < handle
                         this.draw_update_limits_and_plots();
                         this.calc_plot_z_arrow_length();
                         this.calc_plot_w_arrow_length();
+                        this.draw_init_z_plot_poles_zeros();
                         this.draw_one_frame();
                         this.s_check_limits = false;
                     end
@@ -585,8 +592,8 @@ classdef anp_gui < handle
             in_phi =                angle(z_values_head - z_values_head_prev);
             out_phi =               angle(w_values_head - w_values_head_prev);
             
-            this.h_z_plot_arrow =       this.drawArrow(this.h_sub1,[real(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor)),imag(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor))],in_phi,this.p_z_arrow_length);
-            this.h_w_plot_arrow =       this.drawArrow(this.h_sub2,[real(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor)),imag(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor))],out_phi,this.p_w_arrow_length);
+            this.h_z_plot_arrow =       this.draw_arrow(this.h_sub1,[real(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor)),imag(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor))],in_phi,this.p_z_arrow_length);
+            this.h_w_plot_arrow =       this.draw_arrow(this.h_sub2,[real(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor)),imag(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor))],out_phi,this.p_w_arrow_length);
             
         end
         
@@ -601,7 +608,7 @@ classdef anp_gui < handle
         % update the zero- and pole contribution and the cumulative values
         function [] = draw_update_textboxes(this)
             res_magnitude =                     '(';
-            res_phase =                         '';
+            res_phase =                         '(';
             
             for z = 1:this.d_n_zeros
                 z_contribution =                this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_zeros(z);
@@ -620,7 +627,7 @@ classdef anp_gui < handle
             end
             
             res_magnitude =                     [res_magnitude,') = ',num2str(abs(this.d_w_values(this.a_time_ii * this.p_oversampling_factor)),      '%.3f')];
-            res_phase =                         [res_phase,    ') = ',num2str(rad2deg(angle(this.d_w_values(this.a_time_ii * this.p_oversampling_factor))),'%.3f')];
+            res_phase =                         [res_phase,    ') = ',num2str(rad2deg(angle(this.d_w_values(this.a_time_ii * this.p_oversampling_factor))),'%.3f'),'°'];
 
             this.h_text_res_annot(1).String =   ['Magnitude: ',  res_magnitude];
             this.h_text_res_annot(2).String =   ['Phase:       ',res_phase];
@@ -721,6 +728,7 @@ classdef anp_gui < handle
                 this.draw_update_limits_and_plots();
                 this.calc_plot_z_arrow_length();
                 this.calc_plot_w_arrow_length();
+                this.draw_init_z_plot_poles_zeros();
                 this.draw_one_frame();
             else
                 this.s_check_limits =   true;
@@ -730,7 +738,7 @@ classdef anp_gui < handle
         % -----------------------------------------------------------------
         % utility functions
         % -----------------------------------------------------------------
-        function arrowHandle = drawArrow(~,parent,x0,phi,l)
+        function arrowHandle = draw_arrow(~,parent,x0,phi,l)
             r = l*[cos(phi),sin(phi)];
             
             arrowHandle = annotation('Arrow');
@@ -751,8 +759,6 @@ classdef anp_gui < handle
             ylim = anp_stretch_centered(ylim,0.97);
             values_truncated = max(xlim(1), min(xlim(2), real(values))) ...
                           + 1i*max(ylim(1), min(ylim(2), imag(values)));
-            %values_truncated = max(xlim(1), min(xlim(2), real(values))) ...
-            %              + 1i*max(ylim(1), min(ylim(2), imag(values)));
         end
     end
 end

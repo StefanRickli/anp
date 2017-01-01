@@ -28,7 +28,7 @@ function z = evaluate_interval_t(interval_list,t)
     ii_interval = 1;
     z = zeros(size(t));
     for ii = 1:length(t)
-        while t(ii) > interval_list(ii_interval).t(2)
+        while (ii_interval + 1 <= length(interval_list)) && (t(ii) > interval_list(ii_interval).t(2))
             ii_interval = ii_interval + 1;
         end
         T = interval_list(ii_interval).density_fct_handle(t(ii));

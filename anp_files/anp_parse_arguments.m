@@ -36,10 +36,10 @@ function checked_args = anp_parse_arguments(varargin)
     addParameter(ip,'duration',     default_duration,       @isScalarNumber);
     addParameter(ip,'FPS',          default_FPS,            @isScalarInteger);
     addParameter(ip,'trail_length', default_trail_length,   @checkTrail);
-    addParameter(ip,'z_plot_x0',      default_z_plot_x0,        @isVectorNumber);
-    addParameter(ip,'z_plot_dims',    default_z_plot_dims,      @isVectorNumber);
-    addParameter(ip,'w_plot_x0',     default_w_plot_x0,       @isVectorNumber);
-    addParameter(ip,'w_plot_dims',   default_w_plot_dims,     @isVectorNumber);
+    addParameter(ip,'left_x0',      default_z_plot_x0,        @isVectorNumber);
+    addParameter(ip,'left_dims',    default_z_plot_dims,      @isVectorNumber);
+    addParameter(ip,'right_x0',     default_w_plot_x0,       @isVectorNumber);
+    addParameter(ip,'right_dims',   default_w_plot_dims,     @isVectorNumber);
     addParameter(ip,'plot_size',    default_plot_size,      @isScalarInteger);
     addParameter(ip,'filename',     default_filename,       @ischar);
     
@@ -102,19 +102,19 @@ function checked_args = anp_parse_arguments(varargin)
     checked_args.trail_length =     ip.Results.trail_length;
     
     % parse the parameters for the z-plot (left)
-    if ~isequal(ip.Results.z_plot_x0,[0;0]) || ~isequal(ip.Results.z_plot_dims,[5;5])
+    if ~isequal(ip.Results.left_x0,[0;0]) || ~isequal(ip.Results.left_dims,[5;5])
         checked_args.z_plot_auto_lims = false;        % values below are only active if auto = false
 
-        if ~isempty(ip.Results.z_plot_x0) && length(ip.Results.z_plot_x0(1,:)) > 1
-            checked_args.z_plot_x0 =    ip.Results.z_plot_x0';
+        if ~isempty(ip.Results.left_x0) && length(ip.Results.left_x0(1,:)) > 1
+            checked_args.z_plot_x0 =    ip.Results.left_x0';
         else
-            checked_args.z_plot_x0 =    ip.Results.z_plot_x0;
+            checked_args.z_plot_x0 =    ip.Results.left_x0;
         end
         
-        if ~isempty(ip.Results.z_plot_dims) && length(ip.Results.z_plot_dims(1,:)) > 1
-            checked_args.z_plot_dims =  ip.Results.z_plot_dims';
+        if ~isempty(ip.Results.left_dims) && length(ip.Results.left_dims(1,:)) > 1
+            checked_args.z_plot_dims =  ip.Results.left_dims';
         else
-            checked_args.z_plot_dims =  ip.Results.z_plot_dims;
+            checked_args.z_plot_dims =  ip.Results.left_dims;
         end
     else
         checked_args.z_plot_auto_lims = true;
@@ -123,19 +123,19 @@ function checked_args = anp_parse_arguments(varargin)
     end
     
     % parse the parameters for the w-plot (right)
-    if ~isequal(ip.Results.w_plot_x0,[0;0]) || ~isequal(ip.Results.w_plot_dims,[2;2])
+    if ~isequal(ip.Results.right_x0,[0;0]) || ~isequal(ip.Results.right_dims,[2;2])
         checked_args.w_plot_auto_lims = false;       % values below are only active if auto = false
         
-        if ~isempty(ip.Results.w_plot_x0) && length(ip.Results.w_plot_x0(1,:)) > 1
-            checked_args.w_plot_x0 =   ip.Results.w_plot_x0';
+        if ~isempty(ip.Results.right_x0) && length(ip.Results.right_x0(1,:)) > 1
+            checked_args.w_plot_x0 =   ip.Results.right_x0';
         else
-            checked_args.w_plot_x0 =   ip.Results.w_plot_x0;
+            checked_args.w_plot_x0 =   ip.Results.right_x0;
         end
         
-        if ~isempty(ip.Results.w_plot_dims) && length(ip.Results.w_plot_dims(1,:)) > 1        
-            checked_args.w_plot_dims = ip.Results.w_plot_dims';
+        if ~isempty(ip.Results.right_dims) && length(ip.Results.right_dims(1,:)) > 1        
+            checked_args.w_plot_dims = ip.Results.right_dims';
         else
-            checked_args.w_plot_dims = ip.Results.w_plot_dims;
+            checked_args.w_plot_dims = ip.Results.right_dims;
         end
     else
         checked_args.w_plot_auto_lims = true;

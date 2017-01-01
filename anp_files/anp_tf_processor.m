@@ -241,7 +241,11 @@ classdef anp_tf_processor < handle
                 z_pure_imag =   sum(abs(real(z)) < tol);
             
             total_tf_rel_deg =                  abs(p_neg_real - z_neg_real - p_pos_real + z_pos_real);
-            this.p_time.oversampling_factor =   max(2,ceil(total_tf_rel_deg + this.p_weights.pole * p_pure_imag + this.p_weights.zero * z_pure_imag + floor(this.p_radii.R/10)));
+            
+            pz = [p,z];
+            pz_not_on_im_axis = pz(abs(real(pz)) >= 100*eps);
+            pz_min_abs = min(abs([1,pz_not_on_im_axis]));
+            this.p_time.oversampling_factor =   max(2,ceil(total_tf_rel_deg + this.p_weights.pole * p_pure_imag + this.p_weights.zero * z_pure_imag + floor(this.p_radii.R/10) - floor(20*log10(pz_min_abs))));
             this.p_time.n_data_points =         this.p_time.n_time_steps * this.p_time.oversampling_factor;
             
             this.d_time_points =    linspace(0,1,this.p_time.n_time_steps+1);

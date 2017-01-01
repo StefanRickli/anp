@@ -5,7 +5,7 @@
 %   Author: Stefan Rickli, ricklis [at] student.ethz.ch
 %           https://blogs.ethz.ch/ricklis
 %
-%   Version 5.0, 2017-01-01
+%   Version 5.1, 2017-01-01
 %   
 %   
 %   What does it do?:
