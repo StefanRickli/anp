@@ -164,7 +164,7 @@ function checked_args = anp_parse_arguments(varargin)
     checked_args.separations.pole_max = 1/4;                % [1] absolute
     checked_args.separations.zero_max = 1/8;                % [1] absolute
     checked_args.separations.margin =   0.05;               % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
-    checked_args.weights.pole =         1;
+    checked_args.weights.pole =         2;
     checked_args.weights.zero =         1/3;
     
     % ---------------------------------------------------------------------

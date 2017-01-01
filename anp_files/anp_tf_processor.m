@@ -93,7 +93,7 @@ classdef anp_tf_processor < handle
             
             if ~isempty(this.p_radii) && new_radii.auto_main_R
                 assert(~isempty(this.p_angles) && (length(this.tf_poles) - length(this.tf_zeros) >= 0));
-                possibly_new_R = anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R);
+                possibly_new_R = anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_separations.pole_max,this.p_separations.zero_max));
             else
                 possibly_new_R = NaN;
             end
