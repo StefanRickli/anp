@@ -6,8 +6,9 @@ function poles_zeros_sorted = anp_in_fct_sort_pz(in_params)
     zeros = in_params.zeros;
     
     % first find all the pure imaginary poles and zeros
-    poles = poles(real(poles) == 0);
-    zeros = zeros(real(zeros) == 0);
+    tol =   100*eps;
+    poles = poles(abs(real(poles)) < tol);
+    zeros = zeros(abs(real(zeros)) < tol);
     
     % strip them off the imaginary unit
     poles = imag(poles);

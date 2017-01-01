@@ -9,8 +9,8 @@ classdef tools
         end
         
         function dbg(varargin)
-            global debug
-            if debug
+            global debug_text
+            if debug_text
                 fprintf(varargin{:});
             end
         end

@@ -1,3 +1,5 @@
+% TODO duration and FPS are deprecated
+
 function checked_args = anp_parse_arguments(varargin)
     
     %% Globals
@@ -159,18 +161,17 @@ function checked_args = anp_parse_arguments(varargin)
     checked_args.angles.crop_inf_transition =  7;                  % [°], roundoff-parameter of the D-curve, usually not necessary to change
     checked_args.angles.min_angle_contribution_at_R = 65;          % [°]
     checked_args.angles.detour =        45;                 % [°]
-    checked_args.separation_pole_max =  1/4;                % [1] absolute
-    checked_args.separation_zero_max =  1/8;                % [1] absolute
-    checked_args.separation_margin =    0.05;               % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
+    checked_args.separations.pole_max = 1/4;                % [1] absolute
+    checked_args.separations.zero_max = 1/8;                % [1] absolute
+    checked_args.separations.margin =   0.05;               % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
     checked_args.weights.pole =         1;
     checked_args.weights.zero =         1/3;
     
     % ---------------------------------------------------------------------
     % Time and spatial resolution parameters
     % ---------------------------------------------------------------------
-    checked_args.resolution_factor = 3;
-    checked_args.duration =         ip.Results.duration;
-    checked_args.FPS =              ip.Results.FPS;
+    checked_args.time_params.n_time_steps = 120;
+    checked_args.time_params.resolution_factor = 3;
     
     % ---------------------------------------------------------------------
     % Video export parameters
