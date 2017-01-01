@@ -1,8 +1,8 @@
 function [c_lorentz,gamma_star,r1,r2,c1,c2] = anp_in_fit_mixed_exp_lorentz(a,b,ya,yb,va,vb)
-    if any(strcmp(who('global'),'debug'))
-        global debug;
+    if any(strcmp(who('global'),'debug_graphics'))
+        global debug_graphics;
     else
-        debug = false;
+        debug_graphics = false;
     end
     
     %% init
@@ -39,7 +39,7 @@ function [c_lorentz,gamma_star,r1,r2,c1,c2] = anp_in_fit_mixed_exp_lorentz(a,b,y
     c2 = vb / (exp( r2*b) - exp( r2*a));
     
     %% Debug output
-    if debug
+    if debug_graphics
         close all;
         % Upper case function names mean the antiderivatives of their lower
         % case siblings.
@@ -112,12 +112,15 @@ function gamma_star = find_gamma_star(a,b)
     dx = b-a;
     h = @(gamma) 2*atan(dx/(2*gamma))  -  (4*dx*gamma) / (dx^2 + 4*gamma^2);
     
-    gamma_star = fsolve(h,0.1);
+    options = optimset('Display','off');
+    gamma_star = fsolve(h,0.1,options);
 end
 
 function r1 = find_r1(a,b,delta_y,va,vb,alpha)
     delta_x = b-a;
     G = @(t) va*(1/t - delta_x/(exp(t*delta_x)-1))  +  vb*(1/(alpha*t) - delta_x/(exp(alpha*t*delta_x)-1)) - delta_y;
-    r1 = fsolve(G,1);
+    
+    options = optimset('Display','off');
+    r1 = fsolve(G,1,options);
 end
 

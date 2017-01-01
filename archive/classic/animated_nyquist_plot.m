@@ -90,7 +90,7 @@
 %
 % -------------------------------------------------------------------------
 
-function [] = animated_nyquist_plot_new(varargin)
+function [] = animated_nyquist_plot(varargin)
     ip = inputParser;
     
     global arg_types keywords;
@@ -333,9 +333,7 @@ function [] = main(main_params)
     in_args.separation_zero_max = 1/8;
     in_args.separation_margin = 0.05;               % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
     
-    tic
     in_values = anp_in_fct_init_and_evaluate(t,in_args);
-    toc
     out_values = g(in_values);
     
     %% calculation of the plot(s)

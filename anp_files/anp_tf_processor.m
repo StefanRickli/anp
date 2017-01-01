@@ -74,7 +74,7 @@ classdef anp_tf_processor < handle
                 this.tf_obj =   new_tf;
                 this.tf_poles = roots(new_tf.Denominator{1})';
                 this.tf_zeros = roots(new_tf.Numerator{1})';
-                this.tf_G =     @(z) polyval(poly(this.tf_zeros),z)./polyval(poly(this.tf_poles),z);
+                this.tf_G =     @(z) polyval(new_tf.Numerator{1},z)./polyval(new_tf.Denominator{1},z);
                 
                 dirty =         true;
                 if ~this.g_wait
@@ -164,6 +164,7 @@ classdef anp_tf_processor < handle
         
         % put the transfer function to the text output
         function [] = echo_tf(this)
+            fprintf('Plotting the ');
             transfer_function = this.tf_obj %#ok<NOPRT,NASGU>
             fprintf('with\n');
             poles = this.tf_poles           %#ok<NOPRT,NASGU>
@@ -192,7 +193,6 @@ classdef anp_tf_processor < handle
         
         function delete(this)
             tools.dbg('anp_tf_processor[delete]:\t%s: Deletion requested.\n',this.g_uid);
-            fprintf('anp_tf_processor[delete]:\t%s: Deletion requested (fprintf).\n',this.g_uid);
         end
     end
     methods(Access = private)
@@ -203,7 +203,7 @@ classdef anp_tf_processor < handle
                 if isempty([this.tf_poles,this.tf_zeros])
                     this.p_radii.R = 5;
                 else
-                    this.p_radii.R =    anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R);
+                    this.p_radii.R =    anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_separations.pole_max,this.p_separations.zero_max));
                 end
             end
             

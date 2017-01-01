@@ -1,11 +1,5 @@
 function interval_list = anp_in_fct_fill_interval_list_t_to_q(in_params,in_data)
     
-    if any(strcmp(who('global'),'debug'))
-        global debug;
-    else
-        debug = false;
-    end
-
     poles =         in_params.poles;
     zeros =         in_params.zeros;
     im_pz_sorted =  in_data.im_pz_sorted;

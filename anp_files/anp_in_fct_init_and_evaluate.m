@@ -1,8 +1,8 @@
 function z = anp_in_fct_init_and_evaluate(t,in_params)
-    if any(strcmp(who('global'),'debug'))
-        global debug;
+    if any(strcmp(who('global'),'debug_graphics'))
+        global debug_graphics;
     else
-        debug = false;
+        debug_graphics = false;
     end
     
     in_data.im_pz_sorted = anp_in_fct_sort_pz(in_params);
@@ -17,7 +17,7 @@ function z = anp_in_fct_init_and_evaluate(t,in_params)
     
     z = evaluate_interval_t(in_data.interval_list,t);
     
-    if debug
+    if debug_graphics
         figure;
         scatter(real(z),imag(z));
         axis equal;
