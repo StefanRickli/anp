@@ -386,6 +386,7 @@ classdef anp_gui < handle
         
         function [] = draw_init_gui_statics(this)
             % TODO 
+            figure(this.h_fig);
             this.h_fig.Position =   this.w_fig_position;
             
             this.h_sub1.Position =  this.w_sub1_position;
@@ -394,8 +395,9 @@ classdef anp_gui < handle
         
         % prepare the annotations below the plots and remember their handles
         function [] = draw_init_gui_text_objects(this)
+            figure(this.h_fig);
+
             % parameters get set in 'calc_gui_positions'
-            
             for ii = 1:length(this.h_text_z_annot)
                 this.h_text_z_annot(ii).delete
             end
@@ -421,6 +423,7 @@ classdef anp_gui < handle
         end
         
         function [] = draw_init_plot_axes(this)
+            figure(this.h_fig);
             % TODO maybe separate into two separate functions for z and w
             % plot
             
@@ -449,6 +452,8 @@ classdef anp_gui < handle
         end
         
         function [] = draw_init_line_plots(this)
+            figure(this.h_fig);
+
             % plot the full input- and output curves with some transparency
             this.h_z_plot_full =            plot(this.h_sub1,0,0);
             set(this.h_z_plot_full,'Color',[0.05 0.4970 0.7410]);
@@ -467,6 +472,8 @@ classdef anp_gui < handle
         end
         
         function [] = draw_init_plot_arrows(this)
+            figure(this.h_fig);
+
             % prepare the arrows annotations that mark the value of the head of the
             % trail at the current frame and remember their handle for later use
             subplot(this.h_sub1);
@@ -478,7 +485,7 @@ classdef anp_gui < handle
         
         % draw the this.d_poles and this.d_zeros in the left (input function) subplot
         function [] = draw_init_z_plot_poles_zeros(this)
-            
+            figure(this.h_fig);            
             
             for ii = 1:length(this.h_z_pz_objcts)
                 this.h_z_pz_objcts{ii}.delete();
@@ -535,6 +542,8 @@ classdef anp_gui < handle
         % -----------------------------------------------------------------
         function [] = draw_run_continuous_animation(this)
             try
+                figure(this.h_fig);
+
                 this.s_draw_busy = true;
                 tools.dbg('anp_gui[draw_run_continuous_animation]:\tStarting animation\n');
 

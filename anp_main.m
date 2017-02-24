@@ -90,8 +90,9 @@
 
 function [] = anp_main(varargin)
     
-    global debug_graphics debug_text;
-    debug_graphics = false;
+    global debug_graphics debug_graphics_interpolation debug_text;
+    debug_graphics = true;
+    debug_graphics_interpolation = false;
     debug_text = false;
 
     addpath('anp_files');

@@ -1,8 +1,8 @@
 function [c_lorentz,gamma_star,r1,r2,c1,c2] = anp_in_fit_mixed_exp_lorentz(a,b,ya,yb,va,vb)
-    if any(strcmp(who('global'),'debug_graphics'))
-        global debug_graphics;
+    if any(strcmp(who('global'),'debug_graphics_interpolation'))
+        global debug_graphics_interpolation;
     else
-        debug_graphics = false;
+        debug_graphics_interpolation = false;
     end
     
     %% init
@@ -39,7 +39,7 @@ function [c_lorentz,gamma_star,r1,r2,c1,c2] = anp_in_fit_mixed_exp_lorentz(a,b,y
     c2 = vb / (exp( r2*b) - exp( r2*a));
     
     %% Debug output
-    if debug_graphics
+    if debug_graphics_interpolation
         close all;
         % Upper case function names mean the antiderivatives of their lower
         % case siblings.
