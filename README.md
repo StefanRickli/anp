@@ -1,6 +1,6 @@
 README.md template from https://gist.github.com/PurpleBooth/109311bb0361f32d87a2
 
-# anp
+# ANP
 The acronym ANP stands for Animated Nyquist Plot.
 
 It draws display rational transfer functions as a customizable Nyquist plot. The GUI shows the contribution of every pole and zero to the plots magnitude and phase. It allows the user to gain deeper knowledge about what happens in the origin by choosing how large the radius of the D-contour should be.
@@ -76,14 +76,14 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
 
 ## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Stefan Rickli** - *Initial idea and versions of ANP* [StefanRickli](https://github.com/StefanRickli and https://blogs.ethz.ch/ricklis)
+* **Billie Thompson** - *Template for the README.md* - [PurpleBooth](https://github.com/PurpleBooth)
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+I have not yet decided on the type of licence I'm releasing this project under, since I'm fairly new to software development and it's my first serious open project.
 
 ## Acknowledgments
 
