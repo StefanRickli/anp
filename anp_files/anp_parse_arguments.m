@@ -1,4 +1,5 @@
-% TODO duration and FPS are deprecated
+% TODO duration, FPS, noplayer and export are deprecated
+% 2017-02-24: reuse them later
 
 function checked_args = anp_parse_arguments(varargin)
     
@@ -17,14 +18,14 @@ function checked_args = anp_parse_arguments(varargin)
     default_arg4            = NaN;
     
     default_R               = NaN;
-    default_duration        = 20;               % length of animation in movie player, affects spatial resolution, [s]
-    default_FPS             = 6;               % speed of animation in movie player, affects spatial resolution, [frames/s]
-    default_trail_length    = 0.15;             % how long should the trail be?, [0<trail_length<1]
-    default_z_plot_x0         = [0;0];            % center of left plot
-    default_z_plot_dims       = [5;5];            % width and heigth of left plot
-    default_w_plot_x0        = [0;0];            % center of right plot
-    default_w_plot_dims      = [2;2];            % width and heigth of right plot
-    default_plot_size       = 500;              % pixel
+    default_duration        = 20;       % length of animation in movie player, affects spatial resolution, [s]
+    default_FPS             = 6;        % speed of animation in movie player, affects spatial resolution, [frames/s]
+    default_trail_length    = 0.15;     % how long should the trail be?, [0<trail_length<1]
+    default_z_plot_x0       = [0;0];    % center of left plot
+    default_z_plot_dims     = [5;5];    % width and heigth of left plot
+    default_w_plot_x0       = [0;0];    % center of right plot
+    default_w_plot_dims     = [2;2];    % width and heigth of right plot
+    default_plot_size       = 500;      % [pixel]
     default_filename        = 'animated_nyquist_plot_export';
     
     addOptional(ip,'arg1',          default_arg1,           @checkOptArg);
@@ -36,19 +37,21 @@ function checked_args = anp_parse_arguments(varargin)
     addParameter(ip,'duration',     default_duration,       @isScalarNumber);
     addParameter(ip,'FPS',          default_FPS,            @isScalarInteger);
     addParameter(ip,'trail_length', default_trail_length,   @checkTrail);
-    addParameter(ip,'left_x0',      default_z_plot_x0,        @isVectorNumber);
-    addParameter(ip,'left_dims',    default_z_plot_dims,      @isVectorNumber);
-    addParameter(ip,'right_x0',     default_w_plot_x0,       @isVectorNumber);
-    addParameter(ip,'right_dims',   default_w_plot_dims,     @isVectorNumber);
+    addParameter(ip,'left_x0',      default_z_plot_x0,      @isVectorNumber);
+    addParameter(ip,'left_dims',    default_z_plot_dims,    @isVectorNumber);
+    addParameter(ip,'right_x0',     default_w_plot_x0,      @isVectorNumber);
+    addParameter(ip,'right_dims',   default_w_plot_dims,    @isVectorNumber);
     addParameter(ip,'plot_size',    default_plot_size,      @isScalarInteger);
     addParameter(ip,'filename',     default_filename,       @ischar);
     
+    % do the first round of syntax checking, the parsers also build a
+    % string, 'anp_arg_types', according to the types of arguments encountered
     parse(ip,varargin{:});
     
     % for the optional arguments we require
-    % either (neither a transfer function nor poles/zeros), followed by zero, one or two anp_keywords
-    % OR a transfer function, followed by zero, one or two anp_keywords
-    % OR two vectors containing the poles and zeros, followed by zero, one or two anp_keywords
+    % - either (neither a transfer function nor poles/zeros), followed by zero, one or two anp_keywords
+    % - OR a transfer function, followed by zero, one or two anp_keywords
+    % - OR two vectors containing the poles and zeros, followed by zero, one or two anp_keywords
     if isempty(regexp(anp_arg_types,'^(t|v{2})?k{0,2}$','emptymatch'))
         error('Check type and order of optional arguments.');
     end
@@ -59,26 +62,35 @@ function checked_args = anp_parse_arguments(varargin)
     % Transfer function parameters
     % ---------------------------------------------------------------------
     
+    % unused yet
     checked_args.tf_delay =         0;
+    
     % parse the poles, zeros and construct the tf-object if necessary
     if ~isempty(regexp(anp_arg_types,'^k{0,2}$','emptymatch','once'))
-        % if no poles and zeros have been specified: load demo
+        % if neither a [t]ransfer function nor [v]ectors of poles and
+        % zeros have been specified: use some standard values for
+        % demonstration purposes
+        
         fprintf('\nNo transfer function specified. Showing default example.\n\n');
         fprintf('Usage:\n');
         fprintf('animated_nyquist_plot(tf)\t\t\t\twhere ''tf'' is a transfer function object by Matlab command ''tf''\n');
         fprintf('animated_nyquist_plot([zeros],[poles])\twhere ''zeros'' and ''poles'' are 2D row vectors with roots of [num] and [denum]\n');
         fprintf('animated_nyquist_plot(__,Name,Value)\tsee documentation\n');
         
-        tf_poles =     [-3,-2,-1+1i,-1-1i];
-        tf_zeros =     [-0.7];
+        tf_poles =                  [-3,-2,-1+1i,-1-1i];
+        tf_zeros =                  -0.7;
         checked_args.tf_obj =       tf(poly(tf_zeros),poly(tf_poles));
         
     elseif ~isempty(regexp(anp_arg_types,'^tk{0,2}$', 'once'))
-        % we only take the first transfer function if there multiple have
-        % been provided
+        % [t]ransfer function
+        % we only take the first transfer function if an object with 
+        % multiple transfer function has been provided
         checked_args.tf_obj =       ip.Results.arg1;
         
     elseif ~isempty(regexp(anp_arg_types,'^vvk{0,2}$', 'once'))
+        % two [v]ectors, containing lists of pole and zero locations
+        
+        % transpose to row vector if necessary
         if ~isempty(ip.Results.arg2) && length(ip.Results.arg2(:,1)) > 1
             tf_poles = ip.Results.arg2';
         else
@@ -99,15 +111,21 @@ function checked_args = anp_parse_arguments(varargin)
     % ---------------------------------------------------------------------
     % Plot parameters
     % ---------------------------------------------------------------------
-    checked_args.trail_length =     ip.Results.trail_length;
+    checked_args.trail_length =         ip.Results.trail_length;
     
     % parse the parameters for the z-plot (left)
-    if ~isequal(ip.Results.left_x0,[0;0]) || ~isequal(ip.Results.left_dims,[5;5])
-        checked_args.z_plot_auto_lims = false;        % values below are only active if auto = false
-
+    % the GUI will choose the parameters automatically
+    % if z_plot_auto_lims = true
+    if ~isequal(ip.Results.left_x0,default_z_plot_x0) || ~isequal(ip.Results.left_dims,default_z_plot_dims)
+        checked_args.z_plot_auto_lims = false;
+        
         if ~isempty(ip.Results.left_x0) && length(ip.Results.left_x0(1,:)) > 1
+            % argument has been given but as column vector, use transposed
             checked_args.z_plot_x0 =    ip.Results.left_x0';
         else
+            % either 'ip.Results.left_x0' is initialized with the default
+            % value 'default_z_plot_x0' if no argument has been given
+            % OR it contains the argument by the user
             checked_args.z_plot_x0 =    ip.Results.left_x0;
         end
         
@@ -122,9 +140,10 @@ function checked_args = anp_parse_arguments(varargin)
         checked_args.z_plot_dims =      [];
     end
     
-    % parse the parameters for the w-plot (right)
-    if ~isequal(ip.Results.right_x0,[0;0]) || ~isequal(ip.Results.right_dims,[2;2])
-        checked_args.w_plot_auto_lims = false;       % values below are only active if auto = false
+    % parse the parameters for the w-plot (right), see documentation for
+    % z-plot
+    if ~isequal(ip.Results.right_x0,default_w_plot_x0) || ~isequal(ip.Results.right_dims,default_w_plot_dims)
+        checked_args.w_plot_auto_lims = false;
         
         if ~isempty(ip.Results.right_x0) && length(ip.Results.right_x0(1,:)) > 1
             checked_args.w_plot_x0 =   ip.Results.right_x0';
@@ -146,8 +165,8 @@ function checked_args = anp_parse_arguments(varargin)
     % ---------------------------------------------------------------------
     % Figure parameters
     % ---------------------------------------------------------------------
-    checked_args.plot_size =         ip.Results.plot_size;
-    checked_args.border =           20;                    % pixel   
+    checked_args.plot_size =            ip.Results.plot_size;
+    checked_args.border =               20;                 % pixel   
     
     % ---------------------------------------------------------------------
     % Input-function parameters
@@ -158,27 +177,27 @@ function checked_args = anp_parse_arguments(varargin)
         checked_args.radii.auto_main_R = false;
     end
     checked_args.radii.R =              ip.Results.R;
-    checked_args.angles.crop_inf_transition =  7;                  % [°], roundoff-parameter of the D-curve, usually not necessary to change
-    checked_args.angles.min_angle_contribution_at_R = 65;          % [°]
+    checked_args.angles.crop_inf_transition =           7;  % [°], roundoff-parameter of the D-curve, usually not necessary to change
+    checked_args.angles.min_angle_contribution_at_R =   65; % [°]
     checked_args.angles.detour =        45;                 % [°]
     checked_args.separations.pole_max = 1/4;                % [1] absolute
     checked_args.separations.zero_max = 1/8;                % [1] absolute
     checked_args.separations.margin =   0.05;               % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
-    checked_args.weights.pole =         2;
-    checked_args.weights.zero =         1/3;
+    checked_args.weights.pole =         2;                  % if a pole is on the Im-axis, how many spatial points should it be given in the nyquist plot?
+    checked_args.weights.zero =         1/3;                % same as above
     
     % ---------------------------------------------------------------------
     % Time and spatial resolution parameters
     % ---------------------------------------------------------------------
-    checked_args.time_params.n_time_steps = 120;
-    checked_args.time_params.resolution_factor = 3;
+    checked_args.time_params.n_time_steps =         120;    % this is only the base (minimal) value
+    checked_args.time_params.resolution_factor =    3;      % TODO deprecated, unused: remove in future version
     
     % ---------------------------------------------------------------------
-    % Video export parameters
+    % Video export parameters, DEPRECATED
     % ---------------------------------------------------------------------
-    checked_args.noPlayer =         anp_keywords{1,2};
-    checked_args.export =           anp_keywords{2,2};
-    checked_args.filename =         ip.Results.filename;
+    checked_args.noPlayer =     anp_keywords{1,2};          % TODO deprecated, unused
+    checked_args.export =       anp_keywords{2,2};          % TODO deprecated, unused
+    checked_args.filename =     ip.Results.filename;        % TODO deprecated, unused
     
 end
 
@@ -186,7 +205,7 @@ end
 function res = checkOptArg(x)
     global anp_arg_types
     
-    % simply tries to find out the type of argument that has been provided
+    % simply try to find out the type of argument that has been provided
     % do a check for sanity later
     n = length(anp_arg_types);
     if isa(x,'tf')

@@ -86,6 +86,14 @@
 %     denominator produce plots with very small amplitudes which 
 %     lead Matlab to draw arrow-annotations incorrectly.
 %
+%
+%   Ideas:
+%   ------
+%
+%   - An earlier version had the capability of exporting videos. I'd like
+%     to reestablish this possibility. Will probably do by adding buttons
+%     to capture frames and later on export a video file from the frame
+%     buffer.
 % -------------------------------------------------------------------------
 
 function [] = anp_main(varargin)
@@ -114,13 +122,18 @@ function [] = anp_main(varargin)
             fprintf('Reusing old TF processor instance\n');
         end
         
+        % pass the handles to the GUI and tf_processor in the args
         args.gui_handle =           h_gui;
         args.processor_handle =     h_tf_processor;
+        
         args.tf_poles =             roots(args.tf_obj.Numerator{1})';
         args.tf_zeros =             roots(args.tf_obj.Denominator{1})';
         
+        % this kicks off the calculation of the data that the
+        % GUI object then displays
         h_tf_processor.init_params(args);
         
+        % let the GUI read the relevant parameters from the arguments
         h_gui.init_params(args);
         
         h_gui.init_visuals();
