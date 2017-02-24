@@ -76,7 +76,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
 
 ## Authors
-* **Stefan Rickli** - *Initial idea and versions of ANP* [StefanRickli](https://github.com/StefanRickli and https://blogs.ethz.ch/ricklis)
+* **Stefan Rickli** - *Initial idea and versions of ANP* [StefanRickli](https://blogs.ethz.ch/ricklis)
 * **Billie Thompson** - *Template for the README.md* - [PurpleBooth](https://github.com/PurpleBooth)
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
