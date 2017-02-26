@@ -1,41 +1,40 @@
 % as in p.41
-% last line: 516
 classdef anp_gui < handle
     properties(SetAccess = private)
         % g: general properties
-        g_uid               % Java String
-        g_legacy            string
+        g_uid               % Java String       uniqe identifier for every object instance
+        g_legacy            string              % store Matlabs version here
         
         % s: state
-        s_data_ready        logical
-        s_draw_allowed      logical
-        s_draw_busy         logical
-        s_check_limits      logical
+        s_data_ready        logical             % do we have everything together before we can draw?
+        s_draw_allowed      logical             % set this to false before changing data or parameters, it forces the draw-function to stop once it's done with an iteration
+        s_draw_busy         logical             % we're updating the plot at the moment, parameter or data change not allowed
+        s_check_limits      logical             % prompt the draw-function to update axis limit related data before it makes the next iteration
         
         % h: handles
-        h_anp_tf_processor
+        h_anp_tf_processor                      % remember the handle to the calculation object
         
-        h_fig               matlab.ui.Figure
-        h_sub1              matlab.graphics.axis.Axes
-        h_sub2              matlab.graphics.axis.Axes
-        h_zoom              matlab.graphics.interaction.internal.zoom
-        h_pan               matlab.graphics.interaction.internal.pan
+        h_fig               matlab.ui.Figure                            % main figure handle
+        h_sub1              matlab.graphics.axis.Axes                   % left (z-)plot
+        h_sub2              matlab.graphics.axis.Axes                   % right (w-)plot
+        h_zoom              matlab.graphics.interaction.internal.zoom   % oject needed for zooming related callbacks
+        h_pan               matlab.graphics.interaction.internal.pan    % oject needed for panning related callbacks
         
-        h_text_z_annot      matlab.graphics.shape.TextBox
-        h_text_p_annot      matlab.graphics.shape.TextBox
-        h_text_res_annot    matlab.graphics.shape.TextBox
+        h_text_p_annot      matlab.graphics.shape.TextBox           % handles to the textboxes of the pole-contributions
+        h_text_z_annot      matlab.graphics.shape.TextBox           % handles to the textboxes of the zero-contributions
+        h_text_res_annot    matlab.graphics.shape.TextBox           % handles to the textboxes of the result
         
-        h_z_plot_full       matlab.graphics.chart.primitive.Line
-        h_z_plot_trail      matlab.graphics.chart.primitive.Line
-        h_z_plot_arrow      matlab.graphics.shape.Arrow
-        h_z_pz_objcts       % array of handles with possibly mixed type
+        h_z_plot_full       matlab.graphics.chart.primitive.Line    % left plot full D-shape
+        h_z_plot_trail      matlab.graphics.chart.primitive.Line    % left plot yellow/orange trail of arrow
+        h_z_plot_arrow      matlab.graphics.shape.Arrow             % left plot arrow
+        h_z_pz_objcts       % annotations of type crosses, circles and arrows with text
         
         h_w_plot_full       matlab.graphics.chart.primitive.Line
         h_w_plot_trail      matlab.graphics.chart.primitive.Line
         h_w_plot_arrow      matlab.graphics.shape.Arrow
                 
         % ui: GUI elements
-        ui_icons            double
+        ui_icons            double                          % 4D array (x,y,color,index) that holds the custom icons
         ui_toolbar          matlab.ui.container.Toolbar
         ui_run_switches     matlab.ui.container.toolbar.ToggleTool
         ui_sw_pause         matlab.ui.container.toolbar.ToggleTool
@@ -43,39 +42,37 @@ classdef anp_gui < handle
         ui_btn_next         matlab.ui.container.toolbar.PushTool
         
         % a: animation
-        a_direction         double
-        a_time_ii           double
+        a_direction         double          % determines movement speed of the arrow. a_direction = {-3,-1,1,3}
+        a_time_ii           double          % remember the position of the arrow
 
         % w: window properties
-        w_fig_position      double
-        w_sub1_position     double
-        w_sub2_position     double
+        w_fig_position      double          % vector containing the figure window position on the display
+        w_sub1_position     double          % vector conataining the left plot's position withing the figure
+        w_sub2_position     double          % vector conataining the right plot's position withing the figure
         
-        w_border                    double
-        w_plot_size                 double
-        w_plot_width_frac           double
-        w_border_horizontal_frac    double
-        w_border_vertical_frac      double
-        w_annotation_start_frac     double
-        w_annotation_textbox_frac   double
+        w_border                    double  % how much border to the left, right and top from the plots? [pixel]
+        w_plot_size                 double  % [pixel]
+        w_plot_width_frac           double  % [1]
+        w_border_horizontal_frac    double  % [1]
+        w_border_vertical_frac      double  % [1]
+        w_annotation_start_frac     double  % where (vertically) on the figure do the annotations start? [1]
+        w_annotation_textbox_frac   double  % vertical separation between annotations [1]
         
         % p: plot properties (z: left, w=f(z): right)
-        p_n_time_steps      double
-        p_oversampling_factor double
-        n_data_points       double
-        p_trail_length      double
-        p_n_trail           double
+        p_n_time_steps      double          % how many steps in the animation? limit for a_time_ii
+        p_oversampling_factor double        % how many more data than animation steps are there?
+        p_n_data_points       double        % basically time steps * oversampling factor
+        p_trail_length      double          % which percentage of data points make the trail?
+        p_n_trail           double          % of how many data points is the trail comprised?
         
-        p_z_x0              double
-        p_z_dims            double
-        p_z_auto_lims       logical
-        p_z_xlim            double
-        p_z_xspan           double
-        p_z_ylim            double
-        p_z_yspan           double
-        p_z_width           double
-        p_z_height          double
-        p_z_arrow_length    double
+        p_z_x0              double          % left plot: requested center location
+        p_z_dims            double          % left plot: requested height and width
+        p_z_auto_lims       logical         % left plot: ignore p_z_x0 and p_z_dims, calculate xlim and ylim automatically
+        p_z_xlim            double          % left plot: actual xlim
+        p_z_xspan           double          % left plot: data range in x-direction
+        p_z_ylim            double          % left plot: actual ylim
+        p_z_yspan           double          % left plot: data range in y-direction
+        p_z_arrow_length    double          % left plot: length of annotaion as fraction of the figure [1]
         
         p_w_x0              double
         p_w_dims            double
@@ -84,8 +81,6 @@ classdef anp_gui < handle
         p_w_xspan           double
         p_w_ylim            double
         p_w_yspan           double
-        p_w_width           double
-        p_w_height          double
         p_w_arrow_length    double
         
         % d: data
@@ -261,7 +256,7 @@ classdef anp_gui < handle
             this.d_t_oversampled =          time_data.data_points;
             this.p_n_time_steps =           time_data.time_props.n_time_steps;
             this.p_oversampling_factor =    time_data.time_props.oversampling_factor;
-            this.n_data_points =            time_data.time_props.n_data_points;
+            this.p_n_data_points =          time_data.time_props.p_n_data_points;
             
             function_data = this.h_anp_tf_processor.get_data();
             this.d_z_values =       function_data.z_values;

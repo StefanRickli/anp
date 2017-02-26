@@ -189,7 +189,7 @@ function checked_args = anp_parse_arguments(varargin)
     % ---------------------------------------------------------------------
     % Time and spatial resolution parameters
     % ---------------------------------------------------------------------
-    checked_args.time_params.n_time_steps =         120;    % this is only the base (minimal) value
+    checked_args.time_params.n_time_steps =         120;    % a) how many steps in the animation? b) base value for # of data points
     checked_args.time_params.resolution_factor =    3;      % TODO deprecated, unused: remove in future version
     
     % ---------------------------------------------------------------------

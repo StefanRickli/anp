@@ -4,8 +4,9 @@
 %
 %   Author: Stefan Rickli, ricklis [at] student.ethz.ch
 %           https://blogs.ethz.ch/ricklis
+%           https://github.com/StefanRickli/anp
 %
-%   Version 5.1, 2017-01-01
+%   Version 5.1.1
 %   
 %   
 %   What does it do?:
@@ -45,10 +46,6 @@
 %                   pixels.
 %                   Default size is 500px.
 %   
-%   'duration': deprecated, will be ignored.
-%   
-%   'FPS':      deprecated, will be ignored.
-%   
 %   'trail-length': Determines the fraction of the plot that is colored
 %                   orange. Acceptable values are 0 <= length < 1.
 %   
@@ -73,27 +70,15 @@
 %   
 %   Known Limitations:
 %   ------------------
-%   1)  The function can't handle input- or output delays.
-%   2)  v5.0 has only been minimally tested with optional arguments.
+%   ANP can't handle input- or output delays and other nonlinearities, yet.
 %
 %
 %   Known Issues:
 %   -------------
 %
-%   - Pole and zero contributions of those with positive real part may be
-%     incorrect.
-%   - Transfer functions with a high relative degree of numerator and
-%     denominator produce plots with very small amplitudes which 
-%     lead Matlab to draw arrow-annotations incorrectly.
+%   Please visit https://github.com/StefanRickli/anp/issues to find a list
+%   of documented issues.
 %
-%
-%   Ideas:
-%   ------
-%
-%   - An earlier version had the capability of exporting videos. I'd like
-%     to reestablish this possibility. Will probably do by adding buttons
-%     to capture frames and later on export a video file from the frame
-%     buffer.
 % -------------------------------------------------------------------------
 
 function [] = anp_main(varargin)
