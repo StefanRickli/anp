@@ -19,7 +19,7 @@ You'll need to have the following toolboxes installed:
 
 Download the project by clicking 'Clone or download' button in the upper right and then choose ZIP.
 
-Unzip the contents to your desiredd Matlab workspace folder.
+Unzip the contents to your desired Matlab workspace folder.
 You don't need the folders 'additional' and 'archive' for the function to work.
 
 ### Usage examples

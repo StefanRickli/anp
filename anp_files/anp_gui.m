@@ -1,17 +1,39 @@
-% as in p.41
+%   class: anp_gui
+%   --------------
+%   
+%   This class is all about displaying the data that a tf_processor object
+%   previously calculated.
+%   
+%   On creation it instantiates a figure containing a left and right
+%   subplot and some space below to put text about the transfer function
+%   that is going to be plotted.
+%   
+%   After that it takes the data from a tf_processor object, calculates
+%   display and animation parameters and draws it to the preallocated
+%   graphs and text boxes.
+%
+%   The figure contains a custom toolbar with buttons that control the
+%   stepping of the animation.
+%
+%   paper reference: p.41
 classdef anp_gui < handle
     properties(SetAccess = private)
         % g: general properties
-        g_uid               % Java String       uniqe identifier for every object instance
+        
+        g_uid               % Java String,      uniqe identifier for every object instance
         g_legacy            string              % store Matlabs version here
         
+        
         % s: state
+        
         s_data_ready        logical             % do we have everything together before we can draw?
         s_draw_allowed      logical             % set this to false before changing data or parameters, it forces the draw-function to stop once it's done with an iteration
         s_draw_busy         logical             % we're updating the plot at the moment, parameter or data change not allowed
         s_check_limits      logical             % prompt the draw-function to update axis limit related data before it makes the next iteration
         
+        
         % h: handles
+        
         h_anp_tf_processor                      % remember the handle to the calculation object
         
         h_fig               matlab.ui.Figure                            % main figure handle
@@ -32,8 +54,10 @@ classdef anp_gui < handle
         h_w_plot_full       matlab.graphics.chart.primitive.Line
         h_w_plot_trail      matlab.graphics.chart.primitive.Line
         h_w_plot_arrow      matlab.graphics.shape.Arrow
-                
+        
+        
         % ui: GUI elements
+        
         ui_icons            double                          % 4D array (x,y,color,index) that holds the custom icons
         ui_toolbar          matlab.ui.container.Toolbar
         ui_run_switches     matlab.ui.container.toolbar.ToggleTool
@@ -41,11 +65,15 @@ classdef anp_gui < handle
         ui_btn_prev         matlab.ui.container.toolbar.PushTool
         ui_btn_next         matlab.ui.container.toolbar.PushTool
         
+        
         % a: animation
+        
         a_direction         double          % determines movement speed of the arrow. a_direction = {-3,-1,1,3}
         a_time_ii           double          % remember the position of the arrow
 
+        
         % w: window properties
+        
         w_fig_position      double          % vector containing the figure window position on the display
         w_sub1_position     double          % vector conataining the left plot's position withing the figure
         w_sub2_position     double          % vector conataining the right plot's position withing the figure
@@ -58,7 +86,9 @@ classdef anp_gui < handle
         w_annotation_start_frac     double  % where (vertically) on the figure do the annotations start? [1]
         w_annotation_textbox_frac   double  % vertical separation between annotations [1]
         
+        
         % p: plot properties (z: left, w=f(z): right)
+        
         p_n_time_steps      double          % how many steps in the animation? limit for a_time_ii
         p_oversampling_factor double        % how many more data than animation steps are there?
         p_n_data_points       double        % basically time steps * oversampling factor
@@ -72,7 +102,7 @@ classdef anp_gui < handle
         p_z_xspan           double          % left plot: data range in x-direction
         p_z_ylim            double          % left plot: actual ylim
         p_z_yspan           double          % left plot: data range in y-direction
-        p_z_arrow_length    double          % left plot: length of annotaion as fraction of the figure [1]
+        p_z_arrow_length    double          % left plot: length of annotation as fraction of the figure [1]
         
         p_w_x0              double
         p_w_dims            double
@@ -83,39 +113,50 @@ classdef anp_gui < handle
         p_w_yspan           double
         p_w_arrow_length    double
         
+        
         % d: data
-        d_n_poles               double
-        d_n_zeros               double
-        d_poles                 double
-        d_zeros                 double
-        d_R                     double
         
-        d_t_values              double
-        d_t_oversampled         double
-        d_t_trails
+        d_n_poles               double      % how many poles does the transfer function have?
+        d_n_zeros               double      % how many zeros does the transfer function have?
+        d_poles                 double      % array holding the pole locations
+        d_zeros                 double      % array holding the zero locations
+        d_R                     double      % radius of the half-circle
         
-        d_z_values              double
-        d_z_values_truncated    double
+        d_t_values              double      % UNUSED, time steps
+        d_t_oversampled         double      % UNUSED
+        d_t_trails                          % cell array holding the index arrays that address the different trail elements at a certain animation step
+        
+        d_z_values              double      % array that holds the raw data for the left plot
+        d_z_values_truncated    double      % array, holds the displayed data of the left plot. it might be altered in order to fit the x- and ylim.
         
         d_w_values              double
         d_w_values_truncated    double        
     end
     methods(Access = public)
+        
         function this = anp_gui()
+            % Instantiates a figure window with two subplots. Initializes state variables and the custom toolbar.
+            
+            % set a unique ID for every instance of the GUI and find out
+            % which Matlab version is running.
             this.g_uid =        java.util.UUID.randomUUID.toString;
             this.g_legacy =     anp_check_Matlab_version();
+            
+            % Initialize the state variables
             this.s_data_ready = false;
             this.s_draw_allowed = false;
             this.s_draw_busy =  false;
             this.a_time_ii =    1;
             this.a_direction =  1;
             
+            % Instantiate the figure and its subplots
             this.h_fig =        figure('CloseRequestFcn',@this.on_figure_delete);
             this.h_sub1 =       subplot(1,2,1);
             hold on;
             this.h_sub2 =       subplot(1,2,2);
             hold on;
             
+            % Initialize the custom toolbar
             this.ui_toolbar =   findall(this.h_fig,'Type','uitoolbar');
             this.load_icons();
             this.ui_run_switches(1) =   uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,1),'TooltipString','Fast Backward','OnCallback',{@this.cb_run,-3},'OffCallback',{@this.cb_run_switch_off,-3},'Enable','off','Separator','on');
@@ -126,13 +167,15 @@ classdef anp_gui < handle
             this.ui_run_switches(3) =   uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,6),'TooltipString','Play Forward', 'OnCallback',{@this.cb_run,1},'OffCallback',{@this.cb_run_switch_off,1},'Enable','off');
             this.ui_run_switches(4) =   uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,7),'TooltipString','Fast Forward', 'OnCallback',{@this.cb_run,3},'OffCallback',{@this.cb_run_switch_off,3},'Enable','off');
             
-            
-            
             tools.dbg('anp_gui[constructor]:\t%s: Instance created.\n',this.g_uid);
         end
         
         function [] = init_params(this,new_props)
-            % TODO check for dirty values and later redraw
+            % Populate the variables that hold the relevant properties and
+            % data for the GUI
+            
+            % TODO  if we're reusing this instance, check for dirty values
+            %       and later redraw
             
             this.set_z_plot_limits(new_props);
             this.set_w_plot_limits(new_props);
@@ -144,15 +187,21 @@ classdef anp_gui < handle
         end
         
         function [] = set_window_props(this,new_props)
+            % Populates the variables holding the main window properties with new values.
+            
             this.w_border =     new_props.border;
             this.w_plot_size =  new_props.plot_size;
         end
         
         function [] = set_plot_props(this,new_props)
+            % Populates the variables holding the general plot properties with new values.
+
             this.p_trail_length =     new_props.trail_length;
         end
         
         function [] = set_z_plot_limits(this,new_props)
+            % Populate the axis parameters of the left plot with new values.
+            
             % TODO check for proper array dimensions
             
             this.p_z_x0 =           new_props.z_plot_x0;
@@ -161,6 +210,8 @@ classdef anp_gui < handle
         end
         
         function [] = set_w_plot_limits(this,new_props)
+            % Populate the axis parameters of the right plot with new values.
+            
             % TODO check for proper array dimensions
             
             this.p_w_x0 =           new_props.w_plot_x0;
@@ -169,12 +220,16 @@ classdef anp_gui < handle
         end
         
         function [] = set_radii(this,new_props)
+            % Populate variables holding geometric information with new values.
+            
             % TODO check for proper array dimensions
             % TODO radii comes from tf_processor!
             this.d_radii =          new_props.radii;
         end
-                
+        
         function [] = set_poles_zeros(this,new_props)
+            % Populates the variables containing information about the poles and zeros with new values.
+            
             % TODO check for proper array dimensions
             
             this.d_poles =          new_props.tf_poles;
@@ -185,19 +240,31 @@ classdef anp_gui < handle
         end
 
         function [] = set_anp_tf_processor(this,new_props)
+            % Changes the handle reference to a new tf_processor object.
+            
             this.h_anp_tf_processor = new_props.processor_handle;
         end
         
         function [] = init_visuals(this)
+            % Calculates everything needed for a first draw and performs it.
+            
+            % Get data and relevant display parameters from tf_processor.
             this.fetch_R();
             this.fetch_data();
+            
+            % Decide on layout parameters.
             this.calc_gui_positions();
             this.calc_plot_axis_limits();
             this.calc_plot_z_arrow_length();
             this.calc_plot_w_arrow_length();
+            this.calc_trail_indexes();
+            
+            % Calculate the data that is to be plotted. Compared to the raw
+            % data from the tf_processor object, its data points could be
+            % repositioned to stay within the plot.
             this.calc_truncated_z_values();
             this.calc_truncated_w_values();
-            this.calc_trail_indexes();
+            
             this.draw_init_gui_statics();
             this.draw_init_gui_text_objects();
             this.draw_init_plot_axes();
@@ -214,6 +281,8 @@ classdef anp_gui < handle
         
         
         function delete(this)
+            % Destructor for the object. Closes the figure if it hasn't been already.
+            
             tools.dbg('anp_gui[delete]\t%s: Deletion requested.\n',this.g_uid);
             
             if isvalid(this.h_fig)
