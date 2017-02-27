@@ -17,6 +17,11 @@
 %
 %   paper reference: p.41
 classdef anp_gui < handle
+    
+    % ---------------------------------------------------------------------
+    % PRIVATE Variables
+    % ---------------------------------------------------------------------
+        
     properties(SetAccess = private)
         % g: general properties
         
@@ -26,7 +31,7 @@ classdef anp_gui < handle
         
         % s: state
         
-        s_data_ready        logical             % do we have everything together before we can draw?
+        s_gui_nominal        logical             % do we have everything together before we can draw?
         s_draw_allowed      logical             % set this to false before changing data or parameters, it forces the draw-function to stop once it's done with an iteration
         s_draw_busy         logical             % we're updating the plot at the moment, parameter or data change not allowed
         s_check_limits      logical             % prompt the draw-function to update axis limit related data before it makes the next iteration
@@ -132,6 +137,12 @@ classdef anp_gui < handle
         d_w_values              double
         d_w_values_truncated    double        
     end
+    
+    
+    % ---------------------------------------------------------------------
+    % PUBLIC methods
+    % ---------------------------------------------------------------------
+    
     methods(Access = public)
         
         function this = anp_gui()
@@ -143,7 +154,7 @@ classdef anp_gui < handle
             this.g_legacy =     anp_check_Matlab_version();
             
             % Initialize the state variables
-            this.s_data_ready = false;
+            this.s_gui_nominal = false;
             this.s_draw_allowed = false;
             this.s_draw_busy =  false;
             this.a_time_ii =    1;
@@ -265,17 +276,29 @@ classdef anp_gui < handle
             this.calc_truncated_z_values();
             this.calc_truncated_w_values();
             
+            % Instatiate the rest of the objects in the figure and/or
+            % configure them.
             this.draw_init_gui_statics();
             this.draw_init_gui_text_objects();
             this.draw_init_plot_axes();
             this.draw_init_line_plots();
             this.draw_init_plot_arrows();
             this.draw_init_z_plot_poles_zeros();
+            
+            % Since draw_one_frame only updates the trail arrow and the
+            % trail itself, we must explicitly update the plot of the whole
+            % functions.
             this.draw_update_full_z_plot();
             this.draw_update_full_w_plot();
+            
+            % Update trail, trail arrow and text boxes.
             this.draw_one_frame();
             
-            this.s_data_ready =     true;
+            % s_gui_nominal = true means that everything has been
+            % initialized and the GUI can enter a nominal state.
+            this.s_gui_nominal = true;
+            
+            % Until now the buttons were disabled. Make them clickable now.
             this.ui_control_enable();
         end
         
@@ -290,9 +313,15 @@ classdef anp_gui < handle
             end
         end
     end
+    
+    % ---------------------------------------------------------------------
+    % PRIVATE methods
+    % ---------------------------------------------------------------------
+    
     methods(Access = private)
-        function on_figure_delete(this,src,~) % last argument is 'evt'
-            % TODO remove all event listeners here!
+        function on_figure_delete(this,src,~) % ignored argument is 'evt'
+            % Callback that issues the deletion of the anp_gui object that is holding the closed and now invalid figure window.
+            
             tools.dbg('anp_gui[on_figure_delete]:\tDeleting figure window.\n');
             
             delete(src);
@@ -300,6 +329,8 @@ classdef anp_gui < handle
         end
         
         function [] = load_icons(this)
+            % Loads the PNG files of the custom toolbar icons into memory.
+            
             this.ui_icons =             zeros(16,16,3,5);
             this.ui_icons(:,:,:,1) =    imread('Fast Backward.png');
             this.ui_icons(:,:,:,2) =    imread('Backward.png');
@@ -312,12 +343,16 @@ classdef anp_gui < handle
         end
         
         function [] = fetch_R(this)
+            % Gets the current value of the half-circle from the tf_processor object.
+            
             assert(isvalid(this.h_anp_tf_processor));
             
             this.d_R =                  this.h_anp_tf_processor.get_R();
         end
         
         function [] = fetch_data(this)
+            % Gets all data that could be relevant to the GUI from the tf_processor object.
+            
             assert(isvalid(this.h_anp_tf_processor));
             
             time_data =                     this.h_anp_tf_processor.get_time_points();
@@ -327,48 +362,72 @@ classdef anp_gui < handle
             this.p_oversampling_factor =    time_data.time_props.oversampling_factor;
             this.p_n_data_points =          time_data.time_props.p_n_data_points;
             
-            function_data = this.h_anp_tf_processor.get_data();
+            function_data =         this.h_anp_tf_processor.get_data();
             this.d_z_values =       function_data.z_values;
             this.d_w_values =       function_data.w_values;
         end
         
         function [] = calc_gui_positions(this)
-            % calculate the correct positions (relative to interior of the figure)
-            fig_plot_height = 2*this.w_border + this.w_plot_size;              % plot + border above and below, pixel
-            fig_annotation_textbox_height = 14;                                                 % one box, pixel
-            fig_annotation_height_sum = (max(this.d_n_zeros,this.d_n_poles)+2)*fig_annotation_textbox_height; % cumulative, pixel
+            % Determines where within the figure the different elements should be.
+            % The function does this first in units of pixel (for better
+            % human readable code) and then converts the findings to
+            % fractions like the .Position function expects.
+            
+            % Calculate the correct positions (relative to interior of the
+            % figure).
+            fig_plot_height =               2*this.w_border + this.w_plot_size; % plot + border above and below, [pixel]
+            fig_annotation_textbox_height = 14;                                 % one box, [pixel]
+            fig_annotation_height_sum =     (max(this.d_n_zeros,this.d_n_poles)+2) ...
+                                              * fig_annotation_textbox_height;  % cumulative, [pixel]
             switch(this.g_legacy)
                 case 'R2015b_or_newer'
                     fig_legacy_correction = 0;
                 otherwise
                     fig_legacy_correction = 3*fig_annotation_textbox_height;
             end
-            fig_height = fig_plot_height + fig_annotation_height_sum + fig_legacy_correction;   % pixel
-            fig_width = 3*this.w_border + 2*this.w_plot_size;                                  % pixel
+            fig_height =            fig_plot_height ...
+                                    + fig_annotation_height_sum ...
+                                    + fig_legacy_correction;                % [pixel]
+            fig_width =             3*this.w_border + 2*this.w_plot_size;   % [pixel]
             
-            % fig.Position expects pixels as unit
-            this.w_fig_position = [100 100 fig_width fig_height];
+            % fig.Position expects pixels as unit.
+            this.w_fig_position =   [100, ...
+                                     100, ...
+                                     fig_width, ...
+                                     fig_height];
             
-            % as subplot.Postion expects fractions of the inside of the figure, we
-            % recalculate the pixel values
-            this.w_border_horizontal_frac = this.w_border/fig_width;                      % fraction
-            this.w_border_vertical_frac = this.w_border/fig_height;                       % fraction
-            this.w_plot_width_frac = (fig_width - 3*this.w_border)/(2*fig_width);         % fraction
-            fig_plot_height_frac = 1-(2*this.w_border + fig_annotation_height_sum)/fig_height; % fraction
+            % As subplot.Postion expects fractions of the inside of the
+            % figure, we recalculate the pixel values into fractions.
+            this.w_border_horizontal_frac = this.w_border / fig_width;                                      % [1]
+            this.w_border_vertical_frac =   this.w_border / fig_height;                                     % [1]
+            this.w_plot_width_frac =        (fig_width - 3*this.w_border) / (2*fig_width);                  % [1]
+            fig_plot_height_frac =          1 - (2*this.w_border + fig_annotation_height_sum) / fig_height; % [1]
             
-            % subX.Position expects fractions of the inside of the figure as unit
-            this.w_sub1_position = [this.w_border_horizontal_frac, (1 - this.w_border_vertical_frac - fig_plot_height_frac), this.w_plot_width_frac, fig_plot_height_frac];
-            this.w_sub2_position = [(2*this.w_border_horizontal_frac + this.w_plot_width_frac),(1 - this.w_border_vertical_frac - fig_plot_height_frac), this.w_plot_width_frac, fig_plot_height_frac];
+            % subX.Position expects fractions of the inside of the figure
+            % as unit.
+            this.w_sub1_position =  [this.w_border_horizontal_frac, ...
+                                     (1 - this.w_border_vertical_frac - fig_plot_height_frac), ...
+                                     this.w_plot_width_frac, ...
+                                     fig_plot_height_frac];
+            this.w_sub2_position =  [(2*this.w_border_horizontal_frac + this.w_plot_width_frac), ...
+                                     (1 - this.w_border_vertical_frac - fig_plot_height_frac), ...
+                                     this.w_plot_width_frac, ...
+                                     fig_plot_height_frac];
             
-            % text box object parameters:
-            % again we need to know relative (fractions) positions inside the figure
-            this.w_annotation_start_frac = (fig_annotation_height_sum + 10)/fig_height;    % fraction
-            this.w_annotation_textbox_frac = fig_annotation_textbox_height/fig_height;     % fraction
+            % Text box object parameters:
+            % Again we need to know relative (fractions) positions inside
+            % the figure.
+            this.w_annotation_start_frac =      (fig_annotation_height_sum + 10) / fig_height;  % [1]
+            this.w_annotation_textbox_frac =    fig_annotation_textbox_height / fig_height;     % [1]
         end
         
         function [] = calc_plot_axis_limits(this)
+            % Sets the correct x- and ylims for the left and right plot.
+            % The method respects the auto-flags and only calculates the
+            % parameters if it's told to do so.
+            
             % TODO make sure that all props and data are set before calling
-            % this method
+            % this method.
             
             assert(~any([isempty([this.d_zeros,this.d_poles]),...
                          isempty(this.d_R) || isnan(this.d_R),...
@@ -377,16 +436,22 @@ classdef anp_gui < handle
                          isempty(this.p_w_auto_lims)]));
             
             if this.p_z_auto_lims
-                % try to find optimal axis limits for the two plots, or let the user
-                % decide if he chose to set either 'auto_size' to false
+                % try to find optimal axis limits for the left plot, or let
+                % the user decide by setting either 'left_x0' or
+                % 'left_dims' to a manual value
                 
-                [this.p_z_xlim,this.p_z_ylim] = anp_plot_auto_zoom_z([this.d_zeros,this.d_poles],this.d_R);
+                [this.p_z_xlim,this.p_z_ylim] = anp_plot_auto_zoom_z([this.d_zeros,this.d_poles],this.d_R); % separate source file
             else
-               this.p_z_xlim = [(this.p_z_x0(1) - this.p_z_dims(1)/2),(this.p_z_x0(1) + this.p_z_dims(1)/2)];
-               this.p_z_ylim = [(this.p_z_x0(2) - this.p_z_dims(2)/2),(this.p_z_x0(2) + this.p_z_dims(2)/2)];
+               this.p_z_xlim = [(this.p_z_x0(1) - this.p_z_dims(1)/2), ...
+                                (this.p_z_x0(1) + this.p_z_dims(1)/2)];
+               
+               this.p_z_ylim = [(this.p_z_x0(2) - this.p_z_dims(2)/2), ...
+                                (this.p_z_x0(2) + this.p_z_dims(2)/2)];
             end
             
-            [this.p_z_xspan,this.p_z_yspan] = anp_plot_find_span([this.d_zeros,this.d_poles,this.d_z_values]);
+            % Override too small axis limits by replacing them with the
+            % span of the data.
+            [this.p_z_xspan,this.p_z_yspan] = anp_plot_find_span([this.d_zeros,this.d_poles,this.d_z_values]); % separate source file
             if diff(this.p_z_xlim) < 100*eps
                 this.p_z_xlim = this.p_z_xspan;
             end
@@ -396,13 +461,22 @@ classdef anp_gui < handle
             
             
             if this.p_w_auto_lims
-                [this.p_w_xlim,this.p_w_ylim] = anp_plot_auto_zoom_w(this.d_w_values);
+                % try to find optimal axis limits for the right plot, or
+                % let the user decide by setting either 'right_x0' or
+                % 'right_dims' to a manual value
+                
+                [this.p_w_xlim,this.p_w_ylim] = anp_plot_auto_zoom_w(this.d_w_values); % separate source file
             else
-               this.p_w_xlim = [(this.p_w_x0(1) - this.p_w_dims(1)/2),(this.p_w_x0(1) + this.p_w_dims(1)/2)];
-               this.p_w_ylim = [(this.p_w_x0(2) - this.p_w_dims(2)/2),(this.p_w_x0(2) + this.p_w_dims(2)/2)];
+               this.p_w_xlim = [(this.p_w_x0(1) - this.p_w_dims(1)/2), ...
+                                (this.p_w_x0(1) + this.p_w_dims(1)/2)];
+               
+               this.p_w_ylim = [(this.p_w_x0(2) - this.p_w_dims(2)/2), ...
+                                (this.p_w_x0(2) + this.p_w_dims(2)/2)];
             end
             
-            [this.p_w_xspan,this.p_w_yspan] = anp_plot_find_span(this.d_w_values);
+            % Override too small axis limits by replacing them with the
+            % span of the data.
+            [this.p_w_xspan,this.p_w_yspan] = anp_plot_find_span(this.d_w_values); % separate source file
             if diff(this.p_w_xlim) < 100*eps
                 this.p_w_xlim = this.p_w_xspan;
             end
@@ -412,13 +486,17 @@ classdef anp_gui < handle
         end
         
         function [] = calc_plot_z_arrow_length(this)
-            in_axis_width = diff(this.p_z_xlim);        % [1]
-            in_axis_height = diff(this.p_z_ylim);       % [1]
-            this.p_z_arrow_length = 0.04 * sqrt(in_axis_width^2 + in_axis_height^2);      % [1]
+            % Calculates how long the trail arrow should be based on the current axis limits.
+            
+            in_axis_width =         diff(this.p_z_xlim);                            % [1]
+            in_axis_height =        diff(this.p_z_ylim);                            % [1]
+            this.p_z_arrow_length = 0.04 * sqrt(in_axis_width^2 + in_axis_height^2);% [1]
             tools.dbg('anp_gui[calc_plot_z_arrow_length]:\t%.5f\n',this.p_z_arrow_length);
         end
         
         function [] = calc_plot_w_arrow_length(this)
+            % Calculates how long the trail arrow should be based on the current axis limits.
+            
             % TODO handle very short arrow lengths better
             % This involves setting the position relative to the figure/subplot
             % and not within the coordinate system, which is cumbersome...
@@ -747,7 +825,7 @@ classdef anp_gui < handle
         end
         
         
-        function [] = cb_run(this,src,~,dir) % ignored parameters are src,evt
+        function [] = cb_run(this,src,~,dir) % ignored parameters is evt
             if this.s_draw_busy && (dir == this.a_direction)
                 return;
             elseif this.s_draw_busy && (dir ~= this.a_direction)
@@ -759,7 +837,7 @@ classdef anp_gui < handle
                 end
             else
                 tools.dbg('anp_gui[cb_run]:\tStart requested.\n');
-                if this.s_data_ready
+                if this.s_gui_nominal
                     this.ui_sw_pause.State =    'off';
                     this.ui_btn_prev.Enable =   'off';
                     this.ui_btn_next.Enable =   'off';
@@ -825,9 +903,10 @@ classdef anp_gui < handle
             set(h_arrow,'parent',gca,'position',[x0-r,r],'String',text,'Color',color);
         end
 
-        % this function clips the input values to the maximum value allowed inside
-        % the plot
         function values_truncated = trunc(~,values,xlim,ylim)
+            % This method clips the input values to the maximum value
+            % allowed inside the plot
+            
             xlim = anp_stretch_centered(xlim,0.97);
             ylim = anp_stretch_centered(ylim,0.97);
             values_truncated = max(xlim(1), min(xlim(2), real(values))) ...
