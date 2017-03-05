@@ -360,12 +360,16 @@ classdef anp_gui < handle
             this.d_t_oversampled =          time_data.data_points;
             this.p_n_time_steps =           time_data.time_props.n_time_steps;
             this.p_oversampling_factor =    time_data.time_props.oversampling_factor;
-            this.p_n_data_points =          time_data.time_props.p_n_data_points;
+            this.p_n_data_points =          time_data.time_props.n_data_points;
             
             function_data =         this.h_anp_tf_processor.get_data();
             this.d_z_values =       function_data.z_values;
             this.d_w_values =       function_data.w_values;
         end
+        
+        % ---------------
+        % CALC-Methods
+        % ---------------
         
         function [] = calc_gui_positions(this)
             % Determines where within the figure the different elements should be.
@@ -425,6 +429,7 @@ classdef anp_gui < handle
             % Sets the correct x- and ylims for the left and right plot.
             % The method respects the auto-flags and only calculates the
             % parameters if it's told to do so.
+            % Otherwise it uses the user given limits.
             
             % TODO make sure that all props and data are set before calling
             % this method.
@@ -499,10 +504,10 @@ classdef anp_gui < handle
             
             % TODO handle very short arrow lengths better
             % This involves setting the position relative to the figure/subplot
-            % and not within the coordinate system, which is cumbersome...
-            out_axis_width = diff(this.p_w_xlim);     % [1]
-            out_axis_height = diff(this.p_w_ylim);    % [1]
-            this.p_w_arrow_length = 0.04 * sqrt(out_axis_width^2 + out_axis_height^2);   % [1]
+            % and not within the coordinate system. Will become cumbersome...
+            out_axis_width =        diff(this.p_w_xlim);                                % [1]
+            out_axis_height =       diff(this.p_w_ylim);                                % [1]
+            this.p_w_arrow_length = 0.04 * sqrt(out_axis_width^2 + out_axis_height^2);  % [1]
             if this.p_w_arrow_length < 0.05
                 this.p_w_arrow_length = 0.0001;
             end
@@ -510,24 +515,37 @@ classdef anp_gui < handle
         end
         
         function [] = calc_truncated_z_values(this)
+            % Wrapper function for this.trunc(). Moves values that are outside the coordinate system into the graph so we get a continuous closed curve.
+            
             this.d_z_values_truncated =  this.trunc(this.d_z_values,this.p_z_xlim,this.p_z_ylim);
         end
+        
         function [] = calc_truncated_w_values(this)
+            % Wrapper function for this.trunc(). Moves values that are outside the coordinate system into the graph so we get a continuous closed curve.
+            
             this.d_w_values_truncated =  this.trunc(this.d_w_values,this.p_w_xlim,this.p_w_ylim);
         end
         
-        % prepare t-intervals that are plotted on each frame, considering the
-        % set number of trail-values
-        function [] = calc_trail_indexes(this) % TODO
+        function [] = calc_trail_indexes(this)
+            % Prepare t-intervals that are plotted on each frame, considering the set number of trail-values.
+            
+            % TODO (what? 2017-03-05)
             this.p_n_trail = fix(this.p_n_time_steps * this.p_trail_length);
             this.d_t_trails = cell(1,this.p_n_time_steps);
             for ii = 1:this.p_n_time_steps
-                this.d_t_trails{ii} = max(1,(ii-this.p_n_trail)*this.p_oversampling_factor):ii*this.p_oversampling_factor;
+                current_indexes = max(1,(ii-this.p_n_trail)*this.p_oversampling_factor) : 1 : ii*this.p_oversampling_factor;
+                this.d_t_trails{ii} = current_indexes;
             end
         end
         
+        % ---------------
+        % DRAW-Methods
+        % ---------------
+        
         function [] = draw_init_gui_statics(this)
-            % TODO 
+            % Prepares the positions of the figure and its two subplots.
+            
+            % TODO (what? 2017-03-05)
             figure(this.h_fig);
             this.h_fig.Position =   this.w_fig_position;
             
@@ -535,11 +553,13 @@ classdef anp_gui < handle
             this.h_sub2.Position =  this.w_sub2_position;
         end
         
-        % prepare the annotations below the plots and remember their handles
         function [] = draw_init_gui_text_objects(this)
+            % Prepares the annotations below the plots and populates the corresponding handle arrays.
+            
             figure(this.h_fig);
 
-            % parameters get set in 'calc_gui_positions'
+            % Delete all previous instances of text boxes first as there
+            % might be a different number of poles and zeros this time.
             for ii = 1:length(this.h_text_z_annot)
                 this.h_text_z_annot(ii).delete
             end
@@ -547,7 +567,7 @@ classdef anp_gui < handle
                 this.h_text_p_annot(ii).delete
             end
             
-            % zero and pole contributions
+            % Text boxes for zero and pole contributions.
             annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the zeros:','LineStyle','none','FontSize',9);
             for ii = 1:this.d_n_zeros
                 this.h_text_z_annot(ii) = annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['zero ',num2str(ii)],'LineStyle','none','FontSize',9);
@@ -557,7 +577,7 @@ classdef anp_gui < handle
                 this.h_text_p_annot(ii) = annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['pole ',num2str(ii)],'LineStyle','none','FontSize',9);
             end
 
-            % cumulative calculations
+            % Text boxes for the results.
             annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','Resulting value of G:','LineStyle','none','FontSize',9);
             this.h_text_res_annot(1) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 2*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 1','LineStyle','none','FontSize',9);
             this.h_text_res_annot(2) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 3*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 2','LineStyle','none','FontSize',9);
@@ -565,19 +585,36 @@ classdef anp_gui < handle
         end
         
         function [] = draw_init_plot_axes(this)
-            figure(this.h_fig);
+            % Prepares the geometry and behavior of the two subplots and attaches the proper callback methods to them.
+            
             % TODO maybe separate into two separate functions for z and w
             % plot
             
+            figure(this.h_fig);
+            
+            % z-plot ------------
             subplot(this.h_sub1);
-            axis equal; % for 1:1 aspect ratio
+            
+            % Establish 1:1 aspect ratio.
+            axis equal;
+            
+            % Do this to let the user zoom all the way out with a double
+            % click.
             xlim manual, ylim manual;
             xlim(anp_stretch_centered(this.p_z_xspan,1.05)), ylim(anp_stretch_centered(this.p_z_yspan,1.05));
             zoom reset;
             xlim(this.p_z_xlim), ylim(this.p_z_ylim);
-            anp_plot_axes_origin(this.g_legacy);
-            grid on;
             
+            % Default behavior of Matlab is to put the axes on the left and
+            % bottom edge of the graph. We don't want this. Instead, place
+            % the axes such that they go through the origin.
+            anp_plot_axes_origin(this.g_legacy);
+            
+            grid on;
+            % -------------------
+            
+            % w-plot ------------
+            % Same story as in z-plot.
             subplot(this.h_sub2);
             axis equal;
             xlim manual, ylim manual;
@@ -586,7 +623,10 @@ classdef anp_gui < handle
             xlim(this.p_w_xlim), ylim(this.p_w_ylim);
             anp_plot_axes_origin(this.g_legacy);
             grid on;
+            % -------------------
             
+            % Create zoom and pan objects and give them the handles to our
+            % custom callback method.
             this.h_zoom = zoom;
             this.h_zoom.ActionPostCallback = @this.cb_after_zoom_or_pan;
             this.h_pan = pan;
@@ -594,9 +634,12 @@ classdef anp_gui < handle
         end
         
         function [] = draw_init_line_plots(this)
+            % Instantiates the full- and trail plot objects and sets their properties.
+            
             figure(this.h_fig);
 
-            % plot the full input- and output curves with some transparency
+            % Prepare the full input- and output curves with some
+            % transparency
             this.h_z_plot_full =            plot(this.h_sub1,0,0);
             set(this.h_z_plot_full,'Color',[0.05 0.4970 0.7410]);
             this.h_z_plot_full.Color(4) =   0.3;
@@ -605,8 +648,8 @@ classdef anp_gui < handle
             set(this.h_w_plot_full,'Color',[0.05 0.4970 0.7410]);
             this.h_w_plot_full.Color(4) =   0.3;
 
-            % prepare the curves' trail plots and remember their handle for later
-            % use
+            % Prepare the curves' trail plots and remember their handle for
+            % later use.
             this.h_z_plot_trail =           plot(this.h_sub1,0,0);
             set(this.h_z_plot_trail,'Color',[255 215 0]/255,'linewidth',2);
             this.h_w_plot_trail =           plot(this.h_sub2,0,0);
@@ -614,27 +657,40 @@ classdef anp_gui < handle
         end
         
         function [] = draw_init_plot_arrows(this)
+            % Prepare the arrow annotation objects used for the tip of the trails.
+            
             figure(this.h_fig);
 
-            % prepare the arrows annotations that mark the value of the head of the
-            % trail at the current frame and remember their handle for later use
+            % Prepare the arrow annotations that mark the value of the
+            % head of the trail at the current frame and remember their
+            % handle for later use.
             subplot(this.h_sub1);
-            this.h_z_plot_arrow =       annotation('Arrow',[0 0],[1 0]);
+            this.h_z_plot_arrow =   annotation('Arrow',[0 0],[1 0]);
 
             subplot(this.h_sub2);
-            this.h_w_plot_arrow =       annotation('Arrow',[0 0],[1 0]);
+            this.h_w_plot_arrow =   annotation('Arrow',[0 0],[1 0]);
         end
         
-        % draw the this.d_poles and this.d_zeros in the left (input function) subplot
         function [] = draw_init_z_plot_poles_zeros(this)
+            % Draws x's at the location of poles and o's at the location of zeros in the left plot.
+            
+            % TODO we could be way more efficient if we knew which objects
+            % we need to touch and which we don't. For the time being just
+            % redo everything every time this method runs.
+            
             figure(this.h_fig);            
             
+            % First delete all existing objects to start fresh.
             for ii = 1:length(this.h_z_pz_objcts)
                 this.h_z_pz_objcts{ii}.delete();
             end
+            
+            % Preallocate the cell-array containing the object handles.
             this.h_z_pz_objcts = cell(1,this.d_n_poles + this.d_n_zeros);
             
             subplot(this.h_sub1);
+            
+            % Where's the center of the plot with the current limits?
             plot_center = mean(xlim) + 1i*mean(ylim);
             
             objct_ii = 1;
@@ -644,15 +700,18 @@ classdef anp_gui < handle
                 if current_pole ~= pole_trunc
                     % The current pole being not equal to its truncated value
                     % means that it lies outside the current subplot limits.
-                    % Instead of drawing just a circle at the border, plot an
+                    % Instead of drawing just an X at the border, plot an
                     % arrow, indicating that there's an outlier.
                     this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow([real(pole_trunc),imag(pole_trunc)],angle(current_pole - plot_center),this.p_z_arrow_length,' x',[255 140 0]/255);
                 else
+                    % The current pole lies within xlim and ylim, so draw
+                    % an X at its location.
                     this.h_z_pz_objcts{objct_ii} = scatter(real(current_pole),imag(current_pole),60,'x','MarkerEdgeColor',[255 140 0]/255,'LineWidth',1.5);
                 end
                 objct_ii = objct_ii + 1;
             end
             
+            % Same procedure as with poles but instead of X's, plot circles
             for z_ii = 1:this.d_n_zeros
                 current_zero = this.d_zeros(z_ii);
                 zero_trunc = this.trunc(current_zero, this.p_z_xlim, this.p_z_ylim);
@@ -669,6 +728,8 @@ classdef anp_gui < handle
         % GUI methods
         % -----------------------------------------------------------------
         function [] = ui_control_enable(this)
+            % Makes all the custom buttons clickable.
+            
             this.ui_btn_prev.Enable = 'on';
             this.ui_sw_pause.Enable = 'on';
             this.ui_btn_next.Enable = 'on';
@@ -680,16 +741,31 @@ classdef anp_gui < handle
         end
         
         % -----------------------------------------------------------------
-        % methods for the running plot
+        % Methods for the running plot
         % -----------------------------------------------------------------
+        
         function [] = draw_run_continuous_animation(this)
+            % Manages the periodic update of the trails and their arrows.
+            % Gets called whenever the animation should be turned on.
+            
+            % Whether an instance of this method already runs should be
+            % checked prior to calling the method by testing for
+            % this.s_draw_busy!
+            
             try
                 figure(this.h_fig);
-
+                
+                % Prevents data to be changed and is an indicator whether
+                % this method already runs.
                 this.s_draw_busy = true;
+                
                 tools.dbg('anp_gui[draw_run_continuous_animation]:\tStarting animation\n');
-
+                
+                % Main GUI update loop.
                 while this.s_draw_allowed
+                    
+                    % Check whether the plot limits have been changed in
+                    % the meantime during the last update below.
                     if this.s_check_limits
                         this.draw_update_limits_and_plots();
                         this.calc_plot_z_arrow_length();
@@ -699,17 +775,20 @@ classdef anp_gui < handle
                         this.s_check_limits = false;
                     end
                     
+                    % Set the animation iterator to the next value.
                     this.a_time_ii = tools.iterator_modulo(this.a_time_ii + this.a_direction,this.p_n_time_steps);
-
+                    
                     this.draw_one_frame();
-
+                    
                     tools.dbg('anp_gui[draw_run_continuous_animation]:\tdrawing %d :-)\n',this.a_time_ii);
                     pause(1/10);
                 end
                 tools.dbg('anp_gui[draw_run_continuous_animation]:\tStopping animation\n');
-
+                
                 this.s_draw_busy = false;
             catch err
+                % We ignore the exception when the figure is closed
+                % in mid-update. Rethrow everything else.
                 if ~strcmp(err.message,'Invalid or deleted object.')
                     rethrow(err);
                 end
@@ -717,6 +796,8 @@ classdef anp_gui < handle
         end
         
         function [] = draw_one_frame(this)
+            % Manages the drawing tasks that one time step needs.
+            
             this.draw_update_trails();
             this.draw_update_trail_head_arrows();
             this.draw_update_plot_titles();
@@ -724,15 +805,22 @@ classdef anp_gui < handle
         end
         
         function [] = draw_update_trails(this)
-            % update the trail plot data
+            % Updates the trail plots.
+            
             set(this.h_z_plot_trail,'XData',real(this.d_z_values_truncated(this.d_t_trails{this.a_time_ii})),'YData',imag(this.d_z_values_truncated(this.d_t_trails{this.a_time_ii})));
             set(this.h_w_plot_trail,'XData',real(this.d_w_values_truncated(this.d_t_trails{this.a_time_ii})),'YData',imag(this.d_w_values_truncated(this.d_t_trails{this.a_time_ii})));        
         end
         
         function [] = draw_update_trail_head_arrows(this)
-            % draw the (arrow-)head of the trail
+            % Draws the (arrow-)heads of the trails.
+            
             delete(this.h_z_plot_arrow); delete(this.h_w_plot_arrow);
             
+            % The trail arrows need to point always into the same
+            % direction, no matter in which direction the animation goes.
+            % So we get the "previous" and current head location and draw
+            % the arrow at the current location with the direction from the
+            % previous one.
             current_values_index =  this.a_time_ii * this.p_oversampling_factor;
             prev_values_index =     tools.iterator_modulo(this.a_time_ii * this.p_oversampling_factor - 1,this.p_n_time_steps * this.p_oversampling_factor);
             z_values_head_prev =    this.d_z_values(prev_values_index);
@@ -749,6 +837,8 @@ classdef anp_gui < handle
         end
         
         function [] = draw_update_plot_titles(this)
+            % Updates the text of the plot titles.
+            
             current_z_value = this.d_z_values(this.a_time_ii * this.p_oversampling_factor);
             current_w_value = this.d_w_values(this.a_time_ii * this.p_oversampling_factor);
             
@@ -756,13 +846,23 @@ classdef anp_gui < handle
             title(this.h_sub2,['Nyquist: G(',num2str(current_z_value,'%.1f'),') = ',num2str(current_w_value,'%.1f'),': M = ',num2str(abs(current_w_value),'%.2f'),' p = ',num2str(rad2deg(angle(current_w_value)),'%.2f'),'°']);
         end
         
-        % update the zero- and pole contribution and the cumulative values
         function [] = draw_update_textboxes(this)
+            % Updates the zero- and pole contribution and the cumulative values and puts the information in the pre-allocated textboxes.
+            
+            % TODO the text formatting isn't really good. One could make it
+            % way more pleasing to the eyes...
+            
+            % The following two result-strings will be appended further.
             res_magnitude =                     '(';
             res_phase =                         '(';
             
             for z = 1:this.d_n_zeros
+                % Calculate (s-z_i).
                 z_contribution =                this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_zeros(z);
+                
+                % Put together the text for the text box that describes the
+                % current zero's contribution, for example
+                % Z1: (0.0+1.1i) - (-0.7): M=1.3 p=57.9°
                 this.h_text_z_annot(z).String = ['Z',num2str(z),': (',num2str(this.d_z_values(this.a_time_ii * this.p_oversampling_factor),           '%.1f'),') - (',num2str(this.d_zeros(z),'%.1f'),'): M=',num2str(abs(z_contribution),'%.1f'),' p=',num2str(rad2deg(angle(z_contribution)),'%.1f'),'°'];
                 res_magnitude =                 [res_magnitude, '*',  num2str(abs(z_contribution),           '%.2f')];
                 res_phase =                     [res_phase,     '+',  num2str(rad2deg(angle(z_contribution)),'%.2f')];
@@ -770,6 +870,7 @@ classdef anp_gui < handle
             
             res_magnitude =                     [res_magnitude, ')/('];
             
+            % Same story as with the zeros.
             for p = 1:this.d_n_poles
                 p_contribution =                this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_poles(p);
                 this.h_text_p_annot(p).String = ['P',num2str(p),': (',num2str(this.d_z_values(this.a_time_ii * this.p_oversampling_factor),           '%.1f'),') - (',num2str(this.d_poles(p),'%.1f'),'): M=',num2str(abs(p_contribution),'%.1f'),' p=',num2str(rad2deg(angle(p_contribution)),'%.1f'),'°'];            
@@ -779,12 +880,16 @@ classdef anp_gui < handle
             
             res_magnitude =                     [res_magnitude,') = ',num2str(abs(this.d_w_values(this.a_time_ii * this.p_oversampling_factor)),      '%.3f')];
             res_phase =                         [res_phase,    ') = ',num2str(rad2deg(angle(this.d_w_values(this.a_time_ii * this.p_oversampling_factor))),'%.3f'),'°'];
-
+            
             this.h_text_res_annot(1).String =   ['Magnitude: ',  res_magnitude];
             this.h_text_res_annot(2).String =   ['Phase:       ',res_phase];
         end
         
         function [] = draw_update_limits_and_plots(this)
+            % Updates the axes' limits and their plot data.
+            % Gets called by GUI callback-methods. For example after a zoom
+            % or pan event.
+            
             subplot(this.h_sub1);
             this.p_z_xlim = xlim;
             this.p_z_ylim = ylim;
@@ -796,17 +901,20 @@ classdef anp_gui < handle
             this.p_w_xlim = xlim;
             this.p_w_ylim = ylim;
             
-            tools.dbg('anp_gui[draw_update_limits_and_plots]:\tz_xlim=[%.2f,%.2f], z_ylim =[%.2f,%.2f], w_xlim=[%.2f,%.2f], w_ylim=[%.2f,%.2f]\n',this.p_z_xlim(1),this.p_z_xlim(2),this.p_z_ylim(1),this.p_z_ylim(2),this.p_w_xlim(1),this.p_w_xlim(2),this.p_w_ylim(1),this.p_w_ylim(2));
-            
             this.calc_truncated_w_values();
             this.draw_update_full_w_plot();
+            
+            tools.dbg('anp_gui[draw_update_limits_and_plots]:\tz_xlim=[%.2f,%.2f], z_ylim =[%.2f,%.2f], w_xlim=[%.2f,%.2f], w_ylim=[%.2f,%.2f]\n',this.p_z_xlim(1),this.p_z_xlim(2),this.p_z_ylim(1),this.p_z_ylim(2),this.p_w_xlim(1),this.p_w_xlim(2),this.p_w_ylim(1),this.p_w_ylim(2));
         end
         
         function [] = draw_update_full_z_plot(this)
+            % Wrapper method. Updates the z-plot's data.
+            
             set(this.h_z_plot_full,'XData',real(this.d_z_values_truncated),'YData',imag(this.d_z_values_truncated));
         end
         
         function [] = draw_update_full_w_plot(this)
+            % Wrapper method. Updates the w-plot's data.
             set(this.h_w_plot_full,'XData',real(this.d_w_values_truncated),'YData',imag(this.d_w_values_truncated));
         end
         
@@ -815,39 +923,71 @@ classdef anp_gui < handle
         % Callback methods
         % -----------------------------------------------------------------
         
-        function [] = cb_step(this,~,~,dir)
+        function [] = cb_step(this,~,~,dir) % ignored parameters are src and evt
+            % CB method reacting to a "step DIR" button.
+            % The dir value is hardcoded in the button's instantiation.
+            
             this.s_draw_busy = true;
             tools.dbg('anp_gui[cb_step]:\tStepping button.\n');
             
             this.a_time_ii = tools.iterator_modulo(this.a_time_ii + dir,this.p_n_time_steps);
             this.draw_one_frame();
+            
             this.s_draw_busy = false;
         end
         
         
-        function [] = cb_run(this,src,~,dir) % ignored parameters is evt
+        function [] = cb_run(this,src,~,dir) % ignored parameter is evt
+            % CB method reacting to one of the "play" buttons.
+            % The dir values are hardcoded in the buttons' instantiations.
+            
             if this.s_draw_busy && (dir == this.a_direction)
+                % If draw_run_continuous_animation() already runs with the
+                % same dir as the requested one, do nothing.
+                
                 return;
             elseif this.s_draw_busy && (dir ~= this.a_direction)
+                % If draw_run_continuous_animation() already runs, but with
+                % a different dir, change it.
+                
                 this.a_direction = dir;
+                
+                % This case must be because of another "play" button being
+                % pressed, so turn off the old one.
                 for ii = 1:length(this.ui_run_switches)
                     if ~isequal(src,this.ui_run_switches(ii))
                         this.ui_run_switches(ii).State = 'off';
                     end
                 end
             else
+                % draw_run_continuous_animation() wasn't running yet.
+                
                 tools.dbg('anp_gui[cb_run]:\tStart requested.\n');
                 if this.s_gui_nominal
+                    % The GUI and data are ready
+                    
                     this.ui_sw_pause.State =    'off';
+                    
+                    % Block the "step" buttons while the animation
+                    % is running.
                     this.ui_btn_prev.Enable =   'off';
                     this.ui_btn_next.Enable =   'off';
+                    
+                    % Turn off the other "play" buttons.
                     for ii = 1:length(this.ui_run_switches)
                         if ~isequal(src,this.ui_run_switches(ii))
                             this.ui_run_switches(ii).State = 'off';
                         end
                     end
+                    
+                    % Set the animation direction to the requested one.
                     this.a_direction =          dir;
+                    
+                    % s_draw_allowed is a means to stop
+                    % draw_run_continuous_animation(), so better set
+                    % it to true.
                     this.s_draw_allowed =       true;
+                    
                     this.draw_run_continuous_animation();
                 else
                     warning('Data not ready!');
@@ -857,24 +997,37 @@ classdef anp_gui < handle
         end
         
         function [] = cb_run_switch_off(this,src,~,dir)
+            % CB that doesn't let a "play" button to be turned off.
             if this.s_draw_allowed == true && (dir == this.a_direction)
                 src.State = 'on';
             end
         end
         
         function [] = cb_pause(this,src,~)
+            % CB method that reacts to the "pause" button.
+            
             tools.dbg('anp_gui[cb_pause]:\tPause requested.\n');
+            
+            % This causes draw_run_continuous_animation() to stop.
             this.s_draw_allowed =   false;
+            
+            % Set the "play" and "pause" button states correctly.
             src.State =             'on';
             for ii = 1:length(this.ui_run_switches)
                 this.ui_run_switches(ii).State = 'off';
             end
+            
+            % Unblock the "step" buttons.
             this.ui_btn_prev.Enable =   'on';
             this.ui_btn_next.Enable =   'on';
         end
         
         function cb_after_zoom_or_pan(this,~,~)
+            % CB methods for zoom and pan events.
+            
             if ~this.s_draw_busy
+                % As long as draw_run_continuous_animation() isn't running,
+                % we do the updates directly.
                 
                 this.draw_update_limits_and_plots();
                 this.calc_plot_z_arrow_length();
@@ -882,14 +1035,18 @@ classdef anp_gui < handle
                 this.draw_init_z_plot_poles_zeros();
                 this.draw_one_frame();
             else
+                % draw_run_continuous_animation() is still running, notify
+                % it of the changed axes limits.
+                
                 this.s_check_limits =   true;
             end
         end
         
-        % -----------------------------------------------------------------
-        % utility functions
-        % -----------------------------------------------------------------
+        % ---------------------
+        % Utility functions
+        % ---------------------
         function arrowHandle = draw_arrow(~,parent,x0,phi,l)
+            % Places an arrow annotation at the given location.
             r = l*[cos(phi),sin(phi)];
             
             arrowHandle = annotation('Arrow');
@@ -897,6 +1054,7 @@ classdef anp_gui < handle
         end
         
         function h_arrow = draw_text_arrow(~,x0,phi,l,text,color)
+            % Places a text arrow annotation at the given location.
             r = l*[cos(phi),sin(phi)];
 
             h_arrow = annotation('TextArrow');
@@ -904,9 +1062,10 @@ classdef anp_gui < handle
         end
 
         function values_truncated = trunc(~,values,xlim,ylim)
-            % This method clips the input values to the maximum value
-            % allowed inside the plot
+            % Clips the input values to the maximum value allowed inside the plot.
             
+            % We actually don't clip to the maximum value but only 97% so
+            % the clipped value is well inside the plot.
             xlim = anp_stretch_centered(xlim,0.97);
             ylim = anp_stretch_centered(ylim,0.97);
             values_truncated = max(xlim(1), min(xlim(2), real(values))) ...
