@@ -1,13 +1,11 @@
 % moves the current ax(l)es into the origin of the plot
-function anp_plot_axes_origin(legacy)
+function anp_plot_axes_origin(ax,legacy)
     switch(legacy)
         case 'R2015b_or_newer'
-            ax = gca;
             ax.XAxisLocation = 'origin';
             ax.YAxisLocation = 'origin';
         case 'pre_R2015b'
             % http://undocumentedmatlab.com/blog/customizing-axes-part-2
-            ax = gca;
             ax.XBaseline.Color = 'k';
             ax.YBaseline.Color = 'k';
             

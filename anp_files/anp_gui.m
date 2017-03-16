@@ -161,11 +161,12 @@ classdef anp_gui < handle
             this.a_direction =  1;
             
             % Instantiate the figure and its subplots
-            this.h_fig =        figure('CloseRequestFcn',@this.on_figure_delete);
+            this.h_fig =        figure('IntegerHandle','off','CloseRequestFcn',@this.on_figure_delete);
             this.h_sub1 =       subplot(1,2,1);
             hold on;
             this.h_sub2 =       subplot(1,2,2);
             hold on;
+            this.h_fig.HandleVisibility = 'off';
             
             % Initialize the custom toolbar
             this.ui_toolbar =   findall(this.h_fig,'Type','uitoolbar');
@@ -282,7 +283,7 @@ classdef anp_gui < handle
             this.draw_init_gui_text_objects();
             this.draw_init_plot_axes();
             this.draw_init_line_plots();
-            this.draw_init_plot_arrows();
+            % this.draw_init_plot_arrows(); % not needed as the objects get reinstantiated at every update anyway.
             this.draw_init_z_plot_poles_zeros();
             
             % Since draw_one_frame only updates the trail arrow and the
@@ -546,7 +547,7 @@ classdef anp_gui < handle
             % Prepares the positions of the figure and its two subplots.
             
             % TODO (what? 2017-03-05)
-            figure(this.h_fig);
+            
             this.h_fig.Position =   this.w_fig_position;
             
             this.h_sub1.Position =  this.w_sub1_position;
@@ -556,8 +557,6 @@ classdef anp_gui < handle
         function [] = draw_init_gui_text_objects(this)
             % Prepares the annotations below the plots and populates the corresponding handle arrays.
             
-            figure(this.h_fig);
-
             % Delete all previous instances of text boxes first as there
             % might be a different number of poles and zeros this time.
             for ii = 1:length(this.h_text_z_annot)
@@ -590,54 +589,48 @@ classdef anp_gui < handle
             % TODO maybe separate into two separate functions for z and w
             % plot
             
-            figure(this.h_fig);
-            
             % z-plot ------------
-            subplot(this.h_sub1);
             
             % Establish 1:1 aspect ratio.
-            axis equal;
+            axis(this.h_sub1, 'equal');
             
             % Do this to let the user zoom all the way out with a double
             % click.
-            xlim manual, ylim manual;
-            xlim(anp_stretch_centered(this.p_z_xspan,1.05)), ylim(anp_stretch_centered(this.p_z_yspan,1.05));
-            zoom reset;
-            xlim(this.p_z_xlim), ylim(this.p_z_ylim);
+            xlim(this.h_sub1, 'manual'), ylim(this.h_sub1, 'manual');
+            xlim(this.h_sub1, anp_stretch_centered(this.p_z_xspan,1.05)), ylim(this.h_sub1, anp_stretch_centered(this.p_z_yspan,1.05));
+            zoom(this.h_fig, 'reset');
+            xlim(this.h_sub1, this.p_z_xlim), ylim(this.h_sub1, this.p_z_ylim);
             
             % Default behavior of Matlab is to put the axes on the left and
             % bottom edge of the graph. We don't want this. Instead, place
             % the axes such that they go through the origin.
-            anp_plot_axes_origin(this.g_legacy);
+            anp_plot_axes_origin(this.h_sub1, this.g_legacy);
             
-            grid on;
+            grid(this.h_sub1, 'on');
             % -------------------
             
             % w-plot ------------
             % Same story as in z-plot.
-            subplot(this.h_sub2);
-            axis equal;
-            xlim manual, ylim manual;
-            xlim(anp_stretch_centered(this.p_w_xspan,1.05)), ylim(anp_stretch_centered(this.p_w_yspan,1.05));
-            zoom reset;
-            xlim(this.p_w_xlim), ylim(this.p_w_ylim);
-            anp_plot_axes_origin(this.g_legacy);
-            grid on;
+            axis(this.h_sub2, 'equal');
+            xlim(this.h_sub2, 'manual'), ylim(this.h_sub2, 'manual');
+            xlim(this.h_sub2, anp_stretch_centered(this.p_w_xspan,1.05)), ylim(this.h_sub2, anp_stretch_centered(this.p_w_yspan,1.05));
+            zoom(this.h_fig, 'reset');
+            xlim(this.h_sub2, this.p_w_xlim), ylim(this.h_sub2, this.p_w_ylim);
+            anp_plot_axes_origin(this.h_sub2, this.g_legacy);
+            grid(this.h_sub2, 'on');
             % -------------------
             
             % Create zoom and pan objects and give them the handles to our
             % custom callback method.
-            this.h_zoom = zoom;
+            this.h_zoom = zoom(this.h_fig);
             this.h_zoom.ActionPostCallback = @this.cb_after_zoom_or_pan;
-            this.h_pan = pan;
+            this.h_pan = pan(this.h_fig);
             this.h_pan.ActionPostCallback = @this.cb_after_zoom_or_pan;
         end
         
         function [] = draw_init_line_plots(this)
             % Instantiates the full- and trail plot objects and sets their properties.
             
-            figure(this.h_fig);
-
             % Prepare the full input- and output curves with some
             % transparency
             this.h_z_plot_full =            plot(this.h_sub1,0,0);
@@ -656,6 +649,7 @@ classdef anp_gui < handle
             set(this.h_w_plot_trail,'Color',[255 215 0]/255,'linewidth',2);
         end
         
+        % UNUSED
         function [] = draw_init_plot_arrows(this)
             % Prepare the arrow annotation objects used for the tip of the trails.
             
@@ -665,10 +659,10 @@ classdef anp_gui < handle
             % head of the trail at the current frame and remember their
             % handle for later use.
             subplot(this.h_sub1);
-            this.h_z_plot_arrow =   annotation('Arrow',[0 0],[1 0]);
+            this.h_z_plot_arrow =   annotation(this.h_fig, 'Arrow',[0 0],[1 0]);
 
             subplot(this.h_sub2);
-            this.h_w_plot_arrow =   annotation('Arrow',[0 0],[1 0]);
+            this.h_w_plot_arrow =   annotation(this.h_fig, 'Arrow',[0 0],[1 0]);
         end
         
         function [] = draw_init_z_plot_poles_zeros(this)
@@ -677,9 +671,7 @@ classdef anp_gui < handle
             % TODO we could be way more efficient if we knew which objects
             % we need to touch and which we don't. For the time being just
             % redo everything every time this method runs.
-            
-            figure(this.h_fig);            
-            
+                        
             % First delete all existing objects to start fresh.
             for ii = 1:length(this.h_z_pz_objcts)
                 this.h_z_pz_objcts{ii}.delete();
@@ -687,11 +679,9 @@ classdef anp_gui < handle
             
             % Preallocate the cell-array containing the object handles.
             this.h_z_pz_objcts = cell(1,this.d_n_poles + this.d_n_zeros);
-            
-            subplot(this.h_sub1);
-            
+                        
             % Where's the center of the plot with the current limits?
-            plot_center = mean(xlim) + 1i*mean(ylim);
+            plot_center = mean(xlim(this.h_sub1)) + 1i*mean(ylim(this.h_sub1));
             
             objct_ii = 1;
             for p_ii = 1:this.d_n_poles
@@ -702,11 +692,11 @@ classdef anp_gui < handle
                     % means that it lies outside the current subplot limits.
                     % Instead of drawing just an X at the border, plot an
                     % arrow, indicating that there's an outlier.
-                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow([real(pole_trunc),imag(pole_trunc)],angle(current_pole - plot_center),this.p_z_arrow_length,' x',[255 140 0]/255);
+                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow(this.h_sub1,[real(pole_trunc),imag(pole_trunc)],angle(current_pole - plot_center),this.p_z_arrow_length,' x',[255 140 0]/255);
                 else
                     % The current pole lies within xlim and ylim, so draw
                     % an X at its location.
-                    this.h_z_pz_objcts{objct_ii} = scatter(real(current_pole),imag(current_pole),60,'x','MarkerEdgeColor',[255 140 0]/255,'LineWidth',1.5);
+                    this.h_z_pz_objcts{objct_ii} = scatter(this.h_sub1,real(current_pole),imag(current_pole),60,'x','MarkerEdgeColor',[255 140 0]/255,'LineWidth',1.5);
                 end
                 objct_ii = objct_ii + 1;
             end
@@ -716,9 +706,9 @@ classdef anp_gui < handle
                 current_zero = this.d_zeros(z_ii);
                 zero_trunc = this.trunc(current_zero, this.p_z_xlim, this.p_z_ylim);
                 if current_zero ~= zero_trunc
-                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow([real(zero_trunc),imag(zero_trunc)],angle(current_zero - plot_center),this.p_z_arrow_length,' o',[95 158 160]/255);
+                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow(this.h_sub1,[real(zero_trunc),imag(zero_trunc)],angle(current_zero - plot_center),this.p_z_arrow_length,' o',[95 158 160]/255);
                 else
-                    this.h_z_pz_objcts{objct_ii} = scatter(real(current_zero),imag(current_zero),60,'o','MarkerEdgeColor',[70 130 180]/255,'LineWidth',1.5);
+                    this.h_z_pz_objcts{objct_ii} = scatter(this.h_sub1,real(current_zero),imag(current_zero),60,'o','MarkerEdgeColor',[70 130 180]/255,'LineWidth',1.5);
                 end
                 objct_ii = objct_ii + 1;
             end
@@ -890,16 +880,14 @@ classdef anp_gui < handle
             % Gets called by GUI callback-methods. For example after a zoom
             % or pan event.
             
-            subplot(this.h_sub1);
-            this.p_z_xlim = xlim;
-            this.p_z_ylim = ylim;
+            this.p_z_xlim = xlim(this.h_sub1);
+            this.p_z_ylim = ylim(this.h_sub1);
 
             this.calc_truncated_z_values();
             this.draw_update_full_z_plot();
 
-            subplot(this.h_sub2);
-            this.p_w_xlim = xlim;
-            this.p_w_ylim = ylim;
+            this.p_w_xlim = xlim(this.h_sub2);
+            this.p_w_ylim = ylim(this.h_sub2);
             
             this.calc_truncated_w_values();
             this.draw_update_full_w_plot();
@@ -1045,23 +1033,23 @@ classdef anp_gui < handle
         % ---------------------
         % Utility functions
         % ---------------------
-        function arrowHandle = draw_arrow(~,parent,x0,phi,l)
+        function arrowHandle = draw_arrow(this,parent,x0,phi,l)
             % Places an arrow annotation at the given location.
             r = l*[cos(phi),sin(phi)];
             
-            arrowHandle = annotation('Arrow');
+            arrowHandle = annotation(this.h_fig,'Arrow');
             set(arrowHandle,'parent',parent,'position',[x0-r,r]);
         end
         
-        function h_arrow = draw_text_arrow(~,x0,phi,l,text,color)
+        function h_arrow = draw_text_arrow(this,parent,x0,phi,l,text,color)
             % Places a text arrow annotation at the given location.
             r = l*[cos(phi),sin(phi)];
 
-            h_arrow = annotation('TextArrow');
-            set(h_arrow,'parent',gca,'position',[x0-r,r],'String',text,'Color',color);
+            h_arrow = annotation(this.h_fig,'TextArrow');
+            set(h_arrow,'parent',parent,'position',[x0-r,r],'String',text,'Color',color);
         end
 
-        function values_truncated = trunc(~,values,xlim,ylim)
+        function values_truncated = trunc(~,values,xlim,ylim) % ignored parameter is 'this'
             % Clips the input values to the maximum value allowed inside the plot.
             
             % We actually don't clip to the maximum value but only 97% so
