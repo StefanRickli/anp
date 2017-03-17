@@ -26,7 +26,6 @@ classdef anp_gui < handle
         % g: general properties
         
         g_uid               % Java String,      uniqe identifier for every object instance
-        g_legacy            % string            % store Matlabs version here
         
         
         % s: state
@@ -151,7 +150,6 @@ classdef anp_gui < handle
             % set a unique ID for every instance of the GUI and find out
             % which Matlab version is running.
             this.g_uid =        java.util.UUID.randomUUID.toString;
-            this.g_legacy =     anp_check_Matlab_version();
             
             % Initialize the state variables
             this.s_gui_nominal = false;
@@ -384,16 +382,10 @@ classdef anp_gui < handle
             fig_annotation_textbox_height = 14;                                 % one box, [pixel]
             fig_annotation_height_sum =     (max(this.d_n_zeros,this.d_n_poles)+2) ...
                                               * fig_annotation_textbox_height;  % cumulative, [pixel]
-            switch(this.g_legacy)
-                case 'R2015b_or_newer'
-                    fig_legacy_correction = 0;
-                otherwise
-                    fig_legacy_correction = 3*fig_annotation_textbox_height;
-            end
+            
             fig_height =            fig_plot_height ...
-                                    + fig_annotation_height_sum ...
-                                    + fig_legacy_correction;                % [pixel]
-            fig_width =             3*this.w_border + 2*this.w_plot_size;   % [pixel]
+                                    + fig_annotation_height_sum;                % [pixel]
+            fig_width =             3*this.w_border + 2*this.w_plot_size;       % [pixel]
             
             % fig.Position expects pixels as unit.
             this.w_fig_position =   [100, ...
@@ -604,8 +596,9 @@ classdef anp_gui < handle
             % Default behavior of Matlab is to put the axes on the left and
             % bottom edge of the graph. We don't want this. Instead, place
             % the axes such that they go through the origin.
-            anp_plot_axes_origin(this.h_sub1, this.g_legacy);
-            
+            this.h_sub1.XAxisLocation = 'origin';
+            this.h_sub1.YAxisLocation = 'origin';
+
             grid(this.h_sub1, 'on');
             % -------------------
             
@@ -616,7 +609,8 @@ classdef anp_gui < handle
             xlim(this.h_sub2, anp_stretch_centered(this.p_w_xspan,1.05)), ylim(this.h_sub2, anp_stretch_centered(this.p_w_yspan,1.05));
             zoom(this.h_fig, 'reset');
             xlim(this.h_sub2, this.p_w_xlim), ylim(this.h_sub2, this.p_w_ylim);
-            anp_plot_axes_origin(this.h_sub2, this.g_legacy);
+            this.h_sub2.XAxisLocation = 'origin';
+            this.h_sub2.YAxisLocation = 'origin';
             grid(this.h_sub2, 'on');
             % -------------------
             

@@ -82,14 +82,15 @@
 % -------------------------------------------------------------------------
 
 function [] = anp_main(varargin)
-    
-    global debug_graphics debug_graphics_interpolation debug_text;
-    debug_graphics = true;
-    debug_graphics_interpolation = false;
-    debug_text = false;
-    
     addpath('anp_files');
     addpath('anp_icons');
+    
+    anp_check_Matlab_version(); % sets global variable 'matlab_version'
+    
+    global debug_graphics debug_graphics_interpolation debug_text;
+    debug_graphics = false;
+    debug_graphics_interpolation = false;
+    debug_text = false;
     
     args = anp_parse_arguments(varargin{:});
     
