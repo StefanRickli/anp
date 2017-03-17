@@ -26,12 +26,12 @@ classdef anp_gui < handle
         % g: general properties
         
         g_uid               % Java String,      uniqe identifier for every object instance
-        g_legacy            string              % store Matlabs version here
+        g_legacy            % string            % store Matlabs version here
         
         
         % s: state
         
-        s_gui_nominal        logical             % do we have everything together before we can draw?
+        s_gui_nominal       logical             % do we have everything together before we can draw?
         s_draw_allowed      logical             % set this to false before changing data or parameters, it forces the draw-function to stop once it's done with an iteration
         s_draw_busy         logical             % we're updating the plot at the moment, parameter or data change not allowed
         s_check_limits      logical             % prompt the draw-function to update axis limit related data before it makes the next iteration
