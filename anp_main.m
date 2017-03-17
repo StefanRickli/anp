@@ -1,6 +1,6 @@
 % -------------------------------------------------------------------------
-%   Animated Nyquist Plot
-%   *********************
+%   ANP: Animated Nyquist Plot
+%   **************************
 %
 %   Author: Stefan Rickli, ricklis [at] student.ethz.ch
 %           https://blogs.ethz.ch/ricklis
