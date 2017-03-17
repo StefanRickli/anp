@@ -1,6 +1,3 @@
-% theory about Nyquist plot in Signals and Systems II, chapter 5
-% download at http://control.ee.ethz.ch/~sigsys/ at the bottom
-
 % usage (see animated_nyquist_plot.m file for full documentation):
 % animated_nyquist_plot(tf)
 % animated_nyquist_plot([zeros],[poles])
@@ -29,15 +26,15 @@ nyquist(unstable_system) % can't tell...
 animated_nyquist_plot(unstable_system)
 animated_nyquist_plot(unstable_system,'R',50)
 
-% SigSys II Ex from slide 5.43
+% Example of a large system
 s = tf('s')
-ex2 = (10*(s+1)*(2*s+1))/((100*s+1)*(20*s+1)*(10*s+1)*(0.5*s+1))
-nyquist(ex2)
-animated_nyquist_plot(ex2)
-animated_nyquist_plot(ex2,'duration',60) % takes waay longer to compute but has better spatial resolution at the beginning
-animated_nyquist_plot(ex2,'right_dims',[200 100],'right_x0',[-50 0])
-animated_nyquist_plot(ex2,'right_dims',[20 10],'right_x0',[-5 0])
-animated_nyquist_plot(ex2,'right_dims',[5 2],'right_x0',[-1 0])
+sys = (10*(s+1)*(2*s+1))/((100*s+1)*(20*s+1)*(10*s+1)*(0.5*s+1))
+nyquist(sys)
+animated_nyquist_plot(sys)
+animated_nyquist_plot(sys,'duration',60) % takes waay longer to compute but has better spatial resolution at the beginning
+animated_nyquist_plot(sys,'right_dims',[200 100],'right_x0',[-50 0])
+animated_nyquist_plot(sys,'right_dims',[20 10],'right_x0',[-5 0])
+animated_nyquist_plot(sys,'right_dims',[5 2],'right_x0',[-1 0])
 
 % system with outliers, watch the zoom level in the left plot
 zeros = [-30]

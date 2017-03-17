@@ -5,8 +5,8 @@
 %   Author: Stefan Rickli, ricklis [at] student.ethz.ch
 %           https://blogs.ethz.ch/ricklis
 %
-%   Version 4.0, 2016-12-25
-%   
+%   Version 4.0.1, 2017-03-17
+%   Remark: last version to support R2014b
 %   
 %   What does it do?:
 %   -----------------
@@ -90,7 +90,10 @@
 %
 % -------------------------------------------------------------------------
 
-function [] = animated_nyquist_plot_new(varargin)
+function [] = animated_nyquist_plot(varargin)
+    global legacy;
+    legacy = checkMatlabVersion();
+    
     ip = inputParser;
     
     global arg_types keywords;
@@ -153,9 +156,14 @@ function [] = animated_nyquist_plot_new(varargin)
     elseif ~isempty(regexp(arg_types,'^tk{0,2}$', 'once'))
         % we only take the first transfer function if there multiple have
         % been provided
-        main_args.tf_zeros = roots(ip.Results.arg1.Numerator{1})';         % zeros of transfer function
-        main_args.tf_poles = roots(ip.Results.arg1.Denominator{1})';       % poles of transfer function
         
+        if legacy >= 9.0 % R2016b or newer
+            main_args.tf_zeros = roots(ip.Results.arg1.Numerator{1})';         % zeros of transfer function
+            main_args.tf_poles = roots(ip.Results.arg1.Denominator{1})';       % poles of transfer function
+        else
+            main_args.tf_zeros = roots(ip.Results.arg1.num{1})';               % zeros of transfer function
+            main_args.tf_poles = roots(ip.Results.arg1.den{1})';               % poles of transfer function
+        end
     elseif ~isempty(regexp(arg_types,'^vvk{0,2}$', 'once'))
         if ~isempty(ip.Results.arg1) && length(ip.Results.arg1(:,1)) > 1
             main_args.tf_zeros = ip.Results.arg1';
@@ -419,7 +427,7 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
         hold on;
 
         % set the visual params of the subplots
-        legacy = checkMatlabVersion();
+        global legacy;
         subplot(sub1);
         axis equal; % for 1:1 aspect ratio
         xlim(in_axis_xlim), ylim(in_axis_ylim);
@@ -437,12 +445,12 @@ function [frames] = drawFunctions(in_values, out_values, zeros, poles, R, t, t_i
         fig_plot_height = 2*main_params.border + main_params.plotSize;              % plot + border above and below, pixel
         fig_annotation_textbox_height = 14;                                                 % one box, pixel
         fig_annotation_height_sum = (max(zeros_N,poles_N)+2)*fig_annotation_textbox_height; % cumulative, pixel
-        switch(legacy)
-            case 'R2015b_or_newer'
-                fig_legacy_correction = 0;
-            otherwise
-                fig_legacy_correction = 3*fig_annotation_textbox_height;
+        if legacy >= 8.6 % R2015b_or_newer
+            fig_legacy_correction = 0;
+        else
+            fig_legacy_correction = 3*fig_annotation_textbox_height;
         end
+        
         fig_height = fig_plot_height + fig_annotation_height_sum + fig_legacy_correction;   % pixel
         fig_width = 3*main_params.border + 2*main_params.plotSize;                                  % pixel
 
@@ -717,7 +725,7 @@ function legacy = checkMatlabVersion()
 
     if matlab_version <= 8.3
         % we want at least HG2 to work with.
-        legacy = 'too_old';
+        %legacy = 'too_old';
         if ~exist('animated_nyquist_plot_warningOff','file')
             fprintf('Warning: You are using a release of Matlab that doesn''t support the current\n')
             fprintf('HG2 graphics engine. Some features such as axle repositioning are deactivated, but there''s still a chance that the script crashes.\n')
@@ -726,9 +734,9 @@ function legacy = checkMatlabVersion()
             fprintf('(Suppress this warning by placing an empty file named ''animated_nyquist_plot_warningOff'' in the script''s working folder.)\n');
         end
     elseif matlab_version < 8.6
-        legacy = 'pre_R2015b';
+        %legacy = 'pre_R2015b';
     else
-        legacy = 'R2015b_or_newer';
+        %legacy = 'R2015b_or_newer';
     end
     
     if ~exist('animated_nyquist_plot_warningOff','file') && matlab_version >= 8.5 && matlab_version <= 9.0
@@ -737,39 +745,40 @@ function legacy = checkMatlabVersion()
         fprintf('Please report any bugs together with their input!\n');
         fprintf('(Suppress this warning by placing an empty file named ''animated_nyquist_plot_warningOff'' in the script''s working folder.)\n');
     end
+    
+    legacy = matlab_version;
 end
 
 % moves the current ax(l)es into the origin of the plot
 function setaxes_origin(legacy)
-    switch(legacy)
-        case 'R2015b_or_newer'
-            ax = gca;
-            ax.XAxisLocation = 'origin';
-            ax.YAxisLocation = 'origin';
-        case 'pre_R2015b'
-            % http://undocumentedmatlab.com/blog/customizing-axes-part-2
-            ax = gca;
-            ax.XBaseline.Color = 'k';
-            ax.YBaseline.Color = 'k';
-            
-            ax.XBaseline.LineWidth = 1.5;
-            ax.YBaseline.LineWidth = 1.5;
-            
-            ax.YBaseline.Visible = 'on';
-            ax.XBaseline.Visible = 'on';
-            
-            ax.XRuler.Axle.Visible = 'off';
-            ax.YRuler.Axle.Visible = 'off';
+    if legacy >= 8.6 % R2015b_or_newer
+        ax = gca;
+        ax.XAxisLocation = 'origin';
+        ax.YAxisLocation = 'origin';
+    elseif legacy > 8.3 % pre_R2015b
+        % http://undocumentedmatlab.com/blog/customizing-axes-part-2
+        ax = gca;
+        ax.XBaseline.Color = 'k';
+        ax.YBaseline.Color = 'k';
 
-            ax.LineWidth = 1;
+        ax.XBaseline.LineWidth = 1.5;
+        ax.YBaseline.LineWidth = 1.5;
 
-            % 2nd possibility for workaround: http://matlabvn.com/matlab-plotting-tricks-move-x-axis-center/
-            % other:
-            % https://ch.mathworks.com/matlabcentral/answers/147087-how-to-change-the-axes-position-in-matlab
-            % http://ch.mathworks.com/matlabcentral/fileexchange/22956-axescenter
-        otherwise
-            % Too old to produce compatible code. Just skip the axle
-            % repositioning.
-            return;
+        ax.YBaseline.Visible = 'on';
+        ax.XBaseline.Visible = 'on';
+
+        ax.XRuler.Axle.Visible = 'off';
+        ax.YRuler.Axle.Visible = 'off';
+
+        ax.LineWidth = 1;
+
+        % 2nd possibility for workaround: http://matlabvn.com/matlab-plotting-tricks-move-x-axis-center/
+        % other:
+        % https://ch.mathworks.com/matlabcentral/answers/147087-how-to-change-the-axes-position-in-matlab
+        % http://ch.mathworks.com/matlabcentral/fileexchange/22956-axescenter
+    else
+        % Too old to produce compatible code. Just skip the axle
+        % repositioning.
+        return;
     end
 end
