@@ -1,3 +1,10 @@
+% For the theory behind Nyquist plots and their usage refer to
+% http://lpsa.swarthmore.edu/Nyquist/Nyquist.html
+% The program "NyquistGUI" there is also a nice alternative to my program.
+% 
+% If you rather like to look the theory up in a book, then I can recommend
+% "Feedback Control of Dynamic Systems" by Franklin, Powell, Emami-Naeini
+
 % Usage (see anp_main.m file for full documentation of parameters):
 % anp_main(tf)
 % anp_main([zeros],[poles])
