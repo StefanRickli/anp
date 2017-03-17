@@ -9,7 +9,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-ANP has been developed in Matlab R2016b. It should be backward compatible down to R2014b.
+ANP has been developed in Matlab R2016b. It should be backward compatible down to R2016a (not yet tested).
+(v4.0 should be compatible down to R2014b.)
 
 You'll need to have the following toolboxes installed:
 * Control Toolbox
