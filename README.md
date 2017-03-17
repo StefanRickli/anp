@@ -26,7 +26,7 @@ You don't need the folders 'additional' and 'archive' for the function to work.
 
 ### Usage examples
 
-To be done.
+Open 'anp_usage_examples.m' with Matlab and execute the sample statements by highlighting line by line and hitting F9.
 
 ## Contributing
 
