@@ -34,7 +34,7 @@ If you feel like contributing to the project, please contact me first. I have no
 
 ## Versioning
 
-Starting with the initial upload to GitHub, I will use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+Starting with the initial upload to GitHub, I will use [SemVer](http://semver.org/) for versioning. For the versions available, see the [releases on this repository](https://github.com/StefanRickli/anp/releases). 
 
 ## Authors
 * **Stefan Rickli** - *Initial idea and versions of ANP* [StefanRickli](https://blogs.ethz.ch/ricklis)
