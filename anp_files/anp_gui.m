@@ -822,6 +822,9 @@ classdef anp_gui < handle
         
         function [] = draw_update_plot_titles(this)
             % Updates the text of the plot titles.
+            % We calculate the angles directly from the value at the arrow
+            % tip, so the phase can be off by multiples of 360° compared to
+            % the cumulative phase in the text boxes below the graph.
             
             current_z_value = this.d_z_values(this.a_time_ii * this.p_oversampling_factor);
             current_w_value = this.d_w_values(this.a_time_ii * this.p_oversampling_factor);
@@ -832,41 +835,96 @@ classdef anp_gui < handle
         
         function [] = draw_update_textboxes(this)
             % Updates the zero- and pole contribution and the cumulative values and puts the information in the pre-allocated textboxes.
+                        
+            res_magnitude = 1;
+            res_phase =     0;
             
-            % TODO the text formatting isn't really good. One could make it
-            % way more pleasing to the eyes...
+            % *************************
+            % Text before contributions
+            % *************************
             
-            % The following two result-strings will be appended further.
-            res_magnitude =                     '(';
-            res_phase =                         '(';
+            switch this.d_n_zeros
+                case 0
+                    res_magnitude_txt =         '1';
+                case 1
+                    res_magnitude_txt =         '';
+                otherwise
+                    res_magnitude_txt =         '[';
+            end
+            res_phase_txt =                     '[';
+            
+            % ******************
+            % Zero contributions
+            % ******************
             
             for z = 1:this.d_n_zeros
                 % Calculate (s-z_i).
                 z_contribution =                this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_zeros(z);
+                res_magnitude =                 res_magnitude * abs(z_contribution);
+                res_phase =                     res_phase + angle(z_contribution);
                 
                 % Put together the text for the text box that describes the
                 % current zero's contribution, for example
                 % Z1: (0.0+1.1i) - (-0.7): M=1.3 p=57.9°
-                this.h_text_z_annot(z).String = ['Z',num2str(z),': (',num2str(this.d_z_values(this.a_time_ii * this.p_oversampling_factor),           '%.1f'),') - (',num2str(this.d_zeros(z),'%.1f'),'): M=',num2str(abs(z_contribution),'%.1f'),' p=',num2str(rad2deg(angle(z_contribution)),'%.1f'),'°'];
-                res_magnitude =                 [res_magnitude, '*',  num2str(abs(z_contribution),           '%.2f')];
-                res_phase =                     [res_phase,     '+',  num2str(rad2deg(angle(z_contribution)),'%.2f')];
+                this.h_text_z_annot(z).String = ['Z',num2str(z),    ': (',  num2str(this.d_z_values(this.a_time_ii * this.p_oversampling_factor),           '%.1f'),') - (',num2str(this.d_zeros(z),'%.1f'),'): M=',num2str(abs(z_contribution),'%.1f'),' p=',num2str(rad2deg(angle(z_contribution)),'%.1f'),'°'];
+                if z == 1
+                    res_magnitude_txt =      	[res_magnitude_txt,         num2str(abs(z_contribution),           '%.2f')     ];
+                else
+                    res_magnitude_txt =        	[res_magnitude_txt, ' * ',  num2str(abs(z_contribution),           '%.2f')     ];
+                end
+                res_phase_txt =             [res_phase_txt,     ' + (', num2str(rad2deg(angle(z_contribution)),'%.2f'), ')'];
             end
             
-            res_magnitude =                     [res_magnitude, ')/('];
+            % ****************************************
+            % Text between zero and pole contributions
+            % ****************************************
+            
+            if this.d_n_zeros <= 1
+                res_magnitude_txt =           	[res_magnitude_txt, ' / '];
+            else
+                res_magnitude_txt =            	[res_magnitude_txt, '] / '];
+            end
+            
+            if this.d_n_poles >= 2
+                res_magnitude_txt =            	[res_magnitude_txt, '['];
+            end
+            
+            res_phase_txt =                     [res_phase_txt,     '] ['];
+
+            
+            % ******************
+            % Pole contributions
+            % ******************
             
             % Same story as with the zeros.
             for p = 1:this.d_n_poles
                 p_contribution =                this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_poles(p);
-                this.h_text_p_annot(p).String = ['P',num2str(p),': (',num2str(this.d_z_values(this.a_time_ii * this.p_oversampling_factor),           '%.1f'),') - (',num2str(this.d_poles(p),'%.1f'),'): M=',num2str(abs(p_contribution),'%.1f'),' p=',num2str(rad2deg(angle(p_contribution)),'%.1f'),'°'];            
-                res_magnitude =                 [res_magnitude, '*',  num2str(abs(p_contribution),           '%.2f')];
-                res_phase =                     [res_phase,     '-',  num2str(rad2deg(angle(p_contribution)),'%.2f')];
+                res_magnitude =                 res_magnitude / abs(p_contribution);
+                res_phase =                     res_phase - angle(p_contribution);
+                
+                this.h_text_p_annot(p).String = ['P',num2str(p),    ': (',  num2str(this.d_z_values(this.a_time_ii * this.p_oversampling_factor),           '%.1f'),') - (',num2str(this.d_poles(p),'%.1f'),'): M=',num2str(abs(p_contribution),'%.1f'),' p=',num2str(rad2deg(angle(p_contribution)),'%.1f'),'°'];            
+                if p == 1
+                    res_magnitude_txt =     	[res_magnitude_txt,         num2str(abs(p_contribution),           '%.2f')     ];
+                else
+                    res_magnitude_txt =      	[res_magnitude_txt, ' * ',  num2str(abs(p_contribution),           '%.2f')     ];
+                end
+                res_phase_txt =            	[res_phase_txt,     ' - (', num2str(rad2deg(angle(p_contribution)),'%.2f'), ')'];
             end
             
-            res_magnitude =                     [res_magnitude,') = ',num2str(abs(this.d_w_values(this.a_time_ii * this.p_oversampling_factor)),      '%.3f')];
-            res_phase =                         [res_phase,    ') = ',num2str(rad2deg(angle(this.d_w_values(this.a_time_ii * this.p_oversampling_factor))),'%.3f'),'°'];
+            % ************************
+            % Text after contributions
+            % ************************
             
-            this.h_text_res_annot(1).String =   ['Magnitude: ',  res_magnitude];
-            this.h_text_res_annot(2).String =   ['Phase:       ',res_phase];
+            if this.d_n_poles >= 2
+                res_magnitude_txt =             [res_magnitude_txt,']'];
+            end
+            res_phase_txt =                   	[res_phase_txt,    ']'];
+            
+            res_magnitude_txt =               	[res_magnitude_txt,' = ',   num2str(res_magnitude,      '%.3f')];
+            res_phase_txt =                    	[res_phase_txt,    ' = ',   num2str(rad2deg(res_phase),'%.3f'),'°'];
+            
+            this.h_text_res_annot(1).String =   ['Magnitude: ',  res_magnitude_txt];
+            this.h_text_res_annot(2).String =   ['Phase:       ',res_phase_txt];
         end
         
         function [] = draw_update_limits_and_plots(this)
