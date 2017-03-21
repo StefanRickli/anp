@@ -264,9 +264,9 @@ classdef anp_gui < handle
             
             % Decide on layout parameters.
             this.calc_gui_positions();
-            this.calc_plot_axis_limits();
-            this.calc_plot_z_arrow_length();
-            this.calc_plot_w_arrow_length();
+            this.calc_axis_limits();
+            this.calc_z_arrow_length();
+            this.calc_w_arrow_length();
             this.calc_trail_indexes();
             
             % Calculate the data that is to be plotted. Compared to the raw
@@ -418,7 +418,7 @@ classdef anp_gui < handle
             this.w_annotation_textbox_frac =    fig_annotation_textbox_height / fig_height;     % [1]
         end
         
-        function [] = calc_plot_axis_limits(this)
+        function [] = calc_axis_limits(this)
             % Sets the correct x- and ylims for the left and right plot.
             % The method respects the auto-flags and only calculates the
             % parameters if it's told to do so.
@@ -483,16 +483,16 @@ classdef anp_gui < handle
             end
         end
         
-        function [] = calc_plot_z_arrow_length(this)
+        function [] = calc_z_arrow_length(this)
             % Calculates how long the trail arrow should be based on the current axis limits.
             
             in_axis_width =         diff(this.p_z_xlim);                            % [1]
             in_axis_height =        diff(this.p_z_ylim);                            % [1]
             this.p_z_arrow_length = 0.04 * sqrt(in_axis_width^2 + in_axis_height^2);% [1]
-            tools.dbg('anp_gui[calc_plot_z_arrow_length]:\t%.5f\n',this.p_z_arrow_length);
+            tools.dbg('anp_gui[calc_z_arrow_length]:\t%.5f\n',this.p_z_arrow_length);
         end
         
-        function [] = calc_plot_w_arrow_length(this)
+        function [] = calc_w_arrow_length(this)
             % Calculates how long the trail arrow should be based on the current axis limits.
             
             % TODO handle very short arrow lengths better
@@ -504,7 +504,7 @@ classdef anp_gui < handle
             if this.p_w_arrow_length < 0.05
                 this.p_w_arrow_length = 0.0001;
             end
-            tools.dbg('anp_gui[calc_plot_w_arrow_length]:\t%.5f\n',this.p_w_arrow_length);
+            tools.dbg('anp_gui[calc_w_arrow_length]:\t%.5f\n',this.p_w_arrow_length);
         end
         
         function [] = calc_truncated_z_values(this)
@@ -752,8 +752,8 @@ classdef anp_gui < handle
                     % the meantime during the last update below.
                     if this.s_check_limits
                         this.draw_update_limits_and_plots();
-                        this.calc_plot_z_arrow_length();
-                        this.calc_plot_w_arrow_length();
+                        this.calc_z_arrow_length();
+                        this.calc_w_arrow_length();
                         this.draw_init_z_plot_poles_zeros();
                         this.draw_one_frame();
                         this.s_check_limits = false;
@@ -1070,8 +1070,8 @@ classdef anp_gui < handle
                 % we do the updates directly.
                 
                 this.draw_update_limits_and_plots();
-                this.calc_plot_z_arrow_length();
-                this.calc_plot_w_arrow_length();
+                this.calc_z_arrow_length();
+                this.calc_w_arrow_length();
                 this.draw_init_z_plot_poles_zeros();
                 this.draw_one_frame();
             else
