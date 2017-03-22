@@ -264,9 +264,9 @@ classdef anp_gui < handle
             
             % Decide on layout parameters.
             this.calc_gui_positions();
-            this.calc_plot_axis_limits();
-            this.calc_plot_z_arrow_length();
-            this.calc_plot_w_arrow_length();
+            this.calc_axis_limits();
+            this.calc_z_arrow_length();
+            this.calc_w_arrow_length();
             this.calc_trail_indexes();
             
             % Calculate the data that is to be plotted. Compared to the raw
@@ -281,7 +281,7 @@ classdef anp_gui < handle
             this.draw_init_gui_text_objects();
             this.draw_init_plot_axes();
             this.draw_init_line_plots();
-            % this.draw_init_plot_arrows(); % not needed as the objects get reinstantiated at every update anyway.
+            this.draw_init_plot_arrows();
             this.draw_init_z_plot_poles_zeros();
             
             % Since draw_one_frame only updates the trail arrow and the
@@ -418,7 +418,7 @@ classdef anp_gui < handle
             this.w_annotation_textbox_frac =    fig_annotation_textbox_height / fig_height;     % [1]
         end
         
-        function [] = calc_plot_axis_limits(this)
+        function [] = calc_axis_limits(this)
             % Sets the correct x- and ylims for the left and right plot.
             % The method respects the auto-flags and only calculates the
             % parameters if it's told to do so.
@@ -483,28 +483,22 @@ classdef anp_gui < handle
             end
         end
         
-        function [] = calc_plot_z_arrow_length(this)
+        function [] = calc_z_arrow_length(this)
             % Calculates how long the trail arrow should be based on the current axis limits.
             
             in_axis_width =         diff(this.p_z_xlim);                            % [1]
             in_axis_height =        diff(this.p_z_ylim);                            % [1]
             this.p_z_arrow_length = 0.04 * sqrt(in_axis_width^2 + in_axis_height^2);% [1]
-            tools.dbg('anp_gui[calc_plot_z_arrow_length]:\t%.5f\n',this.p_z_arrow_length);
+            tools.dbg('anp_gui[calc_z_arrow_length]:\t%.5f\n',this.p_z_arrow_length);
         end
         
-        function [] = calc_plot_w_arrow_length(this)
+        function [] = calc_w_arrow_length(this)
             % Calculates how long the trail arrow should be based on the current axis limits.
             
-            % TODO handle very short arrow lengths better
-            % This involves setting the position relative to the figure/subplot
-            % and not within the coordinate system. Will become cumbersome...
             out_axis_width =        diff(this.p_w_xlim);                                % [1]
             out_axis_height =       diff(this.p_w_ylim);                                % [1]
             this.p_w_arrow_length = 0.04 * sqrt(out_axis_width^2 + out_axis_height^2);  % [1]
-            if this.p_w_arrow_length < 0.05
-                this.p_w_arrow_length = 0.0001;
-            end
-            tools.dbg('anp_gui[calc_plot_w_arrow_length]:\t%.5f\n',this.p_w_arrow_length);
+            tools.dbg('anp_gui[calc_w_arrow_length]:\t%.5f\n',this.p_w_arrow_length);
         end
         
         function [] = calc_truncated_z_values(this)
@@ -643,20 +637,14 @@ classdef anp_gui < handle
             set(this.h_w_plot_trail,'Color',[255 215 0]/255,'linewidth',2);
         end
         
-        % UNUSED
         function [] = draw_init_plot_arrows(this)
             % Prepare the arrow annotation objects used for the tip of the trails.
             
-            figure(this.h_fig);
-
-            % Prepare the arrow annotations that mark the value of the
-            % head of the trail at the current frame and remember their
-            % handle for later use.
-            subplot(this.h_sub1);
-            this.h_z_plot_arrow =   annotation(this.h_fig, 'Arrow',[0 0],[1 0]);
-
-            subplot(this.h_sub2);
-            this.h_w_plot_arrow =   annotation(this.h_fig, 'Arrow',[0 0],[1 0]);
+            % We're talking about the arrow annotations that mark the value
+            % of the head of the trail at the current frame and remember
+            % their handle for later use.
+            this.h_z_plot_arrow =   annotation(this.h_fig, 'Arrow',[0,0.1],[0,0.1]);
+            this.h_w_plot_arrow =   annotation(this.h_fig, 'Arrow',[1,0.9],[0,0.1]);
         end
         
         function [] = draw_init_z_plot_poles_zeros(this)
@@ -752,8 +740,8 @@ classdef anp_gui < handle
                     % the meantime during the last update below.
                     if this.s_check_limits
                         this.draw_update_limits_and_plots();
-                        this.calc_plot_z_arrow_length();
-                        this.calc_plot_w_arrow_length();
+                        this.calc_z_arrow_length();
+                        this.calc_w_arrow_length();
                         this.draw_init_z_plot_poles_zeros();
                         this.draw_one_frame();
                         this.s_check_limits = false;
@@ -797,9 +785,7 @@ classdef anp_gui < handle
         
         function [] = draw_update_trail_head_arrows(this)
             % Draws the (arrow-)heads of the trails.
-            
-            delete(this.h_z_plot_arrow); delete(this.h_w_plot_arrow);
-            
+                        
             % The trail arrows need to point always into the same
             % direction, no matter in which direction the animation goes.
             % So we get the "previous" and current head location and draw
@@ -812,12 +798,21 @@ classdef anp_gui < handle
             z_values_head =         this.d_z_values(current_values_index);
             w_values_head =         this.d_w_values(current_values_index);
             
-            in_phi =                angle(z_values_head - z_values_head_prev);
-            out_phi =               angle(w_values_head - w_values_head_prev);
             
-            this.h_z_plot_arrow =       this.draw_arrow(this.h_sub1,[real(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor)),imag(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor))],in_phi,this.p_z_arrow_length);
-            this.h_w_plot_arrow =       this.draw_arrow(this.h_sub2,[real(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor)),imag(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor))],out_phi,this.p_w_arrow_length);
+            z_phi =                 angle(z_values_head - z_values_head_prev);
+            w_phi =                 angle(w_values_head - w_values_head_prev);
             
+            
+            z_arrow_tip_x = real(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor));
+            z_arrow_tip_y = imag(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor));
+            
+            this.draw_update_arrow(this.h_sub1,this.h_z_plot_arrow,z_arrow_tip_x,z_arrow_tip_y,z_phi,this.p_z_arrow_length);
+            
+            
+            w_arrow_tip_x = real(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor));
+            w_arrow_tip_y = imag(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor));
+            
+            this.draw_update_arrow(this.h_sub2,this.h_w_plot_arrow,w_arrow_tip_x,w_arrow_tip_y,w_phi,this.p_w_arrow_length);
         end
         
         function [] = draw_update_plot_titles(this)
@@ -1070,8 +1065,8 @@ classdef anp_gui < handle
                 % we do the updates directly.
                 
                 this.draw_update_limits_and_plots();
-                this.calc_plot_z_arrow_length();
-                this.calc_plot_w_arrow_length();
+                this.calc_z_arrow_length();
+                this.calc_w_arrow_length();
                 this.draw_init_z_plot_poles_zeros();
                 this.draw_one_frame();
             else
@@ -1085,6 +1080,8 @@ classdef anp_gui < handle
         % ---------------------
         % Utility functions
         % ---------------------
+        
+        % UNUSED
         function arrowHandle = draw_arrow(this,parent,x0,phi,l)
             % Places an arrow annotation at the given location.
             r = l*[cos(phi),sin(phi)];
@@ -1099,6 +1096,25 @@ classdef anp_gui < handle
 
             h_arrow = annotation(this.h_fig,'TextArrow');
             set(h_arrow,'parent',parent,'position',[x0-r,r],'String',text,'Color',color);
+        end
+        
+        function [] = draw_update_arrow(~,h_plot,h_arrow,x,y,phi,length) % ignored parameter is 'this'
+            % Updates an annotation('arrow')-object's position
+            
+            % First calculate the start and end coordinates within the plot
+            dx = length * cos(phi);
+            dy = length * sin(phi);
+            
+            arrow_end_x = x - dx;
+            arrow_end_y = y - dy;
+            
+            % Transform the plot coordinates to relative position
+            % coordinates in the figure, as this is the arrow's parent
+            % object.
+            [transformed_x,transformed_y] = ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y]);
+            
+            h_arrow.X = transformed_x;
+            h_arrow.Y = transformed_y;
         end
 
         function values_truncated = trunc(~,values,xlim,ylim) % ignored parameter is 'this'
