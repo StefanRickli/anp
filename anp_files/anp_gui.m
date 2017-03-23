@@ -584,7 +584,7 @@ classdef anp_gui < handle
             % click.
             xlim(this.h_sub1, 'manual'), ylim(this.h_sub1, 'manual');
             xlim(this.h_sub1, anp_stretch_centered(this.p_z_xspan,1.05)), ylim(this.h_sub1, anp_stretch_centered(this.p_z_yspan,1.05));
-            zoom(this.h_fig, 'reset');
+            zoom(this.h_sub1, 'reset');
             xlim(this.h_sub1, this.p_z_xlim), ylim(this.h_sub1, this.p_z_ylim);
             
             % Default behavior of Matlab is to put the axes on the left and
@@ -601,7 +601,7 @@ classdef anp_gui < handle
             axis(this.h_sub2, 'equal');
             xlim(this.h_sub2, 'manual'), ylim(this.h_sub2, 'manual');
             xlim(this.h_sub2, anp_stretch_centered(this.p_w_xspan,1.05)), ylim(this.h_sub2, anp_stretch_centered(this.p_w_yspan,1.05));
-            zoom(this.h_fig, 'reset');
+            zoom(this.h_sub2, 'reset');
             xlim(this.h_sub2, this.p_w_xlim), ylim(this.h_sub2, this.p_w_ylim);
             this.h_sub2.XAxisLocation = 'origin';
             this.h_sub2.YAxisLocation = 'origin';
