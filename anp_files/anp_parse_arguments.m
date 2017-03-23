@@ -87,6 +87,10 @@ function checked_args = anp_parse_arguments(varargin)
         % multiple transfer function has been provided
         checked_args.tf_obj =       ip.Results.arg1;
         
+        if any(size(checked_args.tf_obj.Numerator)-[1,1])
+            warning('Specified system is not SISO. Will only use first transfer function.');
+        end
+        
     elseif ~isempty(regexp(anp_arg_types,'^vvk{0,2}$', 'once'))
         % two [v]ectors, containing lists of pole and zero locations
         

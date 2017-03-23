@@ -165,13 +165,13 @@ classdef anp_tf_processor < handle
         % put the transfer function to the text output
         function [] = echo_tf(this)
             fprintf('Plotting the ');
-            transfer_function = this.tf_obj %#ok<NOPRT,NASGU>
+            transfer_function = this.tf_obj(1,1)        %#ok<NOPRT,NASGU>
             fprintf('with\n');
-            poles = this.tf_poles           %#ok<NOPRT,NASGU>
+            poles = this.tf_poles                       %#ok<NOPRT,NASGU>
             fprintf('and\n');
-            zeros = this.tf_zeros           %#ok<NOPRT,NASGU>
+            zeros = this.tf_zeros                       %#ok<NOPRT,NASGU>
 
-            if any([this.tf_obj.IODelay,this.tf_obj.InputDelay,this.tf_obj.OutputDelay])
+            if any([this.tf_obj.IODelay(:);this.tf_obj.InputDelay(:);this.tf_obj.OutputDelay(:)])
                 warning('Delay has been provided, but will be ignored, as this is currently unsupported.');
             end
         end
