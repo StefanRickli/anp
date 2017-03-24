@@ -10,6 +10,7 @@ classdef anp_tf_processor < handle
         tf_obj
         tf_poles        double
         tf_zeros        double
+        tf_delay        double
         tf_G
         
         % p: parameters
@@ -71,10 +72,17 @@ classdef anp_tf_processor < handle
             
             if ~isequal(this.tf_obj,new_tf)
                 tools.dbg('anp_tf_processor[set_tf]:\tNew transfer function\n');
-                this.tf_obj =   new_tf;
-                this.tf_poles = roots(new_tf.Denominator{1})';
-                this.tf_zeros = roots(new_tf.Numerator{1})';
-                this.tf_G =     @(z) polyval(new_tf.Numerator{1},z)./polyval(new_tf.Denominator{1},z);
+                this.tf_obj =   new_tf(1,1);
+                this.tf_poles = roots(this.tf_obj.Denominator{1})';
+                this.tf_zeros = roots(this.tf_obj.Numerator{1})';
+                
+                if this.tf_obj.IODelay ~= 0
+                    this.tf_delay = this.tf_obj.IODelay;
+                else
+                    this.tf_delay = this.tf_obj.InputDelay + this.tf_obj.OutputDelay;
+                end
+                
+                this.tf_G =     @(z) polyval(this.tf_obj.Numerator{1},z)./polyval(this.tf_obj.Denominator{1},z);
                 
                 dirty =         true;
                 if ~this.g_wait
@@ -165,14 +173,15 @@ classdef anp_tf_processor < handle
         % put the transfer function to the text output
         function [] = echo_tf(this)
             fprintf('Plotting the ');
-            transfer_function = this.tf_obj %#ok<NOPRT,NASGU>
+            transfer_function = this.tf_obj(1,1)        %#ok<NOPRT,NASGU>
             fprintf('with\n');
-            poles = this.tf_poles           %#ok<NOPRT,NASGU>
+            poles = this.tf_poles                       %#ok<NOPRT,NASGU>
             fprintf('and\n');
-            zeros = this.tf_zeros           %#ok<NOPRT,NASGU>
-
-            if any([this.tf_obj.IODelay,this.tf_obj.InputDelay,this.tf_obj.OutputDelay])
-                warning('Delay has been provided, but will be ignored, as this is currently unsupported.');
+            zeros = this.tf_zeros                       %#ok<NOPRT,NASGU>
+            
+            if this.tf_delay ~= 0
+                fprintf('and\n');
+                delay = this.tf_delay                   %#ok<NOPRT,NASGU>
             end
         end
         
@@ -203,7 +212,7 @@ classdef anp_tf_processor < handle
                 if isempty([this.tf_poles,this.tf_zeros])
                     this.p_radii.R = 5;
                 else
-                    this.p_radii.R =    anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_separations.pole_max,this.p_separations.zero_max));
+                    this.p_radii.R =    anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_separations.pole_max,this.p_separations.zero_max),this.tf_delay);
                 end
             end
             
@@ -211,7 +220,12 @@ classdef anp_tf_processor < handle
             
             args = this.prepare_z_fct_args();
             this.d_z_values = anp_in_fct_init_and_evaluate(this.d_data_points,args);
-            this.d_w_values = this.tf_G(this.d_z_values);
+            
+            if this.tf_delay ~= 0
+                this.d_w_values = exp(imag(this.d_z_values) * this.tf_delay * 1i) .* this.tf_G(this.d_z_values);
+            else
+                this.d_w_values = this.tf_G(this.d_z_values);
+            end
             
             this.g_busy =   false;
         end
@@ -242,10 +256,28 @@ classdef anp_tf_processor < handle
             
             total_tf_rel_deg =                  abs(p_neg_real - z_neg_real - p_pos_real + z_pos_real);
             
+            radius_correction =     floor(this.p_radii.R/10);
+            
             pz = [p,z];
             pz_not_on_im_axis = pz(abs(real(pz)) >= 100*eps);
-            pz_min_abs = min(abs([1,pz_not_on_im_axis]));
-            this.p_time.oversampling_factor =   max(2,ceil(total_tf_rel_deg + this.p_weights.pole * p_pure_imag + this.p_weights.zero * z_pure_imag + floor(this.p_radii.R/10) - floor(20*log10(pz_min_abs))));
+            %pz_min_abs = min(abs([1,pz_not_on_im_axis]));
+            
+            n_small_poles = sum(abs(p) < 1 & abs(real(p)) >= 100*eps);
+            n_small_zeros = sum(abs(z) < 1 & abs(real(z)) >= 100*eps);
+            dist = mean(abs(pz_not_on_im_axis(abs(pz_not_on_im_axis) < 0.1)));
+            small_pz_correction =   (1+radius_correction) * max(0, n_small_poles - n_small_zeros) * (-5*log(dist));
+            %old_pz_correction =     -floor(20*log10(pz_min_abs));
+            
+            im_pole_correction =    this.p_weights.pole * p_pure_imag;
+            im_zero_correction =    this.p_weights.zero * z_pure_imag;
+            
+            this.p_time.oversampling_factor =   max(5,ceil(total_tf_rel_deg + im_pole_correction + im_zero_correction + radius_correction + small_pz_correction + this.tf_delay));
+            
+            % trade off oversampling for time steps (animation speed will
+            % be lower) if oversampling is high
+            tradeoff = fix(1 + this.p_time.oversampling_factor/100);
+            this.p_time.oversampling_factor = fix(this.p_time.oversampling_factor / tradeoff);
+            this.p_time.n_time_steps = this.p_time.n_time_steps * tradeoff;
             this.p_time.n_data_points =         this.p_time.n_time_steps * this.p_time.oversampling_factor;
             
             this.d_time_points =    linspace(0,1,this.p_time.n_time_steps+1);

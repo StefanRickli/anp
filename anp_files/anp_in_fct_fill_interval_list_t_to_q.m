@@ -49,24 +49,30 @@ function interval_list = anp_in_fct_fill_interval_list_t_to_q(in_params,in_data)
         qa = interval_list(ii).q(1);
         qb = interval_list(ii).q(2);
 
-        if strcmp(interval_list(ii).type,'axis')
-            ii_prev = iterator_modulo(ii-1,length(interval_list));
+        if strcmp(interval_list(ii).type,'axis')            
+            if ii == 1
+                va = 0.5;
+            else
+                ii_prev = iterator_modulo(ii-1,length(interval_list));
+                
+                ta_prev = interval_list(ii_prev).t(1);
+                tb_prev = interval_list(ii_prev).t(2);
+                qa_prev = interval_list(ii_prev).q(1);
+                qb_prev = interval_list(ii_prev).q(2);
+                va = (qb_prev - qa_prev)/(tb_prev - ta_prev);
+            end
             
-            ta_prev = interval_list(ii_prev).t(1);
-            tb_prev = interval_list(ii_prev).t(2);
-            qa_prev = interval_list(ii_prev).q(1);
-            qb_prev = interval_list(ii_prev).q(2);
-            va = (qb_prev - qa_prev)/(tb_prev - ta_prev);
-            
-            
-            ii_next = iterator_modulo(ii + 1,length(interval_list));
-            
-            ta_next = interval_list(ii_next).t(1);
-            tb_next = interval_list(ii_next).t(2);
-            qa_next = interval_list(ii_next).q(1);
-            qb_next = interval_list(ii_next).q(2);
-            vb = (qb_next - qa_next)/(tb_next - ta_next);
-            
+            if ii == length(interval_list)
+                vb = 0.5;
+            else
+                ii_next = iterator_modulo(ii + 1,length(interval_list));
+
+                ta_next = interval_list(ii_next).t(1);
+                tb_next = interval_list(ii_next).t(2);
+                qa_next = interval_list(ii_next).q(1);
+                qb_next = interval_list(ii_next).q(2);
+                vb = (qb_next - qa_next)/(tb_next - ta_next);
+            end
             
             [c_lorentz,gamma_star,r1,r2,c1,c2] = anp_in_fit_mixed_exp_lorentz(ta,tb,qa,qb,va,vb);
             qa_real = exp_Lorentz(ta,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
