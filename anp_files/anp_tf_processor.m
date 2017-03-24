@@ -271,7 +271,13 @@ classdef anp_tf_processor < handle
             im_pole_correction =    this.p_weights.pole * p_pure_imag;
             im_zero_correction =    this.p_weights.zero * z_pure_imag;
             
-            this.p_time.oversampling_factor =   max(2,ceil(total_tf_rel_deg + im_pole_correction + im_zero_correction + radius_correction + small_pz_correction + this.tf_delay));
+            this.p_time.oversampling_factor =   max(5,ceil(total_tf_rel_deg + im_pole_correction + im_zero_correction + radius_correction + small_pz_correction + this.tf_delay));
+            
+            % trade off oversampling for time steps (animation speed will
+            % be lower) if oversampling is high
+            tradeoff = fix(1 + this.p_time.oversampling_factor/100);
+            this.p_time.oversampling_factor = fix(this.p_time.oversampling_factor / tradeoff);
+            this.p_time.n_time_steps = this.p_time.n_time_steps * tradeoff;
             this.p_time.n_data_points =         this.p_time.n_time_steps * this.p_time.oversampling_factor;
             
             this.d_time_points =    linspace(0,1,this.p_time.n_time_steps+1);
