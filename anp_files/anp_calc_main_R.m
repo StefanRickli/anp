@@ -10,7 +10,7 @@ function R = anp_calc_main_R(poles,zeros,min_angle_contribution_at_R,max_pole_se
     R = max([abs(R1),abs(R2),abs(pz_im)*1.5,min_R]);
     
     if delay ~= 0
-        R = 2*R + max(0,exp(-1.5*log(delay))) + max(0,100*log(delay)) + 15;
+        R = 2*R + max(0,exp(-1.4*log(delay))) + max(0,100*log(delay)) + 15;
     end
     
     if R > 1e4

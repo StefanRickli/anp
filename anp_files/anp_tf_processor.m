@@ -342,7 +342,7 @@ classdef anp_tf_processor < handle
             this.d_z_values = anp_d_contour_init_and_evaluate(this.d_data_points,args);
             
             if this.tf_delay ~= 0
-                this.d_w_values = exp(imag(this.d_z_values) * this.tf_delay * 1i) .* this.tf_G(this.d_z_values);
+                this.d_w_values = exp(-imag(this.d_z_values) * this.tf_delay * 1i) .* this.tf_G(this.d_z_values);
             else
                 this.d_w_values = this.tf_G(this.d_z_values);
             end
