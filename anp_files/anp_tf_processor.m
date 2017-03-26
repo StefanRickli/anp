@@ -81,9 +81,9 @@ classdef anp_tf_processor < handle
             if any([this.set_time_params(new_params.time_params),...
                     this.set_tf(new_params.tf_obj),...
                     this.set_angles(new_params.angles),...
+                    this.set_separations(new_params.separations),...
                     this.set_radii(new_params.radii),...
-                    this.set_weights(new_params.weights),...
-                    this.set_separations(new_params.separations)])
+                    this.set_weights(new_params.weights),])
                 this.recalculate();
             end
             
@@ -152,18 +152,29 @@ classdef anp_tf_processor < handle
         
         function dirty = set_radii(this,new_radii)
             % Updates the internal variables containing information about radii of the D-contour
+            % Informs the caller whether something has changed
+            % (dirty=true), potentially triggering a 'recalculate' and/or
+            % a fetch of updated data
             
             assert(~isempty(new_radii) && isstruct(new_radii));
             
-            if ~isempty(this.p_radii) && new_radii.auto_main_R
-                assert(~isempty(this.p_angles) && (length(this.tf_poles) - length(this.tf_zeros) >= 0));
-                possibly_new_R = anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_separations.pole_max,this.p_separations.zero_max));
-            else
-                possibly_new_R = NaN;
+            % auto_main_R == true whenever a user hasn't set a manual value
+            % for R
+            if new_radii.auto_main_R
+                % 'anp_calc_main_R' needs some angles and the separations
+                % to be set in order to work properly. Also we want a
+                % proper transfer function.
+                assert(~isempty(this.p_angles) && ~isempty(this.p_separations) && (length(this.tf_poles) - length(this.tf_zeros) >= 0));
+                
+                % Check whether the transfer function is a constant
+                if isempty([this.tf_poles,this.tf_zeros])
+                    this.p_radii.R = 5;
+                else
+                    new_radii.R =    anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_separations.pole_max,this.p_separations.zero_max),this.tf_delay);
+                end
             end
             
-            
-            if isempty(this.p_radii) || (~isnan(possibly_new_R) && ~(this.p_radii.R == possibly_new_R)) || (isnan(possibly_new_R) && ~(this.p_radii.R == new_radii.R))
+            if isempty(this.p_radii) || this.p_radii.R ~= new_radii.R
                 tools.dbg('anp_tf_processor[set_radii]:\tNew radii.\n');
                 this.p_radii =  new_radii;
                 dirty =         true;
@@ -262,20 +273,17 @@ classdef anp_tf_processor < handle
     end
     methods(Access = private)
         function [] = recalculate(this)
+            % Calculates the w- and z-data
+            
             this.s_busy =       true;
             
-            if this.p_radii.auto_main_R
-                if isempty([this.tf_poles,this.tf_zeros])
-                    this.p_radii.R = 5;
-                else
-                    this.p_radii.R =    anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_separations.pole_max,this.p_separations.zero_max),this.tf_delay);
-                end
-            end
-            
-            this.calc_time_params();
+            % Based on the parameters (transfer function, R, etc),
+            % calculate how many evaluations of G(s) we need and store the
+            % data-point parametrization in the internal variable
+            this.calc_parametrization();
             
             args = this.prepare_z_fct_args();
-            this.d_z_values = anp_in_fct_init_and_evaluate(this.d_data_points,args);
+            this.d_z_values = anp_d_contour_init_and_evaluate(this.d_data_points,args);
             
             if this.tf_delay ~= 0
                 this.d_w_values = exp(imag(this.d_z_values) * this.tf_delay * 1i) .* this.tf_G(this.d_z_values);
@@ -298,9 +306,15 @@ classdef anp_tf_processor < handle
             args.separation_margin =    this.p_separations.margin;
         end
         
-        function [] = calc_time_params(this)
+        function [] = calc_parametrization(this)
+            % Decides on the distribution of time-steps
+            % The GUI will plot D-contour(data-points) and iterate through
+            % the time-points for the arrow.
+            
             tol = 100*eps;
             
+            % Count the # of poles/zeros with zero/positive/negative real
+            % part
             p = this.tf_poles;
             z = this.tf_zeros;
                 p_neg_real =    sum(real(p) <= tol);
