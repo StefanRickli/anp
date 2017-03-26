@@ -63,8 +63,6 @@ function checked_args = anp_parse_arguments(varargin)
     % ---------------------------------------------------------------------
     
     % unused yet
-    checked_args.tf_delay =         0;
-    
     % parse the poles, zeros and construct the tf-object if necessary
     if ~isempty(regexp(anp_arg_types,'^k{0,2}$','emptymatch','once'))
         % if neither a [t]ransfer function nor [v]ectors of poles and
@@ -85,10 +83,10 @@ function checked_args = anp_parse_arguments(varargin)
         % [t]ransfer function
         % we only take the first transfer function if an object with 
         % multiple transfer function has been provided
-        checked_args.tf_obj =       ip.Results.arg1;
+        checked_args.tf_obj =       ip.Results.arg1(1,1);
         
         if any(size(checked_args.tf_obj.Numerator)-[1,1])
-            warning('Specified system is not SISO. Will only use first transfer function.');
+            warning('Specified system is not SISO. Will only use first transfer function from input 1 to output 1.');
         end
         
     elseif ~isempty(regexp(anp_arg_types,'^vvk{0,2}$', 'once'))
@@ -110,6 +108,16 @@ function checked_args = anp_parse_arguments(varargin)
         checked_args.tf_obj =       tf(poly(tf_zeros),poly(tf_poles));
     else
         error('Error: oops, we shouldn''t be here... sorry about that. Please send me an email about this and provide me with the input arguments you used.');
+    end
+    
+    % If any sort of delay was specified, prefer IODelay over
+    % Input- and OutputDelay. Calculate the effecttive delay if
+    % both In- and OutputDelay are present. (According to
+    % https://ch.mathworks.com/help/control/ug/time-delays-in-linear-systems.html )
+    if checked_args.tf_obj.IODelay ~= 0
+        checked_args.tf_delay = checked_args.tf_obj.IODelay;
+    else
+        checked_args.tf_delay = checked_args.tf_obj.InputDelay + checked_args.tf_obj.OutputDelay;
     end
     
     % ---------------------------------------------------------------------

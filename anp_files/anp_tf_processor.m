@@ -107,7 +107,7 @@ classdef anp_tf_processor < handle
             % we need that all of them really run. Hence we can't use a
             % syntax like A || B || C etc because of lazy computing.
             if any([this.set_time_params(new_params.time_params),...
-                    this.set_tf(new_params.tf_obj),...
+                    this.set_tf(new_params.tf_obj,new_params.tf_delay),...
                     this.set_angles(new_params.angles),...
                     this.set_separations(new_params.separations),...
                     this.set_radii(new_params.radii),...
@@ -140,7 +140,7 @@ classdef anp_tf_processor < handle
             end
         end
         
-        function dirty = set_tf(this,new_tf)
+        function dirty = set_tf(this,new_tf,delay)
             % Updates the internal variables containing 'tranfer function'-information
             % Informs the caller whether something has changed
             % (dirty=true), potentially triggering a 'recalculate' and/or
@@ -150,19 +150,11 @@ classdef anp_tf_processor < handle
             
             if ~isequal(this.tf_obj,new_tf)
                 tools.dbg('anp_tf_processor[set_tf]:\tNew transfer function\n');
-                this.tf_obj =   new_tf(1,1);
+                this.tf_obj =   new_tf;
                 this.tf_poles = roots(this.tf_obj.Denominator{1})';
                 this.tf_zeros = roots(this.tf_obj.Numerator{1})';
                 
-                % If any sort of delay was specified, prefer IODelay over
-                % Input- and OutputDelay. Calculate the effecttive delay if
-                % both In- and OutputDelay are present. (According to
-                % https://ch.mathworks.com/help/control/ug/time-delays-in-linear-systems.html )
-                if this.tf_obj.IODelay ~= 0
-                    this.tf_delay = this.tf_obj.IODelay;
-                else
-                    this.tf_delay = this.tf_obj.InputDelay + this.tf_obj.OutputDelay;
-                end
+                this.tf_delay = delay;
                 
                 % Prepare the function that is to be evaluated later
                 this.tf_G =     @(z) polyval(this.tf_obj.Numerator{1},z)./polyval(this.tf_obj.Denominator{1},z);

@@ -124,6 +124,7 @@ classdef anp_gui < handle
         d_n_zeros               double      % how many zeros does the transfer function have?
         d_poles                 double      % array holding the pole locations
         d_zeros                 double      % array holding the zero locations
+        d_delay                 double      % delay of transfer function in [s]
         d_R                     double      % radius of the half-circle
         
         d_t_values              double      % UNUSED, time steps
@@ -190,6 +191,7 @@ classdef anp_gui < handle
             this.set_z_plot_limits(new_props);
             this.set_w_plot_limits(new_props);
             this.set_poles_zeros(new_props);
+            this.set_delay(new_props);
             this.set_window_props(new_props);
             this.set_plot_props(new_props);
             
@@ -248,7 +250,13 @@ classdef anp_gui < handle
             this.d_n_poles =        length(new_props.tf_poles);
             this.d_n_zeros =        length(new_props.tf_zeros);
         end
-
+        
+        function [] = set_delay(this,new_props)
+            % Populates the variable containing information about the delay of the transfer function with the new value.
+            
+            this.d_delay = new_props.tf_delay;
+        end
+        
         function [] = set_anp_tf_processor(this,new_props)
             % Changes the handle reference to a new tf_processor object.
             
