@@ -14,6 +14,30 @@
 %   5) Evaluating the transfer function
 %   6) Providing a calling function with the precalculated data
 %   
+%   Parametrization terminology:
+%   We calculate for every 'data-point' (in [0,1]) the corresponding values
+%   in the z- and w plane.
+%   As we require to maintain a certain maximal spacing between w-points,
+%   it's no good idea to iterate through all of them in the animation.
+%   Instead we only take every 'oversampling_factor'-th point. This is the
+%   'time-point' parametrization.
+%   
+%   We use the following mapping:
+%
+%                                   nonlinear mon. increasing map          D-contour shapes            G(z)
+%   data_points (t) = linspace(0,1) -----------------------------> q [0,1] ----------------> z complex ----> w complex
+%   
+%   We need the pre-mapping from t to q in order to compensate the
+%   highly nonlinear relationship between the animation parametetrization
+%   and the speed the arrow moves with in the Nyquist plot (w-plane)
+%   For example: while we take a detour around a pole on the imaginary
+%                axis, the distance that we take on the D-contour is tiny,
+%                but in the Nyquist plot the curve has a lot of movement.
+%                If we were to simply assign the same evenly spaced points
+%                for the detour as for the preceeding straight line on the
+%                imaginary axis, we would get very poor spatial resolution
+%                in the Nyquist plot.
+%   
 %   paper reference: p.41
 classdef anp_tf_processor < handle
     
@@ -78,6 +102,10 @@ classdef anp_tf_processor < handle
             
             % The setter methods return a true boolean if any of their
             % arguments lead to a changed internal variable
+            % 
+            % As all the called functions have side effects that we rely on
+            % we need that all of them really run. Hence we can't use a
+            % syntax like A || B || C etc because of lazy computing.
             if any([this.set_time_params(new_params.time_params),...
                     this.set_tf(new_params.tf_obj),...
                     this.set_angles(new_params.angles),...
@@ -115,7 +143,8 @@ classdef anp_tf_processor < handle
         function dirty = set_tf(this,new_tf)
             % Updates the internal variables containing 'tranfer function'-information
             % Informs the caller whether something has changed
-            % (dirty=true), potentially triggering a fetch of updated data
+            % (dirty=true), potentially triggering a 'recalculate' and/or
+            % a fetch of updated data
             
             assert(~isempty(new_tf) && isa(new_tf,'tf'));
             
@@ -188,14 +217,19 @@ classdef anp_tf_processor < handle
         end
         
         function dirty = set_angles(this,new_angles)
+            % Updates the internal variables containing information about angles of the D-contour
+            % Informs the caller whether something has changed
+            % (dirty=true), potentially triggering a 'recalculate' and/or
+            % a fetch of updated data
+            
             assert(~isempty(new_angles) && isstruct(new_angles));
             
             if isempty(this.p_angles) || ~all([this.p_angles.crop_inf_transition ==         new_angles.crop_inf_transition,...
                                                this.p_angles.min_angle_contribution_at_R == new_angles.min_angle_contribution_at_R...
                                                this.p_angles.detour ==                      new_angles.detour])
                 tools.dbg('anp_tf_processor[set_angles]:\tNew angles.\n');
+                this.p_angles = new_angles;
                 dirty =         true;
-                this.p_angles =  new_angles;
                 if ~this.s_wait
                     this.recalculate();
                 end
@@ -206,12 +240,17 @@ classdef anp_tf_processor < handle
         end
         
         function dirty = set_weights(this,new_weights)
+            % Updates the internal variables containing information about weigths that influence the spatial resolution of the D-contour
+            % Informs the caller whether something has changed
+            % (dirty=true), potentially triggering a 'recalculate' and/or
+            % a fetch of updated data
+            
             assert(~isempty(new_weights) && isstruct(new_weights));
             
             if ~isequal(this.p_weights,new_weights)
                 tools.dbg('anp_tf_processor[set_weights]:\tNew weights.\n');
-                dirty =             true;
                 this.p_weights =    new_weights;
+                dirty =             true;
                 if ~this.s_wait
                     this.recalculate();
                 end
@@ -222,6 +261,11 @@ classdef anp_tf_processor < handle
         end
         
         function dirty = set_separations(this,new_separations)
+            % Updates the internal variables containing information about separations of detours on the imaginary axis of the D-contour
+            % Informs the caller whether something has changed
+            % (dirty=true), potentially triggering a 'recalculate' and/or
+            % a fetch of updated data
+            
             assert(~isempty(new_separations) && isstruct(new_separations));
             
             if ~isequal(this.p_separations,new_separations)
@@ -237,8 +281,9 @@ classdef anp_tf_processor < handle
             end
         end
         
-        % put the transfer function to the text output
         function [] = echo_tf(this)
+            % Puts information about the transfer function to the text output
+            
             fprintf('Plotting the ');
             transfer_function = this.tf_obj(1,1)        %#ok<NOPRT,NASGU>
             fprintf('with\n');
@@ -253,27 +298,43 @@ classdef anp_tf_processor < handle
         end
         
         function R = get_R(this)
+            % Access method to get R
+            
             R = this.p_radii.R;
         end
         
         function data = get_time_points(this)
+            % Access method to get the parametrization
+            
             data.time_points =   this.d_time_points;
             data.data_points =   this.d_data_points;
             data.time_props =    this.p_time;
         end
         
         function data = get_data(this)
+            % Access method to get the data for the (left) z-plot and (right) w-plot
+            
             data.z_values =     this.d_z_values;
             data.w_values =     this.d_w_values;
         end
         
         function delete(this)
+            % Destructor method
+            
             tools.dbg('anp_tf_processor[delete]:\t%s: Deletion requested.\n',this.g_uid);
         end
     end
+    
+    % ---------------------------------------------------------------------
+    % PRIVATE methods
+    % ---------------------------------------------------------------------
+    
     methods(Access = private)
         function [] = recalculate(this)
             % Calculates the w- and z-data
+            % 
+            % This is the heart of the tf_processor object!
+            % PRE: all the necessary parameters by the user have been set.
             
             this.s_busy =       true;
             
@@ -282,6 +343,9 @@ classdef anp_tf_processor < handle
             % data-point parametrization in the internal variable
             this.calc_parametrization();
             
+            % Put all the arguments together that we then pass to the
+            % function that maps the data-points from [0,1] to the
+            % D-contour in the z-plot
             args = this.prepare_z_fct_args();
             this.d_z_values = anp_d_contour_init_and_evaluate(this.d_data_points,args);
             
@@ -295,6 +359,8 @@ classdef anp_tf_processor < handle
         end
         
         function args = prepare_z_fct_args(this)
+            % Puts together all the arguments for the function that maps [0,1] to the D-contour
+            
             args.poles =                this.tf_poles;
             args.zeros =                this.tf_zeros;
             args.radii.inf =            this.p_radii.R;
@@ -308,6 +374,7 @@ classdef anp_tf_processor < handle
         
         function [] = calc_parametrization(this)
             % Decides on the distribution of time-steps
+            % 
             % The GUI will plot D-contour(data-points) and iterate through
             % the time-points for the arrow.
             
@@ -324,32 +391,56 @@ classdef anp_tf_processor < handle
                 z_pos_real =    sum(real(z) >= tol);
                 z_pure_imag =   sum(abs(real(z)) < tol);
             
-            total_tf_rel_deg =                  abs(p_neg_real - z_neg_real - p_pos_real + z_pos_real);
+            % Calc the effective relative degree of the transfer function
+            % polynomial. This has an effect on how fast the phase changes
+            % in the orgin during the half-circle of the D-contour.
+            total_tf_rel_deg =      abs(p_neg_real - z_neg_real - p_pos_real + z_pos_real);
             
+            % If we go to high frequencies (that is a large radius of the
+            % half-circle, R), we loose spatial resolution at low
+            % frequencies. Compensate this.
             radius_correction =     floor(this.p_radii.R/10);
             
+            % Poles that are near the imaginary axis will lead to huge
+            % movement in the Nyquist plot when the w-arrow gets near them.
+            % Zeros that are near those poles will compensate their effect.
+            % So we only compensate their relative degree.
+            % 
+            % TODO: We could do better by analyzing the exact distribution
+            % of those p/z with small real part, but we stick with this
+            % implementation at the moment.
             pz = [p,z];
-            pz_not_on_im_axis = pz(abs(real(pz)) >= 100*eps);
-            %pz_min_abs = min(abs([1,pz_not_on_im_axis]));
+            pz_not_on_im_axis =     pz(abs(real(pz)) >= 100*eps);
+            n_small_poles =         sum(abs(p) < 1 & abs(real(p)) >= 100*eps);
+            n_small_zeros =         sum(abs(z) < 1 & abs(real(z)) >= 100*eps);
+            magnitude =             mean(abs(pz_not_on_im_axis(abs(pz_not_on_im_axis) < 0.1)));
+            small_pz_correction =   (1+radius_correction) * max(0, n_small_poles - n_small_zeros) * (-5*log(magnitude));
             
-            n_small_poles = sum(abs(p) < 1 & abs(real(p)) >= 100*eps);
-            n_small_zeros = sum(abs(z) < 1 & abs(real(z)) >= 100*eps);
-            dist = mean(abs(pz_not_on_im_axis(abs(pz_not_on_im_axis) < 0.1)));
-            small_pz_correction =   (1+radius_correction) * max(0, n_small_poles - n_small_zeros) * (-5*log(dist));
-            %old_pz_correction =     -floor(20*log10(pz_min_abs));
-            
+            % Poles and zeros that are exactly on the imaginary axis lead
+            % to the creation of a detour in the D-contour.
+            % Purely imaginary poles cause large movement in the Nyquist
+            % plot during the detour.
+            % Purely imaginary zeros cause large movement right before and
+            % after the detour as the mapped points are forced to go to the
+            % origin from wherever they were.
             im_pole_correction =    this.p_weights.pole * p_pure_imag;
             im_zero_correction =    this.p_weights.zero * z_pure_imag;
             
+            % Put together all the corrections and calculate a factor that
+            % relates the # of animation steps (arrow movement) with the
+            % spatial resolution of the plot.
             this.p_time.oversampling_factor =   max(5,ceil(total_tf_rel_deg + im_pole_correction + im_zero_correction + radius_correction + small_pz_correction + this.tf_delay));
             
-            % trade off oversampling for time steps (animation speed will
+            % Trade off oversampling for time steps (animation speed will
             % be lower) if oversampling is high
-            tradeoff = fix(1 + this.p_time.oversampling_factor/100);
-            this.p_time.oversampling_factor = fix(this.p_time.oversampling_factor / tradeoff);
-            this.p_time.n_time_steps = this.p_time.n_time_steps * tradeoff;
+            % 
+            % TODO: check the rounding procedure, why already fix tradeoff?
+            tradeoff =                          fix(1 + this.p_time.oversampling_factor/100);
+            this.p_time.oversampling_factor =   fix(this.p_time.oversampling_factor / tradeoff);
+            this.p_time.n_time_steps =          this.p_time.n_time_steps * tradeoff;
             this.p_time.n_data_points =         this.p_time.n_time_steps * this.p_time.oversampling_factor;
             
+            % Finally generate the vectors of the parametrization
             this.d_time_points =    linspace(0,1,this.p_time.n_time_steps+1);
             this.d_time_points =    this.d_time_points(1:end-1);
             this.d_data_points =    linspace(0,1,this.p_time.n_data_points);
