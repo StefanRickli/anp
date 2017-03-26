@@ -923,7 +923,13 @@ classdef anp_gui < handle
             end
             res_phase_txt =                   	[res_phase_txt,    ']'];
             
-            res_magnitude_txt =               	[res_magnitude_txt,' = ',   num2str(res_magnitude,      '%.3f')];
+            if this.d_delay ~= 0
+                delay_contribution =            -(this.d_delay * imag(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)));
+                res_phase =                     res_phase + delay_contribution;
+                res_phase_txt  =                [res_phase_txt,    ' \{ ',  num2str(rad2deg(delay_contribution),'%.3f'), '\}'];
+            end
+            
+            res_magnitude_txt =               	[res_magnitude_txt,' = ',   num2str(res_magnitude,     '%.3f')];
             res_phase_txt =                    	[res_phase_txt,    ' = ',   num2str(rad2deg(res_phase),'%.3f'),'°'];
             
             this.h_text_res_annot(1).String =   ['Magnitude: ',  res_magnitude_txt];
