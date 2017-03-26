@@ -391,7 +391,7 @@ classdef anp_tf_processor < handle
             % If we go to high frequencies (that is a large radius of the
             % half-circle, R), we loose spatial resolution at low
             % frequencies. Compensate this.
-            radius_correction =     floor(this.p_radii.R/10);
+            radius_correction =     floor(this.p_radii.R/5);
             
             % Poles that are near the imaginary axis will lead to huge
             % movement in the Nyquist plot when the w-arrow gets near them.
