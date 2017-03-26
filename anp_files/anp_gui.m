@@ -875,7 +875,7 @@ classdef anp_gui < handle
                 else
                     res_magnitude_txt =        	[res_magnitude_txt, ' * ',  num2str(abs(z_contribution),           '%.2f')     ];
                 end
-                res_phase_txt =             [res_phase_txt,     ' + (', num2str(rad2deg(angle(z_contribution)),'%.2f'), ')'];
+                res_phase_txt =             [res_phase_txt,     ' + (', num2str(rad2deg(angle(z_contribution)),'%.2f'), '°)'];
             end
             
             % ****************************************
@@ -911,7 +911,7 @@ classdef anp_gui < handle
                 else
                     res_magnitude_txt =      	[res_magnitude_txt, ' * ',  num2str(abs(p_contribution),           '%.2f')     ];
                 end
-                res_phase_txt =            	[res_phase_txt,     ' - (', num2str(rad2deg(angle(p_contribution)),'%.2f'), ')'];
+                res_phase_txt =            	[res_phase_txt,     ' - (', num2str(rad2deg(angle(p_contribution)),'%.2f'), '°)'];
             end
             
             % ************************
@@ -926,7 +926,7 @@ classdef anp_gui < handle
             if this.d_delay ~= 0
                 delay_contribution =            -(this.d_delay * imag(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)));
                 res_phase =                     res_phase + delay_contribution;
-                res_phase_txt  =                [res_phase_txt,    ' \{ ',  num2str(rad2deg(delay_contribution),'%.3f'), '\}'];
+                res_phase_txt  =                [res_phase_txt,    ' \{ ',  num2str(rad2deg(delay_contribution),'%.3f'), '°\}'];
             end
             
             res_magnitude_txt =               	[res_magnitude_txt,' = ',   num2str(res_magnitude,     '%.3f')];
