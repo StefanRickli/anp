@@ -28,6 +28,8 @@ You don't need the folders 'additional' and 'archive' for the function to work.
 
 Open 'anp_usage_examples.m' with Matlab and execute the sample statements by highlighting line by line and hitting F9.
 
+![sample usage](https://cloud.githubusercontent.com/assets/19881323/24335451/01256884-127e-11e7-8d89-bffa42b3ff12.png)
+
 ## Contributing
 
 If you feel like contributing to the project, please contact me first. I have no experience in collaborative coding yet, so you'll probably have to guide me through the process.
