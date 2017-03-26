@@ -1,44 +1,83 @@
-% as in p.41
+%   class: anp_tf_processor
+%   -----------------------
+%   
+%   This class calculates all the data that an anp_gui object then fetches
+%   and subsequently plots.
+%   
+%   The important steps are
+%   1) Receiving the main parameters and transfer function
+%   2) Calculating the depending parameters like time interval size and
+%      spatial oversampling
+%   3) Constructing an appropriate D-Contour
+%   4) Scaling the spatial resolution based on known conditions like
+%      poles on the imaginary axis
+%   5) Evaluating the transfer function
+%   6) Providing a calling function with the precalculated data
+%   
+%   paper reference: p.41
 classdef anp_tf_processor < handle
+    
+    % ---------------------------------------------------------------------
+    % PRIVATE Variables
+    % ---------------------------------------------------------------------
+        
     properties(SetAccess = private)
         % g: general
-        g_uid
-        g_wait          logical
-        g_busy          logical
+        g_uid           % Java String,    uniqe identifier for every object instance
+        s_wait          logical         % used to delay the invocation of a 'recalculate'
+        s_busy          logical         % blocks any setter methods to change parameters during calculation
         
         % tf: transfer function properties
-        tf_obj
-        tf_poles        double
-        tf_zeros        double
-        tf_delay        double
-        tf_G
+        tf_obj                          % the tf-object that we get set with 'set_tf'
+        tf_poles        double          % an array of the poles that come from 'tf_obj'
+        tf_zeros        double          % an array of the zeros that come from 'tf_obj'
+        tf_delay        double          % if a delay was specified, we store it here
+        tf_G            % function handle, is defined by 'tf_poles' and 'tf_zeros'
         
         % p: parameters
-        p_time
-        p_radii
-        p_angles
-        p_weights
-        p_separations
+        p_time          % struct, members: 'n_time_steps','n_data_points','p_oversampling_factor',
+        p_radii         % struct, members: 'auto_main_R','R'
+        p_angles        % struct, members: 'crop_inf_transition','detour','min_angle_contribution'
+        p_weights       % struct, members: 'pole','zero'
+        p_separations   % struct, members: 'margin','pole_max','zero_max'
         
         % d: calculated data
-        d_time_points   double
-        d_data_points   double
-        d_z_values      double
-        d_w_values      double
+        d_time_points   double          % 
+        d_data_points   double          % 
+        d_z_values      double          % data of the left plot
+        d_w_values      double          % data of the right plot
     end
+    
+    
+    
+    % ---------------------------------------------------------------------
+    % PUBLIC methods
+    % ---------------------------------------------------------------------
+    
     methods(Access = public)
+        
         function this = anp_tf_processor()
+            % Instantiates a tf-processor object.
+
+            % Set a unique ID for every instance of this object
             this.g_uid =            java.util.UUID.randomUUID.toString;
-            this.g_wait =           false;
-            this.g_busy =           false;
-            this.d_z_values =       [];
-            this.d_w_values =       [];
+            
+            % Initialize the state variables
+            this.s_wait =           false;
+            this.s_busy =           false;
             
             tools.dbg('anp_tf_processor[constructor]:\t%s: Instance created.\n',this.g_uid);
         end
         
         function [] = init_params(this,new_params)
-            this.g_wait =       true;
+            % Takes all the relevant parameters and stores them in internal variables
+            
+            % Prevent the setter methods to invoke 'recalculate' by
+            % themselves
+            this.s_wait =       true;
+            
+            % The setter methods return a true boolean if any of their
+            % arguments lead to a changed internal variable
             if any([this.set_time_params(new_params.time_params),...
                     this.set_tf(new_params.tf_obj),...
                     this.set_angles(new_params.angles),...
@@ -47,10 +86,16 @@ classdef anp_tf_processor < handle
                     this.set_separations(new_params.separations)])
                 this.recalculate();
             end
-            this.g_wait =       false;
+            
+            % Unblock the setter methods from calling 'recalculate'
+            this.s_wait =       false;
         end
         
         function dirty = set_time_params(this,new_time_params)
+            % Updates the internal variables containing 'time'-information
+            % Informs the caller whether something has changed
+            % (dirty=true), potentially triggering a fetch of updated data
+            
             assert(~isempty(new_time_params) && isstruct(new_time_params));
             
             if isempty(this.p_time) || ~all(this.p_time.n_time_steps == new_time_params.n_time_steps)
@@ -58,7 +103,7 @@ classdef anp_tf_processor < handle
                 this.p_time.n_time_steps =      new_time_params.n_time_steps;
                 
                 dirty =         true;
-                if ~this.g_wait
+                if ~this.s_wait
                     this.recalculate();
                 end
             else
@@ -68,6 +113,10 @@ classdef anp_tf_processor < handle
         end
         
         function dirty = set_tf(this,new_tf)
+            % Updates the internal variables containing 'tranfer function'-information
+            % Informs the caller whether something has changed
+            % (dirty=true), potentially triggering a fetch of updated data
+            
             assert(~isempty(new_tf) && isa(new_tf,'tf'));
             
             if ~isequal(this.tf_obj,new_tf)
@@ -76,16 +125,21 @@ classdef anp_tf_processor < handle
                 this.tf_poles = roots(this.tf_obj.Denominator{1})';
                 this.tf_zeros = roots(this.tf_obj.Numerator{1})';
                 
+                % If any sort of delay was specified, prefer IODelay over
+                % Input- and OutputDelay. Calculate the effecttive delay if
+                % both In- and OutputDelay are present. (According to
+                % https://ch.mathworks.com/help/control/ug/time-delays-in-linear-systems.html )
                 if this.tf_obj.IODelay ~= 0
                     this.tf_delay = this.tf_obj.IODelay;
                 else
                     this.tf_delay = this.tf_obj.InputDelay + this.tf_obj.OutputDelay;
                 end
                 
+                % Prepare the function that is to be evaluated later
                 this.tf_G =     @(z) polyval(this.tf_obj.Numerator{1},z)./polyval(this.tf_obj.Denominator{1},z);
                 
                 dirty =         true;
-                if ~this.g_wait
+                if ~this.s_wait
                     this.recalculate();
                 end
             else
@@ -97,6 +151,8 @@ classdef anp_tf_processor < handle
         end
         
         function dirty = set_radii(this,new_radii)
+            % Updates the internal variables containing information about radii of the D-contour
+            
             assert(~isempty(new_radii) && isstruct(new_radii));
             
             if ~isempty(this.p_radii) && new_radii.auto_main_R
@@ -111,7 +167,7 @@ classdef anp_tf_processor < handle
                 tools.dbg('anp_tf_processor[set_radii]:\tNew radii.\n');
                 this.p_radii =  new_radii;
                 dirty =         true;
-                if ~this.g_wait
+                if ~this.s_wait
                     this.recalculate();
                 end
             else
@@ -129,7 +185,7 @@ classdef anp_tf_processor < handle
                 tools.dbg('anp_tf_processor[set_angles]:\tNew angles.\n');
                 dirty =         true;
                 this.p_angles =  new_angles;
-                if ~this.g_wait
+                if ~this.s_wait
                     this.recalculate();
                 end
             else
@@ -145,7 +201,7 @@ classdef anp_tf_processor < handle
                 tools.dbg('anp_tf_processor[set_weights]:\tNew weights.\n');
                 dirty =             true;
                 this.p_weights =    new_weights;
-                if ~this.g_wait
+                if ~this.s_wait
                     this.recalculate();
                 end
             else
@@ -161,7 +217,7 @@ classdef anp_tf_processor < handle
                 tools.dbg('anp_tf_processor[set_separations]:\tNew separations.\n');
                 dirty =                 true;
                 this.p_separations =    new_separations;
-                if ~this.g_wait
+                if ~this.s_wait
                     this.recalculate();
                 end
             else
@@ -206,7 +262,7 @@ classdef anp_tf_processor < handle
     end
     methods(Access = private)
         function [] = recalculate(this)
-            this.g_busy =       true;
+            this.s_busy =       true;
             
             if this.p_radii.auto_main_R
                 if isempty([this.tf_poles,this.tf_zeros])
@@ -227,7 +283,7 @@ classdef anp_tf_processor < handle
                 this.d_w_values = this.tf_G(this.d_z_values);
             end
             
-            this.g_busy =   false;
+            this.s_busy =   false;
         end
         
         function args = prepare_z_fct_args(this)
