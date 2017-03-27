@@ -327,6 +327,10 @@ classdef anp_tf_processor < handle
             % 
             % This is the heart of the tf_processor object!
             % PRE: all the necessary parameters by the user have been set.
+            % 
+            % TODO: potential bug: as the transfer function can be set
+            % independently from R, R possibly doesn't get updated before
+            % recalculation
             
             this.s_busy =       true;
             
