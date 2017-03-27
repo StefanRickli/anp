@@ -24,8 +24,8 @@
 %   
 %   We use the following mapping:
 %
-%                                   nonlinear mon. increasing map          D-contour shapes            G(z)
-%   data_points (t) = linspace(0,1) -----------------------------> q [0,1] ----------------> z complex ----> w complex
+%                                   nonlinear mon. increasing map                                  D-contour shapes            G(z)
+%   data_points (t) = linspace(0,1) -----------------------------> q [0,total_shape_circumference] ----------------> z complex ----> w complex
 %   
 %   We need the pre-mapping from t to q in order to compensate the
 %   highly nonlinear relationship between the animation parametetrization

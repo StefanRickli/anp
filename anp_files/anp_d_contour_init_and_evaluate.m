@@ -24,13 +24,42 @@ function z = anp_d_contour_init_and_evaluate(t,in_params)
     % can use for the detours.
     in_data.im_pz_combinations = anp_in_fct_pz_combinations(in_params,in_data);
     
+    % Based on location of poles and zeros on the imaginary axis and the
+    % requested radii of the main half-circle and the detours create a list
+    % of intervals that will segment [0,1] into blocks that each belong to
+    % one single shape function, i.e. a straight line or a circle.
+    % 
+    % Also as we enforce a piece of straight line between neighboring
+    % detours, the detour radii might be upper bounded by the minimum
+    % separation of imaginary poles/zeros. We're interested in finding out
+    % those maximal detour radii which will be defined in terms of the
+    % 'actual_separation_...' variables.
     [in_data.interval_list,...
      in_params.actual_separation_pole,...
      in_params.actual_separation_zero] = anp_in_fct_init_interval_list(in_params,in_data);
     
+    % First we create appropriate functions that map an input to a certain
+    % shape, i.e. a straight line or a circle beginning at theta degrees,
+    % and fill them into a handle list (functions q |--> z).
+    % Then we stack up the length that the plot lines of those functions
+    % will take (for straight lines just take the difference between
+    % starting and end point, for circles take their arc length) from zero
+    % up to the total length of the D-contour shape. This list of intervals
+    % will be the input to the functions q |--> z.
     in_data.interval_list = anp_in_fct_fill_interval_list_q_to_z(in_params,in_data);
+    
+    % As tf_processor specifies inputs in an interval of t in [0,1], we
+    % need to map those values to the q-values. Do this such that many
+    % t-values lie inside q-intervals that cause much movement in the
+    % z-values, i.e. scale the spatial resolution.
+    % We do this by specifying appropriate point density functions that
+    % map parts of [0,1] nonlinearly to the q-intervals
+    % (functions t |--> q).
     in_data.interval_list = anp_in_fct_fill_interval_list_t_to_q(in_params,in_data);
     
+    % Finally iterate through every data point that we got from
+    % tf_processor and calculate its corresponding value in the z-plane by
+    % performing the mapping t |--> q |--> z in the appropriate interval.
     z = evaluate_interval_t(in_data.interval_list,t);
     
     if debug_graphics
@@ -41,13 +70,25 @@ function z = anp_d_contour_init_and_evaluate(t,in_params)
 end
 
 function z = evaluate_interval_t(interval_list,t)
+    % Performs the mapping t |--> q |--> z for every point in the vector t
+    % 
+    % PRE: Monotonically increasing list of real values in the range [0,1]
+    
+    % As we know that the values in t are monotonically increasing, there's
+    % no need to look for the right interval for every point of t. Simply
+    % check whether t(ii) > current interval's upper limit and switch to
+    % the next interval if the comparison yields true.
     ii_interval = 1;
     z = zeros(size(t));
     for ii = 1:length(t)
         while (ii_interval + 1 <= length(interval_list)) && (t(ii) > interval_list(ii_interval).t(2))
             ii_interval = ii_interval + 1;
         end
-        T = interval_list(ii_interval).density_fct_handle(t(ii));
-        z(ii) = interval_list(ii_interval).input_fct_handle(T);
+        
+        % Map t(ii) |--> q(ii)
+        Q = interval_list(ii_interval).density_fct_handle(t(ii));
+        
+        % Map q(ii) |--> z(ii)
+        z(ii) = interval_list(ii_interval).input_fct_handle(Q);
     end
 end
