@@ -63,7 +63,7 @@ classdef anp_tf_processor < handle
         p_radii         % struct, members: 'auto_main_R','R'
         p_angles        % struct, members: 'crop_inf_transition','detour','min_angle_contribution'
         p_weights       % struct, members: 'pole','zero'
-        p_separations   % struct, members: 'margin','pole_max','zero_max'
+        p_halfsecants   % struct, members: 'margin','pole_max','zero_max'
         
         % d: calculated data
         d_time_points   double          % 
@@ -109,7 +109,7 @@ classdef anp_tf_processor < handle
             if any([this.set_time_params(new_params.time_params),...
                     this.set_tf(new_params.tf_obj,new_params.tf_delay),...
                     this.set_angles(new_params.angles),...
-                    this.set_separations(new_params.separations),...
+                    this.set_halfsecants(new_params.halfsecants),...
                     this.set_radii(new_params.radii),...
                     this.set_weights(new_params.weights),])
                 this.recalculate();
@@ -185,13 +185,13 @@ classdef anp_tf_processor < handle
                 % 'anp_calc_main_R' needs some angles and the separations
                 % to be set in order to work properly. Also we want a
                 % proper transfer function.
-                assert(~isempty(this.p_angles) && ~isempty(this.p_separations) && (length(this.tf_poles) - length(this.tf_zeros) >= 0));
+                assert(~isempty(this.p_angles) && ~isempty(this.p_halfsecants) && (length(this.tf_poles) - length(this.tf_zeros) >= 0));
                 
                 % Check whether the transfer function is a constant
                 if isempty([this.tf_poles,this.tf_zeros])
                     this.p_radii.R = 5;
                 else
-                    new_radii.R =    anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_separations.pole_max,this.p_separations.zero_max),this.tf_delay);
+                    new_radii.R =    anp_calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_halfsecants.pole_max,this.p_halfsecants.zero_max),this.tf_delay);
                 end
             end
             
@@ -252,24 +252,24 @@ classdef anp_tf_processor < handle
             end
         end
         
-        function dirty = set_separations(this,new_separations)
+        function dirty = set_halfsecants(this,new_halfsecants)
             % Updates the internal variables containing information about separations of detours on the imaginary axis of the D-contour
             % Informs the caller whether something has changed
             % (dirty=true), potentially triggering a 'recalculate' and/or
             % a fetch of updated data
             
-            assert(~isempty(new_separations) && isstruct(new_separations));
+            assert(~isempty(new_halfsecants) && isstruct(new_halfsecants));
             
-            if ~isequal(this.p_separations,new_separations)
-                tools.dbg('anp_tf_processor[set_separations]:\tNew separations.\n');
+            if ~isequal(this.p_halfsecants,new_halfsecants)
+                tools.dbg('anp_tf_processor[set_halfsecants]:\tNew halfsecants.\n');
                 dirty =                 true;
-                this.p_separations =    new_separations;
+                this.p_halfsecants =    new_halfsecants;
                 if ~this.s_wait
                     this.recalculate();
                 end
             else
                 dirty =                 false;
-                tools.dbg('anp_tf_processor[set_separations]:\tNothing changed.\n');
+                tools.dbg('anp_tf_processor[set_halfsecants]:\tNothing changed.\n');
             end
         end
         
@@ -363,9 +363,9 @@ classdef anp_tf_processor < handle
             args.angles.crop =          this.p_angles.crop_inf_transition * pi/180;
             args.angles.detour =        this.p_angles.detour * pi/180;
             args.angles.min_angle_contribution_at_R = this.p_angles.min_angle_contribution_at_R * pi/180;
-            args.separation_pole_max =  this.p_separations.pole_max;
-            args.separation_zero_max =  this.p_separations.zero_max;
-            args.separation_margin =    this.p_separations.margin;
+            args.halfsecant_pole_max =  this.p_halfsecants.pole_max;
+            args.halfsecant_zero_max =  this.p_halfsecants.zero_max;
+            args.halfsecant_margin =    this.p_halfsecants.margin;
         end
         
         function [] = calc_parametrization(this)

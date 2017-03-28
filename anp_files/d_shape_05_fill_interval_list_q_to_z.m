@@ -8,14 +8,14 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
     
     radii =                     in_params.radii;
     angles =                    in_params.angles;
-    separation_pole =           in_params.actual_separation_pole;
-    separation_zero =           in_params.actual_separation_zero;    
+    halfsecant_pole =           in_params.actual_halfsecant_pole;
+    halfsecant_zero =           in_params.actual_halfsecant_zero;    
     im_pz_sorted =              in_data.im_pz_sorted;
     pole_zero_combinations =    in_data.im_pz_combinations;
     interval_list =             in_data.interval_list;
     
-    secant_pole = 2*separation_pole;
-    secant_zero = 2*separation_zero;
+    secant_pole = 2*halfsecant_pole;
+    secant_zero = 2*halfsecant_zero;
     [radii,arc_lengths] = calculate_detour_params(radii,angles,secant_pole,secant_zero);
     positions.crop_y0 = sqrt(radii.inf^2-2*radii.crop*radii.inf);
     positions.crop_x0 = radii.crop;
@@ -28,7 +28,7 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
     %         just touches the origin
     % or: the first straight interval
     if ~isempty(im_pz_sorted)
-        im_pz_sorted = identify_border_cases(im_pz_sorted,separation_pole,separation_zero);
+        im_pz_sorted = identify_border_cases(im_pz_sorted,halfsecant_pole,halfsecant_zero);
     end
     
     interval_ii = 1;
@@ -130,9 +130,9 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
             prev_upper_bound = 0;
 %             interval_list(1).q(1) = 0;
 %             
-%             interval_list(1).q_len = im_pz_sorted(positive_idx).value - separation_pole;
+%             interval_list(1).q_len = im_pz_sorted(positive_idx).value - halfsecant_pole;
 %             
-%             interval_list(1).q(2) = im_pz_sorted(positive_idx).value - separation_pole;
+%             interval_list(1).q(2) = im_pz_sorted(positive_idx).value - halfsecant_pole;
 %             prev_upper_bound = interval_list(1).q(2);
         tools.dbg('no p/z in range of origin\n');
         
@@ -159,11 +159,11 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
         
         if isnan(idx_current_pz)
             idx_current_pz = idx_first_positive;
-            interval_length = im_pz_sorted(idx_current_pz).value - separation_pole*im_pz_sorted(idx_current_pz).pole - separation_zero*im_pz_sorted(idx_current_pz).zero;
+            interval_length = im_pz_sorted(idx_current_pz).value - halfsecant_pole*im_pz_sorted(idx_current_pz).pole - halfsecant_zero*im_pz_sorted(idx_current_pz).zero;
             za = 0;
         else
-            interval_length = pole_zero_combinations(idx_current_pz-1).distance - separation_pole*(im_pz_sorted(idx_current_pz-1).pole + im_pz_sorted(idx_current_pz).pole) - separation_zero*(im_pz_sorted(idx_current_pz-1).zero + im_pz_sorted(idx_current_pz).zero);            
-            za = im_pz_sorted(idx_current_pz-1).value + im_pz_sorted(idx_current_pz-1).pole*separation_pole + im_pz_sorted(idx_current_pz-1).zero*separation_zero;
+            interval_length = pole_zero_combinations(idx_current_pz-1).distance - halfsecant_pole*(im_pz_sorted(idx_current_pz-1).pole + im_pz_sorted(idx_current_pz).pole) - halfsecant_zero*(im_pz_sorted(idx_current_pz-1).zero + im_pz_sorted(idx_current_pz).zero);            
+            za = im_pz_sorted(idx_current_pz-1).value + im_pz_sorted(idx_current_pz-1).pole*halfsecant_pole + im_pz_sorted(idx_current_pz-1).zero*halfsecant_zero;
         end
         interval_list(interval_ii).q_len = interval_length;
         
@@ -171,7 +171,7 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
         prev_upper_bound = interval_list(interval_ii).q(2);
         
         
-        zb = im_pz_sorted(idx_current_pz).value - im_pz_sorted(idx_current_pz).pole*separation_pole - im_pz_sorted(idx_current_pz).zero*separation_zero;
+        zb = im_pz_sorted(idx_current_pz).value - im_pz_sorted(idx_current_pz).pole*halfsecant_pole - im_pz_sorted(idx_current_pz).zero*halfsecant_zero;
         interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
         
         tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
@@ -208,8 +208,8 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
         interval_length = positions.crop_y0;
         za = 0;
     else
-        interval_length = positions.crop_y0 - (im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*separation_pole + im_pz_sorted(idx_current_pz).zero*separation_zero);
-        za = im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*separation_pole + im_pz_sorted(idx_current_pz).zero*separation_zero;
+        interval_length = positions.crop_y0 - (im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*halfsecant_pole + im_pz_sorted(idx_current_pz).zero*halfsecant_zero);
+        za = im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*halfsecant_pole + im_pz_sorted(idx_current_pz).zero*halfsecant_zero;
     end
     interval_list(interval_ii).q_len = interval_length;
     
@@ -262,12 +262,12 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
     
     if any([im_pz_sorted.value] < 0)
         idx_current_pz = 1;
-        interval_length = positions.crop_y0 - (-im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*separation_pole + im_pz_sorted(idx_current_pz).zero*separation_zero);
-        zb = im_pz_sorted(idx_current_pz).value - im_pz_sorted(idx_current_pz).pole*separation_pole - im_pz_sorted(idx_current_pz).zero*separation_zero;
+        interval_length = positions.crop_y0 - (-im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*halfsecant_pole + im_pz_sorted(idx_current_pz).zero*halfsecant_zero);
+        zb = im_pz_sorted(idx_current_pz).value - im_pz_sorted(idx_current_pz).pole*halfsecant_pole - im_pz_sorted(idx_current_pz).zero*halfsecant_zero;
     elseif any([im_pz_sorted.pos_overlapping])
         idx_current_pz = NaN;
-        interval_length = positions.crop_y0 - (-im_pz_sorted(1).value + im_pz_sorted(1).pole*separation_pole + im_pz_sorted(1).zero*separation_zero);
-        zb = im_pz_sorted(1).value - im_pz_sorted(1).pole*separation_pole - im_pz_sorted(1).zero*separation_zero;
+        interval_length = positions.crop_y0 - (-im_pz_sorted(1).value + im_pz_sorted(1).pole*halfsecant_pole + im_pz_sorted(1).zero*halfsecant_zero);
+        zb = im_pz_sorted(1).value - im_pz_sorted(1).pole*halfsecant_pole - im_pz_sorted(1).zero*halfsecant_zero;
     else
         idx_current_pz = NaN;
         interval_length = positions.crop_y0;
@@ -313,14 +313,14 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
             interval_list(interval_ii).type = 'axis';
             interval_list(interval_ii).q(1) = prev_upper_bound;
             
-            interval_length = pole_zero_combinations(idx_current_pz).distance - separation_pole*(im_pz_sorted(idx_current_pz).pole + im_pz_sorted(idx_current_pz+1).pole) - separation_zero*(im_pz_sorted(idx_current_pz).zero + im_pz_sorted(idx_current_pz+1).zero);            
+            interval_length = pole_zero_combinations(idx_current_pz).distance - halfsecant_pole*(im_pz_sorted(idx_current_pz).pole + im_pz_sorted(idx_current_pz+1).pole) - halfsecant_zero*(im_pz_sorted(idx_current_pz).zero + im_pz_sorted(idx_current_pz+1).zero);            
             interval_list(interval_ii).q_len = interval_length;
             
             interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
             prev_upper_bound = interval_list(interval_ii).q(2);
             
-            za = im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*separation_pole + im_pz_sorted(idx_current_pz).zero*separation_zero;
-            zb = im_pz_sorted(idx_current_pz+1).value - im_pz_sorted(idx_current_pz+1).pole*separation_pole - im_pz_sorted(idx_current_pz+1).zero*separation_zero;
+            za = im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*halfsecant_pole + im_pz_sorted(idx_current_pz).zero*halfsecant_zero;
+            zb = im_pz_sorted(idx_current_pz+1).value - im_pz_sorted(idx_current_pz+1).pole*halfsecant_pole - im_pz_sorted(idx_current_pz+1).zero*halfsecant_zero;
             interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
 
             tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
@@ -377,12 +377,12 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
             interval_list(interval_ii).type = 'axis';
             interval_list(interval_ii).q(1) = prev_upper_bound;
             
-            interval_length = abs(im_pz_sorted(idx_current_pz).value + separation_pole*im_pz_sorted(idx_current_pz).pole + separation_zero*im_pz_sorted(idx_current_pz).zero);
+            interval_length = abs(im_pz_sorted(idx_current_pz).value + halfsecant_pole*im_pz_sorted(idx_current_pz).pole + halfsecant_zero*im_pz_sorted(idx_current_pz).zero);
             interval_list(interval_ii).q_len = interval_length;
             
             interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
             
-            za = im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*separation_pole + im_pz_sorted(idx_current_pz).zero*separation_zero;
+            za = im_pz_sorted(idx_current_pz).value + im_pz_sorted(idx_current_pz).pole*halfsecant_pole + im_pz_sorted(idx_current_pz).zero*halfsecant_zero;
             zb = 0;
             interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
             
@@ -396,14 +396,14 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
             interval_list(interval_ii).type = 'axis';
             interval_list(interval_ii).q(1) = prev_upper_bound;
             
-            interval_length = pole_zero_combinations(idx_current_pz).distance - separation_pole*(im_pz_sorted(idx_current_pz).pole + im_pz_sorted(idx_current_pz+1).pole) - separation_zero*(im_pz_sorted(idx_current_pz).zero + im_pz_sorted(idx_current_pz+1).zero);            
+            interval_length = pole_zero_combinations(idx_current_pz).distance - halfsecant_pole*(im_pz_sorted(idx_current_pz).pole + im_pz_sorted(idx_current_pz+1).pole) - halfsecant_zero*(im_pz_sorted(idx_current_pz).zero + im_pz_sorted(idx_current_pz+1).zero);            
             interval_list(interval_ii).q_len = interval_length;
             
             interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
             prev_upper_bound = interval_list(interval_ii).q(2);
             
-            za = im_pz_sorted(idx_current_pz).value   + im_pz_sorted(idx_current_pz).pole  *separation_pole + im_pz_sorted(idx_current_pz).zero  *separation_zero;
-            zb = im_pz_sorted(idx_current_pz+1).value - im_pz_sorted(idx_current_pz+1).pole*separation_pole - im_pz_sorted(idx_current_pz+1).zero*separation_zero;
+            za = im_pz_sorted(idx_current_pz).value   + im_pz_sorted(idx_current_pz).pole  *halfsecant_pole + im_pz_sorted(idx_current_pz).zero  *halfsecant_zero;
+            zb = im_pz_sorted(idx_current_pz+1).value - im_pz_sorted(idx_current_pz+1).pole*halfsecant_pole - im_pz_sorted(idx_current_pz+1).zero*halfsecant_zero;
             interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
 
         tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
@@ -447,28 +447,28 @@ function interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data)
     
 end
 
-function pz_list_sorted = identify_border_cases(pz_list_sorted,separation_pole,separation_zero)
+function pz_list_sorted = identify_border_cases(pz_list_sorted,halfsecant_pole,halfsecant_zero)
     for ii = 1:length(pz_list_sorted)
         pz_value = pz_list_sorted(ii).value;
         switch(pz_list_sorted(ii).type)
             case 'p'
-                if pz_value < 0 && (pz_value + separation_pole == 0)
+                if pz_value < 0 && (pz_value + halfsecant_pole == 0)
                     pz_list_sorted(ii).neg_on_origin = true;
-                elseif pz_value < 0 && (pz_value + separation_pole > 0)
+                elseif pz_value < 0 && (pz_value + halfsecant_pole > 0)
                     pz_list_sorted(ii).neg_overlapping = true;
-                elseif pz_value >= 0 && (pz_value - separation_pole == 0)
+                elseif pz_value >= 0 && (pz_value - halfsecant_pole == 0)
                     pz_list_sorted(ii).pos_on_origin = true;
-                elseif pz_value >= 0 && (pz_value - separation_pole < 0)
+                elseif pz_value >= 0 && (pz_value - halfsecant_pole < 0)
                     pz_list_sorted(ii).pos_overlapping = true;
                 end
             case 'z'
-                if pz_value < 0 && (pz_value + separation_zero == 0)
+                if pz_value < 0 && (pz_value + halfsecant_zero == 0)
                     pz_list_sorted(ii).neg_on_origin = true;
-                elseif pz_value < 0 && (pz_value + separation_zero > 0)
+                elseif pz_value < 0 && (pz_value + halfsecant_zero > 0)
                     pz_list_sorted(ii).neg_overlapping = true;
-                elseif pz_value >= 0 && (pz_value - separation_zero == 0)
+                elseif pz_value >= 0 && (pz_value - halfsecant_zero == 0)
                     pz_list_sorted(ii).pos_on_origin = true;
-                elseif pz_value >= 0 && (pz_value - separation_zero < 0)
+                elseif pz_value >= 0 && (pz_value - halfsecant_zero < 0)
                     pz_list_sorted(ii).pos_overlapping = true;
                 end
             otherwise

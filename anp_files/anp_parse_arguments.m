@@ -192,9 +192,9 @@ function checked_args = anp_parse_arguments(varargin)
     checked_args.angles.crop_inf_transition =           7;  % [°], roundoff-parameter of the D-curve, usually not necessary to change
     checked_args.angles.min_angle_contribution_at_R =   65; % [°]
     checked_args.angles.detour =        45;                 % [°]
-    checked_args.separations.pole_max = 1/4;                % [1] absolute
-    checked_args.separations.zero_max = 1/8;                % [1] absolute
-    checked_args.separations.margin =   0.05;               % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
+    checked_args.halfsecants.pole_max = 1/4;                % [1] absolute
+    checked_args.halfsecants.zero_max = 1/8;                % [1] absolute
+    checked_args.halfsecants.margin =   0.05;               % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
     checked_args.weights.pole =         2;                  % if a pole is on the Im-axis, how many spatial points should it be given in the nyquist plot?
     checked_args.weights.zero =         1/3;                % same as above
     

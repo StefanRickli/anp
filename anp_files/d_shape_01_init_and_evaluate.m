@@ -30,13 +30,13 @@ function z = d_shape_01_init_and_evaluate(t,in_params)
     % one single shape function, i.e. a straight line or a circle.
     % 
     % Also as we enforce a piece of straight line between neighboring
-    % detours, the detour radii might be upper bounded by the minimum
+    % detours, the detour secants might be upper bounded by the minimum
     % separation of imaginary poles/zeros. We're interested in finding out
-    % those maximal detour radii which will be defined in terms of the
-    % 'actual_separation_...' variables.
+    % the maximal allowed detour secant which will be defined in terms of
+    % the 'actual_halfsecant_...' variables later.
     [in_data.interval_list,...
-     in_params.actual_separation_pole,...
-     in_params.actual_separation_zero] = d_shape_04_init_interval_list(in_params,in_data);
+     in_params.actual_halfsecant_pole,...
+     in_params.actual_halfsecant_zero] = d_shape_04_init_interval_list(in_params,in_data);
     
     % First we create appropriate functions that map an input to a certain
     % shape, i.e. a straight line or a circle beginning at theta degrees,
