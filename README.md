@@ -36,7 +36,9 @@ If you feel like contributing to the project, please contact me first. I have no
 
 ## Versioning
 
-Starting with the initial upload to GitHub, I will use [SemVer](http://semver.org/) for versioning. For the versions available, see the [releases on this repository](https://github.com/StefanRickli/anp/releases). 
+This project uses [SemVer](http://semver.org/) for versioning.
+
+For the versions available, see the [releases on this repository](https://github.com/StefanRickli/anp/releases). 
 
 ## Authors
 * **Stefan Rickli** - *Initial idea and versions of ANP* [StefanRickli](https://blogs.ethz.ch/ricklis)
@@ -45,7 +47,7 @@ See also the list of [contributors](https://github.com/your/project/contributors
 
 ## License
 
-I have not yet decided on the type of licence I'm releasing this project under, since I'm fairly new to software development and it's my first serious open project.
+This project is licensed under the BSD 3-Clause License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
 
