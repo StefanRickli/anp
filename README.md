@@ -14,7 +14,7 @@ ANP has been developed in Matlab R2016b. It should be backward compatible down t
 (v4.0 should be compatible down to R2014b.)
 
 You'll need to have the following toolboxes installed:
-* Control Toolbox
+* Control System Toolbox
 * Optimization Toolbox
 
 ### Installing
