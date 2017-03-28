@@ -1,5 +1,5 @@
 function [interval_list,actual_separation_pole,actual_separation_zero] = ...
-         anp_in_fct_init_interval_list(in_params,in_data)
+         d_shape_04_init_interval_list(in_params,in_data)
      
     separation_pole_max =    in_params.separation_pole_max;
     separation_zero_max =    in_params.separation_zero_max;

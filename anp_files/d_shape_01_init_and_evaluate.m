@@ -1,4 +1,4 @@
-function z = anp_d_contour_init_and_evaluate(t,in_params)
+function z = d_shape_01_init_and_evaluate(t,in_params)
     % Serves as main entry point for the creation D-contour points based on a set of input data points that are in an interval of [0,1]
     % 
     % PRE:  - t is a vector with monotonically increasing values from 0 to 1
@@ -16,13 +16,13 @@ function z = anp_d_contour_init_and_evaluate(t,in_params)
     
     % Sort the pure imaginary poles and zeros in the order they will be
     % encountered en route of the D-contour
-    in_data.im_pz_sorted = anp_in_fct_sort_pz(in_params);
+    in_data.im_pz_sorted = d_shape_02_sort_pz(in_params);
     
     % Determines which combinations of pole-zero occur in which order and
     % calculates the distance between the neighbors.
-    % This distances are later used to form an upper bound on the radii we
+    % These distances are later used to form an upper bound on the radii we
     % can use for the detours.
-    in_data.im_pz_combinations = anp_in_fct_pz_combinations(in_params,in_data);
+    in_data.im_pz_combinations = d_shape_03_pz_combinations(in_params,in_data);
     
     % Based on location of poles and zeros on the imaginary axis and the
     % requested radii of the main half-circle and the detours create a list
@@ -36,7 +36,7 @@ function z = anp_d_contour_init_and_evaluate(t,in_params)
     % 'actual_separation_...' variables.
     [in_data.interval_list,...
      in_params.actual_separation_pole,...
-     in_params.actual_separation_zero] = anp_in_fct_init_interval_list(in_params,in_data);
+     in_params.actual_separation_zero] = d_shape_04_init_interval_list(in_params,in_data);
     
     % First we create appropriate functions that map an input to a certain
     % shape, i.e. a straight line or a circle beginning at theta degrees,
@@ -46,7 +46,7 @@ function z = anp_d_contour_init_and_evaluate(t,in_params)
     % starting and end point, for circles take their arc length) from zero
     % up to the total length of the D-contour shape. This list of intervals
     % will be the input to the functions q |--> z.
-    in_data.interval_list = anp_in_fct_fill_interval_list_q_to_z(in_params,in_data);
+    in_data.interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data);
     
     % As tf_processor specifies inputs in an interval of t in [0,1], we
     % need to map those values to the q-values. Do this such that many
@@ -55,7 +55,7 @@ function z = anp_d_contour_init_and_evaluate(t,in_params)
     % We do this by specifying appropriate point density functions that
     % map parts of [0,1] nonlinearly to the q-intervals
     % (functions t |--> q).
-    in_data.interval_list = anp_in_fct_fill_interval_list_t_to_q(in_params,in_data);
+    in_data.interval_list = d_shape_06_fill_interval_list_t_to_q(in_params,in_data);
     
     % Finally iterate through every data point that we got from
     % tf_processor and calculate its corresponding value in the z-plane by

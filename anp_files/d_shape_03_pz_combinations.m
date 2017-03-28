@@ -1,4 +1,8 @@
-function pole_zero_combinations = anp_in_fct_pz_combinations(in_params,in_data)
+function pole_zero_combinations = d_shape_03_pz_combinations(in_params,in_data)
+    % Determines which combinations of pole-zero occur in which order and
+    % calculates the distance between the neighbors.
+    % These distances are later used to form an upper bound on the radii we
+    % can use for the detours.
     
     imaginary_PolesZeros_sorted =   in_data.im_pz_sorted;
     separation_pole_max =           in_params.separation_pole_max;

@@ -343,7 +343,7 @@ classdef anp_tf_processor < handle
             % function that maps the data-points from [0,1] to the
             % D-contour in the z-plot
             args = this.prepare_z_fct_args();
-            this.d_z_values = anp_d_contour_init_and_evaluate(this.d_data_points,args);
+            this.d_z_values = d_shape_01_init_and_evaluate(this.d_data_points,args);
             
             if this.tf_delay ~= 0
                 this.d_w_values = exp(-imag(this.d_z_values) * this.tf_delay * 1i) .* this.tf_G(this.d_z_values);
