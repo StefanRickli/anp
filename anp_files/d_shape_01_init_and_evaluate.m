@@ -24,19 +24,19 @@ function z = d_shape_01_init_and_evaluate(t,in_params)
     % can use for the detours.
     in_data.im_pz_combinations = d_shape_03_pz_combinations(in_params,in_data);
     
-    % Based on location of poles and zeros on the imaginary axis and the
-    % requested radii of the main half-circle and the detours create a list
-    % of intervals that will segment [0,1] into blocks that each belong to
-    % one single shape function, i.e. a straight line or a circle.
-    % 
-    % Also as we enforce a piece of straight line between neighboring
+    % As we enforce a piece of straight line between neighboring
     % detours, the detour secants might be upper bounded by the minimum
     % separation of imaginary poles/zeros. We're interested in finding out
     % the maximal allowed detour secant which will be defined in terms of
     % the 'actual_halfsecant_...' variables later.
-    [in_data.interval_list,...
-     in_params.actual_halfsecant_pole,...
-     in_params.actual_halfsecant_zero] = d_shape_04_init_interval_list(in_params,in_data);
+    [in_params.actual_halfsecant_pole,...
+     in_params.actual_halfsecant_zero] = d_shape_04_calc_actual_halfsecants(in_params,in_data);
+    
+    % Based on location of poles and zeros on the imaginary axis and the
+    % requested radii of the main half-circle and the detours create a list
+    % of intervals that each belong to one single shape function,
+    % i.e. a straight line or a circle.
+    in_data.interval_list = d_shape_05_init_interval_list(in_params,in_data);
     
     % First we create appropriate functions that map an input to a certain
     % shape, i.e. a straight line or a circle beginning at theta degrees,
@@ -46,7 +46,7 @@ function z = d_shape_01_init_and_evaluate(t,in_params)
     % starting and end point, for circles take their arc length) from zero
     % up to the total length of the D-contour shape. This list of intervals
     % will be the input to the functions q |--> z.
-    in_data.interval_list = d_shape_05_fill_interval_list_q_to_z(in_params,in_data);
+    in_data.interval_list = d_shape_06_fill_interval_list_q_to_z(in_params,in_data);
     
     % As tf_processor specifies inputs in an interval of t in [0,1], we
     % need to map those values to the q-values. Do this such that many
@@ -55,7 +55,7 @@ function z = d_shape_01_init_and_evaluate(t,in_params)
     % We do this by specifying appropriate point density functions that
     % map parts of [0,1] nonlinearly to the q-intervals
     % (functions t |--> q).
-    in_data.interval_list = d_shape_06_fill_interval_list_t_to_q(in_params,in_data);
+    in_data.interval_list = d_shape_07_fill_interval_list_t_to_q(in_params,in_data);
     
     % Finally iterate through every data point that we got from
     % tf_processor and calculate its corresponding value in the z-plane by
