@@ -3,6 +3,18 @@ function pole_zero_combinations = d_shape_03_pz_combinations(in_params,in_data)
     % calculates the distance between the neighbors.
     % These distances are later used to form an upper bound on the radii we
     % can use for the detours.
+    % 
+    % PRE:  A list of purely imaginary poles and zeros that is sorted in
+    %       the order they appear along the D-contour.
+    % POST: A list containing info about which type of detour combinations
+    %       are expected along the D-contour.
+    %       
+    %       For example, 'pz' means that there will be first a pole detour,
+    %       then a straight piece of line along the imaginary axis and then
+    %       a zero detour. In order to ensure the existence of said
+    %       straight piece along the im-axis, we may need to impose an
+    %       upper bound on the detour radii. Hence the list, such that we
+    %       can later calculate the maximal detour radius.
     
     imaginary_PolesZeros_sorted =   in_data.im_pz_sorted;
     halfsecant_pole_max =           in_params.halfsecant_pole_max;

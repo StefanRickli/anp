@@ -16,11 +16,23 @@ function interval_list = d_shape_05_init_interval_list(in_params,in_data)
     im_poles = [im_pz_sorted([im_pz_sorted.pole] == 1).value];
     im_zeros = [im_pz_sorted([im_pz_sorted.zero] == 1).value];
     
+    % This is true whenevery one of the detour circles's end points lands
+    % exactly on the origin.
     pz_interval_border_on_origin = any( [(im_poles+actual_halfsecant_pole)==0,...
                                          (im_poles-actual_halfsecant_pole)==0,...
                                          (im_zeros+actual_halfsecant_zero)==0,...
                                          (im_zeros+actual_halfsecant_zero)==0]);
     
+    % There are 5 base intervals along the D-contour:
+    %   - a straight line from origin to the upper crop-cirlce
+    %   - the upper crop-circle
+    %   - the main large halfcircle
+    %   - the lower crop-circle
+    %   - the straight line from lower crop-circle to the origin
+    % Each purely imaginary pole or zero leads to an additional straight
+    % line interval (i) and its detour circle.
+    % The only exeption to (i) is when a detour circle's end point lands
+    % exactly on the origin.
     n_intervals = 5 + 2*length([im_poles,im_zeros]) - pz_interval_border_on_origin;
     
     interval_list = repmat(struct('type',[],...

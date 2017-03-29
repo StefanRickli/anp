@@ -81,9 +81,10 @@ function poles_zeros_sorted = d_shape_02_sort_pz(in_params)
     end
 end
 
-% code adopted from
-% http://blogs.mathworks.com/pick/2010/09/17/sorting-structure-arrays-based-on-fields/
 function sorted_struct_array = sort_struct_array_by_field_index(array_in,ind)
+    % Code adopted from
+    % http://blogs.mathworks.com/pick/2010/09/17/sorting-structure-arrays-based-on-fields/
+    
     Afields = fieldnames(array_in);
     
     if ind > length(Afields)
@@ -109,12 +110,15 @@ function sorted_struct_array = sort_struct_array_by_field_index(array_in,ind)
 
     % Convert to Struct
     sorted_struct_array = cell2struct(Acell, Afields, 1);
-
 end
 
 function poles_zeros_sorted = check_for_multiple_pz_at_same_value(poles_zeros_sorted)
     % Removes any poles or zeros that occur more than once at the exact
     % same spot/value.
+    % Note: We don't identify for pole/zero cancellations. If one happens,
+    %       the one to appear later in the list will get dropped and we
+    %       still make a detour.
+    
     start_over = false;
     while(true)
         for ii = 2:length(poles_zeros_sorted)

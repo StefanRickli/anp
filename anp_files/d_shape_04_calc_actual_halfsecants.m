@@ -19,6 +19,10 @@ function [halfsecant_pole,halfsecant_zero] = d_shape_04_calc_actual_halfsecants(
     nonzero_halfsecant_poles = s_poles(s_poles > 0);
     nonzero_halfsecant_zeros = s_zeros(s_zeros > 0);
     
+    % These are the values we will stick with for the rest of the D-contour
+    % init!
+    % 'halfsecant_margin' reduces the secants by this factor and ultimately
+    % leads to the desired minimum gap between detour circles.
     halfsecant_pole = min([(1-halfsecant_margin)*nonzero_halfsecant_poles,...
                            halfsecant_pole_max]);
     halfsecant_zero = min([(1-halfsecant_margin)*nonzero_halfsecant_zeros,...

@@ -1,5 +1,6 @@
 function z = d_shape_01_init_and_evaluate(t,in_params)
-    % Serves as main entry point for the creation D-contour points based on a set of input data points that are in an interval of [0,1]
+    % Serves as main entry point for the creation D-contour points based on
+    % a set of input data points that are in an interval of [0,1] 
     % 
     % PRE:  - t is a vector with monotonically increasing values from 0 to 1
     %       - all necessary parameters are set in in_params
