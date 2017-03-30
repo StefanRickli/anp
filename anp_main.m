@@ -114,8 +114,8 @@ function [] = anp_main(varargin)
         args.gui_handle =           h_gui;
         args.processor_handle =     h_tf_processor;
         
-        args.tf_poles =             roots(args.tf_obj.Denominator{1})';
-        args.tf_zeros =             roots(args.tf_obj.Numerator{1})';
+        args.tf_poles =             roots(args.tf_obj.Denominator{1}).';
+        args.tf_zeros =             roots(args.tf_obj.Numerator{1}).';
         
         % this kicks off the calculation of the data that the
         % GUI object then displays

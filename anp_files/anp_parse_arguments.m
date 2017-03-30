@@ -94,13 +94,13 @@ function checked_args = anp_parse_arguments(varargin)
         
         % transpose to row vector if necessary
         if ~isempty(ip.Results.arg2) && length(ip.Results.arg2(:,1)) > 1
-            tf_poles = ip.Results.arg2';
+            tf_poles = ip.Results.arg2.';
         else
             tf_poles = ip.Results.arg2;
         end
         
         if ~isempty(ip.Results.arg1) && length(ip.Results.arg1(:,1)) > 1
-            tf_zeros = ip.Results.arg1';
+            tf_zeros = ip.Results.arg1.';
         else
             tf_zeros = ip.Results.arg1;
         end

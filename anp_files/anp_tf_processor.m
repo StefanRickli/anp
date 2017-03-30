@@ -151,8 +151,8 @@ classdef anp_tf_processor < handle
             if ~isequal(this.tf_obj,new_tf)
                 tools.dbg('anp_tf_processor[set_tf]:\tNew transfer function\n');
                 this.tf_obj =   new_tf;
-                this.tf_poles = roots(this.tf_obj.Denominator{1})';
-                this.tf_zeros = roots(this.tf_obj.Numerator{1})';
+                this.tf_poles = roots(this.tf_obj.Denominator{1}).';
+                this.tf_zeros = roots(this.tf_obj.Numerator{1}).';
                 
                 this.tf_delay = delay;
                 
