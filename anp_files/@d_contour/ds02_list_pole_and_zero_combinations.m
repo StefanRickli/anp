@@ -1,4 +1,4 @@
-function pole_zero_combinations = d_shape_03_pz_combinations(in_params,in_data)
+function [] = ds02_list_pole_and_zero_combinations(this)
     % Determines which combinations of pole-zero occur in which order and
     % calculates the distance between the neighbors.
     % These distances are later used to form an upper bound on the radii we
@@ -16,9 +16,9 @@ function pole_zero_combinations = d_shape_03_pz_combinations(in_params,in_data)
     %       upper bound on the detour radii. Hence the list, such that we
     %       can later calculate the maximal detour radius.
     
-    imaginary_PolesZeros_sorted =   in_data.im_pz_sorted;
-    halfsecant_pole_max =           in_params.halfsecant_pole_max;
-    halfsecant_zero_max =           in_params.halfsecant_zero_max;
+    imaginary_PolesZeros_sorted =   this.im_pz_sorted;
+    halfsecant_pole_max =           this.halfsecant_pole_max;
+    halfsecant_zero_max =           this.halfsecant_zero_max;
     
     % this ratio determines which fraction of the distance between the
     % neighboring pole/zero is used for the separation of its detour
@@ -48,7 +48,9 @@ function pole_zero_combinations = d_shape_03_pz_combinations(in_params,in_data)
                 pole_zero_combinations(ii-1).halfsecant_pole = pole_zero_combinations(ii-1).distance / (1 + 1/halfsecant_max_ratio);
                 pole_zero_combinations(ii-1).halfsecant_zero = pole_zero_combinations(ii-1).distance / (halfsecant_max_ratio + 1);
             otherwise
-                error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
+                error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
         end
     end
+    
+    this.im_pz_combinations = pole_zero_combinations;
 end

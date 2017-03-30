@@ -1,4 +1,4 @@
-function [c_lorentz,gamma_star,r1,r2,c1,c2] = d_shape_07_mixed_exp_lorentz(a,b,ya,yb,va,vb)
+function [c_lorentz,gamma_star,r1,r2,c1,c2] = ds09_mixed_exp_lorentz(~,a,b,ya,yb,va,vb)
     if any(strcmp(who('global'),'debug_graphics_interpolation'))
         global debug_graphics_interpolation;
     else

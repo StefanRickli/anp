@@ -73,7 +73,7 @@ function checked_args = anp_parse_arguments(varargin)
         fprintf('Usage:\n');
         fprintf('animated_nyquist_plot(tf)\t\t\t\twhere ''tf'' is a transfer function object by Matlab command ''tf''\n');
         fprintf('animated_nyquist_plot([zeros],[poles])\twhere ''zeros'' and ''poles'' are 2D row vectors with roots of [num] and [denum]\n');
-        fprintf('animated_nyquist_plot(__,Name,Value)\tsee documentation\n');
+        fprintf('animated_nyquist_plot(__,Name,Value)\tsee documentation\n\n');
         
         tf_poles =                  [-3,-2,-1+1i,-1-1i];
         tf_zeros =                  -0.7;
@@ -94,13 +94,13 @@ function checked_args = anp_parse_arguments(varargin)
         
         % transpose to row vector if necessary
         if ~isempty(ip.Results.arg2) && length(ip.Results.arg2(:,1)) > 1
-            tf_poles = ip.Results.arg2';
+            tf_poles = ip.Results.arg2.';
         else
             tf_poles = ip.Results.arg2;
         end
         
         if ~isempty(ip.Results.arg1) && length(ip.Results.arg1(:,1)) > 1
-            tf_zeros = ip.Results.arg1';
+            tf_zeros = ip.Results.arg1.';
         else
             tf_zeros = ip.Results.arg1;
         end
@@ -194,9 +194,11 @@ function checked_args = anp_parse_arguments(varargin)
     checked_args.angles.detour =        45;                 % [°]
     checked_args.halfsecants.pole_max = 1/4;                % [1] absolute
     checked_args.halfsecants.zero_max = 1/8;                % [1] absolute
-    checked_args.halfsecants.margin =   0.05;               % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
-    checked_args.weights.pole =         2;                  % if a pole is on the Im-axis, how many spatial points should it be given in the nyquist plot?
-    checked_args.weights.zero =         1/3;                % same as above
+    checked_args.halfsecants.margin =   0.3;                % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
+    checked_args.weight.per_pole =      2;                  % if a pole is on the Im-axis, how many spatial points should it be given in the nyquist plot?
+    checked_args.weight.per_zero =      1/3;                % same as above
+    checked_args.weight.of_axis_parts = 9;                  % 
+    checked_args.weight.of_crop_inf =   3;                  % 
     
     % ---------------------------------------------------------------------
     % Time and spatial resolution parameters

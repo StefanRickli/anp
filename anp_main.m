@@ -2,11 +2,11 @@
 %   ANP: Animated Nyquist Plot
 %   **************************
 %
-%   Author: Stefan Rickli, ricklis [at] student.ethz.ch
+%   Author: Stefan Rickli, stefanrickli [at] gmx.ch
 %           https://blogs.ethz.ch/ricklis
 %           https://github.com/StefanRickli/anp
 %
-%   Version 5.2.1
+%   Version 5.2.2
 %   
 %   
 %   What does it do?:
@@ -83,6 +83,8 @@
 
 function [] = anp_main(varargin)
     addpath('anp_files');
+    addpath('anp_files/d_contour_tiny_fcts');
+    addpath('anp_files/tools');
     addpath('anp_icons');
     
     anp_check_Matlab_version(); % sets global variable 'matlab_version'
@@ -91,7 +93,7 @@ function [] = anp_main(varargin)
     debug_graphics = false;
     debug_graphics_interpolation = false;
     debug_text = false;
-    debug_no_reuse = true;
+    debug_no_reuse = false;
     
     args = anp_parse_arguments(varargin{:});
     
@@ -106,15 +108,15 @@ function [] = anp_main(varargin)
         if isempty(h_tf_processor) || ~isvalid(h_tf_processor) || debug_no_reuse
             h_tf_processor =        anp_tf_processor;
         else
-            fprintf('Reusing old TF processor instance\n');
+            fprintf('(Reusing old tf_processor instance. If subsequent calls to anp_main behave odd, try ''clear all'')\n\n');
         end
         
         % pass the handles to the GUI and tf_processor in the args
         args.gui_handle =           h_gui;
         args.processor_handle =     h_tf_processor;
         
-        args.tf_poles =             roots(args.tf_obj.Denominator{1})';
-        args.tf_zeros =             roots(args.tf_obj.Numerator{1})';
+        args.tf_poles =             roots(args.tf_obj.Denominator{1}).';
+        args.tf_zeros =             roots(args.tf_obj.Numerator{1}).';
         
         % this kicks off the calculation of the data that the
         % GUI object then displays

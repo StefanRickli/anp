@@ -62,7 +62,7 @@ classdef anp_tf_processor < handle
         p_time          % struct, members: 'n_time_steps','n_data_points','p_oversampling_factor',
         p_radii         % struct, members: 'auto_main_R','R'
         p_angles        % struct, members: 'crop_inf_transition','detour','min_angle_contribution'
-        p_weights       % struct, members: 'pole','zero'
+        p_weight        % struct, members: 'per_pole','per_zero'
         p_halfsecants   % struct, members: 'margin','pole_max','zero_max'
         
         % d: calculated data
@@ -90,7 +90,7 @@ classdef anp_tf_processor < handle
             this.s_wait =           false;
             this.s_busy =           false;
             
-            tools.dbg('anp_tf_processor[constructor]:\t%s: Instance created.\n',this.g_uid);
+            dbg_out('anp_tf_processor[constructor]:\t%s: Instance created.\n',this.g_uid);
         end
         
         function [] = init_params(this,new_params)
@@ -111,7 +111,7 @@ classdef anp_tf_processor < handle
                     this.set_angles(new_params.angles),...
                     this.set_halfsecants(new_params.halfsecants),...
                     this.set_radii(new_params.radii),...
-                    this.set_weights(new_params.weights),])
+                    this.set_weights(new_params.weight),])
                 this.recalculate();
             end
             
@@ -127,7 +127,7 @@ classdef anp_tf_processor < handle
             assert(~isempty(new_time_params) && isstruct(new_time_params));
             
             if isempty(this.p_time) || ~all(this.p_time.n_time_steps == new_time_params.n_time_steps)
-                tools.dbg('anp_tf_processor[set_time_params]:\tNew time params.\n');
+                dbg_out('anp_tf_processor[set_time_params]:\tNew time params.\n');
                 this.p_time.n_time_steps =      new_time_params.n_time_steps;
                 
                 dirty =         true;
@@ -136,7 +136,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =         false;
-                tools.dbg('anp_tf_processor[set_time_params]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_time_params]:\tNothing changed.\n');
             end
         end
         
@@ -149,10 +149,10 @@ classdef anp_tf_processor < handle
             assert(~isempty(new_tf) && isa(new_tf,'tf'));
             
             if ~isequal(this.tf_obj,new_tf)
-                tools.dbg('anp_tf_processor[set_tf]:\tNew transfer function\n');
+                dbg_out('anp_tf_processor[set_tf]:\tNew transfer function\n');
                 this.tf_obj =   new_tf;
-                this.tf_poles = roots(this.tf_obj.Denominator{1})';
-                this.tf_zeros = roots(this.tf_obj.Numerator{1})';
+                this.tf_poles = roots(this.tf_obj.Denominator{1}).';
+                this.tf_zeros = roots(this.tf_obj.Numerator{1}).';
                 
                 this.tf_delay = delay;
                 
@@ -165,7 +165,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =         false;
-                tools.dbg('anp_tf_processor[set_tf]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_tf]:\tNothing changed.\n');
             end
             
             this.echo_tf();
@@ -196,7 +196,7 @@ classdef anp_tf_processor < handle
             end
             
             if isempty(this.p_radii) || this.p_radii.R ~= new_radii.R
-                tools.dbg('anp_tf_processor[set_radii]:\tNew radii.\n');
+                dbg_out('anp_tf_processor[set_radii]:\tNew radii.\n');
                 this.p_radii =  new_radii;
                 dirty =         true;
                 if ~this.s_wait
@@ -204,7 +204,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =         false;
-                tools.dbg('anp_tf_processor[set_radii]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_radii]:\tNothing changed.\n');
             end
         end
         
@@ -219,7 +219,7 @@ classdef anp_tf_processor < handle
             if isempty(this.p_angles) || ~all([this.p_angles.crop_inf_transition ==         new_angles.crop_inf_transition,...
                                                this.p_angles.min_angle_contribution_at_R == new_angles.min_angle_contribution_at_R...
                                                this.p_angles.detour ==                      new_angles.detour])
-                tools.dbg('anp_tf_processor[set_angles]:\tNew angles.\n');
+                dbg_out('anp_tf_processor[set_angles]:\tNew angles.\n');
                 this.p_angles = new_angles;
                 dirty =         true;
                 if ~this.s_wait
@@ -227,28 +227,28 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =         false;
-                tools.dbg('anp_tf_processor[set_angles]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_angles]:\tNothing changed.\n');
             end
         end
         
-        function dirty = set_weights(this,new_weights)
+        function dirty = set_weights(this,new_weight)
             % Updates the internal variables containing information about weigths that influence the spatial resolution of the D-contour
             % Informs the caller whether something has changed
             % (dirty=true), potentially triggering a 'recalculate' and/or
             % a fetch of updated data
             
-            assert(~isempty(new_weights) && isstruct(new_weights));
+            assert(~isempty(new_weight) && isstruct(new_weight));
             
-            if ~isequal(this.p_weights,new_weights)
-                tools.dbg('anp_tf_processor[set_weights]:\tNew weights.\n');
-                this.p_weights =    new_weights;
+            if ~isequal(this.p_weight,new_weight)
+                dbg_out('anp_tf_processor[set_weights]:\tNew weights.\n');
+                this.p_weight =     new_weight;
                 dirty =             true;
                 if ~this.s_wait
                     this.recalculate();
                 end
             else
                 dirty =             false;
-                tools.dbg('anp_tf_processor[set_weights]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_weights]:\tNothing changed.\n');
             end
         end
         
@@ -261,7 +261,7 @@ classdef anp_tf_processor < handle
             assert(~isempty(new_halfsecants) && isstruct(new_halfsecants));
             
             if ~isequal(this.p_halfsecants,new_halfsecants)
-                tools.dbg('anp_tf_processor[set_halfsecants]:\tNew halfsecants.\n');
+                dbg_out('anp_tf_processor[set_halfsecants]:\tNew halfsecants.\n');
                 dirty =                 true;
                 this.p_halfsecants =    new_halfsecants;
                 if ~this.s_wait
@@ -269,7 +269,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =                 false;
-                tools.dbg('anp_tf_processor[set_halfsecants]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_halfsecants]:\tNothing changed.\n');
             end
         end
         
@@ -313,7 +313,7 @@ classdef anp_tf_processor < handle
         function delete(this)
             % Destructor method
             
-            tools.dbg('anp_tf_processor[delete]:\t%s: Deletion requested.\n',this.g_uid);
+            dbg_out('anp_tf_processor[delete]:\t%s: Deletion requested.\n',this.g_uid);
         end
     end
     
@@ -343,7 +343,10 @@ classdef anp_tf_processor < handle
             % function that maps the data-points from [0,1] to the
             % D-contour in the z-plot
             args = this.prepare_z_fct_args();
-            this.d_z_values = d_shape_01_init_and_evaluate(this.d_data_points,args);
+            h_d_contour = d_contour(this.d_data_points,args);
+            this.d_z_values = h_d_contour.get_z_values();
+            
+            % this.d_z_values = d_shape_01_init_and_evaluate(this.d_data_points,args);
             
             if this.tf_delay ~= 0
                 this.d_w_values = exp(-imag(this.d_z_values) * this.tf_delay * 1i) .* this.tf_G(this.d_z_values);
@@ -366,6 +369,7 @@ classdef anp_tf_processor < handle
             args.halfsecant_pole_max =  this.p_halfsecants.pole_max;
             args.halfsecant_zero_max =  this.p_halfsecants.zero_max;
             args.halfsecant_margin =    this.p_halfsecants.margin;
+            args.weight =               this.p_weight;
         end
         
         function [] = calc_parametrization(this)
@@ -419,8 +423,8 @@ classdef anp_tf_processor < handle
             % Purely imaginary zeros cause large movement right before and
             % after the detour as the mapped points are forced to go to the
             % origin from wherever they were.
-            im_pole_correction =    this.p_weights.pole * p_pure_imag;
-            im_zero_correction =    this.p_weights.zero * z_pure_imag;
+            im_pole_correction =    this.p_weight.per_pole * p_pure_imag;
+            im_zero_correction =    this.p_weight.per_zero * z_pure_imag;
             
             % Put together all the corrections and calculate a factor that
             % relates the # of animation steps (arrow movement) with the
