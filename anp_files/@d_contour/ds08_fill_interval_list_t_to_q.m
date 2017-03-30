@@ -48,7 +48,7 @@ function [] = ds08_fill_interval_list_t_to_q(this)
         tb = interval_list(ii).t(2);
         qa = interval_list(ii).q(1);
         qb = interval_list(ii).q(2);
-
+        
         if strcmp(interval_list(ii).type,'axis')            
             if ii == 1
                 va = 0.5;
@@ -120,13 +120,9 @@ function shares = determine_crop_inf_shares(shares,interval_list)
     shares.inf =  inf_arc_length/crop_inf_arc_length * shares.crop_inf;
 end
 
-function y = map(x,t0,t1,u0,u1)
-    y = ((u0-u1).*x + (t0*u1-t1*u0))/(t0-t1);
-end
-
-function y = iterator_modulo(x,m)
-    y = mod(x - 1,m) + 1;
-end
+% function y = iterator_modulo(x,m)
+%     y = mod(x - 1,m) + 1;
+% end
 
 function z = exp_Lorentz(T,a,b,ya,c_lorentz,gamma_star,r1,r2,c1,c2)
     delta_x = b - a;
