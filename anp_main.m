@@ -93,7 +93,7 @@ function [] = anp_main(varargin)
     debug_graphics = false;
     debug_graphics_interpolation = false;
     debug_text = false;
-    debug_no_reuse = true;
+    debug_no_reuse = false;
     
     args = anp_parse_arguments(varargin{:});
     
@@ -108,7 +108,7 @@ function [] = anp_main(varargin)
         if isempty(h_tf_processor) || ~isvalid(h_tf_processor) || debug_no_reuse
             h_tf_processor =        anp_tf_processor;
         else
-            fprintf('Reusing old TF processor instance\n');
+            fprintf('(Reusing old tf_processor instance. If subsequent calls to anp_main behave odd, try ''clear all'')\n\n');
         end
         
         % pass the handles to the GUI and tf_processor in the args

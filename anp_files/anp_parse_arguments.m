@@ -73,7 +73,7 @@ function checked_args = anp_parse_arguments(varargin)
         fprintf('Usage:\n');
         fprintf('animated_nyquist_plot(tf)\t\t\t\twhere ''tf'' is a transfer function object by Matlab command ''tf''\n');
         fprintf('animated_nyquist_plot([zeros],[poles])\twhere ''zeros'' and ''poles'' are 2D row vectors with roots of [num] and [denum]\n');
-        fprintf('animated_nyquist_plot(__,Name,Value)\tsee documentation\n');
+        fprintf('animated_nyquist_plot(__,Name,Value)\tsee documentation\n\n');
         
         tf_poles =                  [-3,-2,-1+1i,-1-1i];
         tf_zeros =                  -0.7;
