@@ -7,6 +7,7 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
     im_pz_sorted =          this.im_pz_sorted;
     interval_list =         this.interval_list;
     radii =                 this.radii;
+    arc_lengths =           this.arc_lengths;
     secant_pole =           this.secant_pole;
     secant_zero =           this.secant_zero;
     

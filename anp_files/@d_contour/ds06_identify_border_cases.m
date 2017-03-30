@@ -35,4 +35,6 @@ function [] = ds06_identify_border_cases(this)
                 error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
         end
     end
+    
+    this.im_pz_sorted = pz_list_sorted;
 end
