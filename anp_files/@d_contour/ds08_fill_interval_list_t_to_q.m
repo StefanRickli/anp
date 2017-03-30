@@ -53,7 +53,7 @@ function [] = ds08_fill_interval_list_t_to_q(this)
             if ii == 1
                 va = 0.5;
             else
-                ii_prev = iterator_modulo(ii-1,length(interval_list));
+                ii_prev = one_indexing_modulo(ii-1,length(interval_list));
                 
                 ta_prev = interval_list(ii_prev).t(1);
                 tb_prev = interval_list(ii_prev).t(2);
@@ -65,7 +65,7 @@ function [] = ds08_fill_interval_list_t_to_q(this)
             if ii == length(interval_list)
                 vb = 0.5;
             else
-                ii_next = iterator_modulo(ii + 1,length(interval_list));
+                ii_next = one_indexing_modulo(ii + 1,length(interval_list));
 
                 ta_next = interval_list(ii_next).t(1);
                 tb_next = interval_list(ii_next).t(2);

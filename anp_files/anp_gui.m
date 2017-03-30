@@ -756,7 +756,7 @@ classdef anp_gui < handle
                     end
                     
                     % Set the animation iterator to the next value.
-                    this.a_time_ii = tools.iterator_modulo(this.a_time_ii + this.a_direction,this.p_n_time_steps);
+                    this.a_time_ii = one_indexing_modulo(this.a_time_ii + this.a_direction,this.p_n_time_steps);
                     
                     this.draw_one_frame();
                     
@@ -800,7 +800,7 @@ classdef anp_gui < handle
             % the arrow at the current location with the direction from the
             % previous one.
             current_values_index =  this.a_time_ii * this.p_oversampling_factor;
-            prev_values_index =     tools.iterator_modulo(this.a_time_ii * this.p_oversampling_factor - 1,this.p_n_time_steps * this.p_oversampling_factor);
+            prev_values_index =     one_indexing_modulo(this.a_time_ii * this.p_oversampling_factor - 1,this.p_n_time_steps * this.p_oversampling_factor);
             z_values_head_prev =    this.d_z_values(prev_values_index);
             w_values_head_prev =    this.d_w_values(prev_values_index);
             z_values_head =         this.d_z_values(current_values_index);
@@ -979,7 +979,7 @@ classdef anp_gui < handle
             this.s_draw_busy = true;
             dbg_out('anp_gui[cb_step]:\tStepping button.\n');
             
-            this.a_time_ii = tools.iterator_modulo(this.a_time_ii + dir,this.p_n_time_steps);
+            this.a_time_ii = one_indexing_modulo(this.a_time_ii + dir,this.p_n_time_steps);
             this.draw_one_frame();
             
             this.s_draw_busy = false;
