@@ -129,7 +129,6 @@ classdef anp_gui < handle
         
         d_t_values              double      % UNUSED, time steps
         d_t_oversampled         double      % UNUSED
-        d_t_trails                          % cell array holding the index arrays that address the different trail elements at a certain animation step
         
         d_z_values              double      % array that holds the raw data for the left plot
         d_z_values_truncated    double      % array, holds the displayed data of the left plot. it might be altered in order to fit the x- and ylim.
@@ -275,7 +274,7 @@ classdef anp_gui < handle
             this.calc_axis_limits();
             this.calc_z_arrow_length();
             this.calc_w_arrow_length();
-            this.calc_trail_indexes();
+            this.calc_trail_params();
             
             % Calculate the data that is to be plotted. Compared to the raw
             % data from the tf_processor object, its data points could be
@@ -521,16 +520,16 @@ classdef anp_gui < handle
             this.d_w_values_truncated =  this.trunc(this.d_w_values,this.p_w_xlim,this.p_w_ylim);
         end
         
-        function [] = calc_trail_indexes(this)
-            % Prepare t-intervals that are plotted on each frame, considering the set number of trail-values.
+        function [] = calc_trail_params(this)
+            % Prepares trail-parameters
             
-            % TODO (what? 2017-03-05)
             this.p_n_trail = fix(this.p_n_time_steps * this.p_trail_length);
-            this.d_t_trails = cell(1,this.p_n_time_steps);
-            for ii = 1:this.p_n_time_steps
-                current_indexes = max(1,(ii-this.p_n_trail)*this.p_oversampling_factor) : 1 : ii*this.p_oversampling_factor;
-                this.d_t_trails{ii} = current_indexes;
-            end
+        end
+        
+        function idx = get_trail_indexes(this,ii)
+            % Calculates on the fly the indexes that belong to the current animation step.
+            
+            idx = max(1,(ii-this.p_n_trail)*this.p_oversampling_factor) : 1 : ii*this.p_oversampling_factor;
         end
         
         % ---------------
@@ -786,9 +785,10 @@ classdef anp_gui < handle
         
         function [] = draw_update_trails(this)
             % Updates the trail plots.
+            idx = this.get_trail_indexes(this.a_time_ii);
             
-            set(this.h_z_plot_trail,'XData',real(this.d_z_values_truncated(this.d_t_trails{this.a_time_ii})),'YData',imag(this.d_z_values_truncated(this.d_t_trails{this.a_time_ii})));
-            set(this.h_w_plot_trail,'XData',real(this.d_w_values_truncated(this.d_t_trails{this.a_time_ii})),'YData',imag(this.d_w_values_truncated(this.d_t_trails{this.a_time_ii})));        
+            set(this.h_z_plot_trail,'XData',real(this.d_z_values_truncated(idx)),'YData',imag(this.d_z_values_truncated(idx)));
+            set(this.h_w_plot_trail,'XData',real(this.d_w_values_truncated(idx)),'YData',imag(this.d_w_values_truncated(idx)));        
         end
         
         function [] = draw_update_trail_head_arrows(this)
