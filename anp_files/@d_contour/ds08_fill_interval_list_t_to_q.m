@@ -1,12 +1,12 @@
 function [] = ds08_fill_interval_list_t_to_q(this)
     
-    interval_list = this.interval_list;
+    interval_list =     this.interval_list;
     
     this.ds08a_calc_shares_of_t_intervals();
     
-    n_axis_intvls = sum(strncmp({interval_list.type},'axis',4));
-    n_pole_detours = sum(strncmp({interval_list.type},'detour_pole',11)) - sum(strncmp({interval_list.type},'detour_pole_part',16))/2;
-    n_zero_detours = sum(strncmp({interval_list.type},'detour_zero',11)) - sum(strncmp({interval_list.type},'detour_zero_part',16))/2;
+    n_axis_intvls =     sum(strncmp({interval_list.type},'axis',4));
+    n_pole_detours =    sum(strncmp({interval_list.type},'detour_pole',11)) - sum(strncmp({interval_list.type},'detour_pole_part',16))/2;
+    n_zero_detours =    sum(strncmp({interval_list.type},'detour_zero',11)) - sum(strncmp({interval_list.type},'detour_zero_part',16))/2;
     
     for ii = 1:length(interval_list)
         switch interval_list(ii).type
@@ -67,13 +67,21 @@ function [] = ds08_fill_interval_list_t_to_q(this)
                 vb = (qb_next - qa_next)/(tb_next - ta_next);
             end
             
-            [c_lorentz,gamma_star,r1,r2,c1,c2] = this.ds09_mixed_exp_lorentz(ta,tb,qa,qb,va,vb);
-            qa_real = exp_Lorentz(ta,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
-            qb_real = exp_Lorentz(tb,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
-            interval_list(ii).density_fct_handle = @(t) map(exp_Lorentz(t,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2),qa_real,qb_real,qa,qb);
+            % Calculate the parameters for the nonlinear mapping function
+            % 'exp_Lorentz' for this interval. We give it the starting
+            % point (ta,qa), end point (tb,qb) and a desired slope at the
+            % beginning va and at the end vb.
+            [c_lorentz,gamma_star,r1,r2,c1,c2] =    this.ds09_mixed_exp_lorentz(ta,tb,qa,qb,va,vb);
+            
+            % The solver in the interpolation function delivers not so
+            % precise start and endpoints. We need to align them perfectly
+            % with the desired qa and qb, so we simply do a linear mapping.
+            qa_real =                               exp_Lorentz(ta,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
+            qb_real =                               exp_Lorentz(tb,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
+            interval_list(ii).density_fct_handle =  @(t) map(exp_Lorentz(t,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2), qa_real,qb_real,qa,qb);
             
         elseif any(strcmp(interval_list(ii).type,{'detour_pole','detour_zero','detour_pole_part','detour_zero_part','crop','inf'}))
-            interval_list(ii).density_fct_handle = @(t) map(t,ta,tb,qa,qb);
+            interval_list(ii).density_fct_handle =  @(t) map(t,ta,tb,qa,qb);
         else
             error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
         end
@@ -81,6 +89,3 @@ function [] = ds08_fill_interval_list_t_to_q(this)
     
     this.interval_list = interval_list;
 end
-
-
-
