@@ -1,13 +1,15 @@
-function R = anp_calc_main_R(poles,zeros,min_angle_contribution_at_R,max_pole_separation,delay)
-    min_R = 2.5 * max_pole_separation;
-    
+function R = anp_calc_main_R(poles,zeros,min_angle_contribution_at_R,max_halfsecant,delay)
     pz_all = [poles,zeros];
     
     R1 = imag(pz_all) - real(pz_all) * tan(deg2rad(min_angle_contribution_at_R));
     R2 = imag(pz_all) - real(pz_all) * tan(-deg2rad(min_angle_contribution_at_R));
     
     pz_im = pz_all(abs(real(pz_all)) < 100*eps);
-    R = max([abs(R1),abs(R2),abs(pz_im)*1.5,min_R]);
+    if isempty(pz_im)
+        pz_im = 0;
+    end
+    
+    R = max([abs(R1),abs(R2),(abs(pz_im) + 3.5*max_halfsecant)*1.5]);
     
     if delay ~= 0
         R = 2*R + max(0,exp(-1.4*log(delay))) + max(0,100*log(delay)) + 15;
