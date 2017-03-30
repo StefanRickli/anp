@@ -48,7 +48,7 @@ function [] = ds02_list_pole_and_zero_combinations(this)
                 pole_zero_combinations(ii-1).halfsecant_pole = pole_zero_combinations(ii-1).distance / (1 + 1/halfsecant_max_ratio);
                 pole_zero_combinations(ii-1).halfsecant_zero = pole_zero_combinations(ii-1).distance / (halfsecant_max_ratio + 1);
             otherwise
-                error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
+                error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
         end
     end
     

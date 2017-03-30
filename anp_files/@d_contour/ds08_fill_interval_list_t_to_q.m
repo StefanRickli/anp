@@ -32,7 +32,7 @@ function [] = ds08_fill_interval_list_t_to_q(this)
             case 'detour_zero'
                 interval_list(ii).t_len = shares.zeros/n_zero_detours;
             otherwise
-                error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
+                error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
         end
     end
     
@@ -82,7 +82,7 @@ function [] = ds08_fill_interval_list_t_to_q(this)
         elseif any(strcmp(interval_list(ii).type,{'detour_pole','detour_zero','detour_pole_part','detour_zero_part','crop','inf'}))
             interval_list(ii).density_fct_handle = @(t) map(t,ta,tb,qa,qb);
         else
-            error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
+            error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
         end
     end
     
@@ -119,10 +119,6 @@ function shares = determine_crop_inf_shares(shares,interval_list)
     shares.crop = crop_arc_length/crop_inf_arc_length * shares.crop_inf;
     shares.inf =  inf_arc_length/crop_inf_arc_length * shares.crop_inf;
 end
-
-% function y = iterator_modulo(x,m)
-%     y = mod(x - 1,m) + 1;
-% end
 
 function z = exp_Lorentz(T,a,b,ya,c_lorentz,gamma_star,r1,r2,c1,c2)
     delta_x = b - a;

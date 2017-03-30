@@ -10,6 +10,6 @@ function type = get_detour_type(pz_type,remark)
         case 'z'
             type = ['detour_zero',underline,remark];
         otherwise
-            error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
+            error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
     end 
 end

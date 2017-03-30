@@ -34,7 +34,7 @@ function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bou
                 interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
 
             else
-                error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
+                error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
             end
 
             switch im_pz_sorted(idx_current_pz).type
@@ -106,7 +106,7 @@ function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bou
             
         tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(1).q(1),interval_list(1).q(2),interval_length);
     else
-        error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
+        error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
     end
     
     this.interval_list = interval_list;    
