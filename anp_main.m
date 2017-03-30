@@ -83,6 +83,7 @@
 
 function [] = anp_main(varargin)
     addpath('anp_files');
+    addpath('anp_files/d_shape');
     addpath('anp_icons');
     
     anp_check_Matlab_version(); % sets global variable 'matlab_version'
