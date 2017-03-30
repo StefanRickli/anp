@@ -34,7 +34,7 @@ classdef anp_gui < handle
         s_draw_allowed      logical             % set this to false before changing data or parameters, it forces the draw-function to stop once it's done with an iteration
         s_draw_busy         logical             % we're updating the plot at the moment, parameter or data change not allowed
         s_check_limits      logical             % prompt the draw-function to update axis limit related data before it makes the next iteration
-        
+        s_plot_src                              % used to pass the contiuous-draw function the source of the pan or zoom event, can be either h_sub1 or h_sub2
         
         % h: handles
         
@@ -747,11 +747,19 @@ classdef anp_gui < handle
                     % Check whether the plot limits have been changed in
                     % the meantime during the last update below.
                     if this.s_check_limits
-                        this.draw_update_limits_and_plots();
-                        this.calc_z_arrow_length();
-                        this.calc_w_arrow_length();
-                        this.draw_init_z_plot_poles_zeros();
+                        obj = this.s_plot_src;
+                        
+                        if isequal(obj.Axes,this.h_sub1)
+                            this.draw_update_z_limits_and_plot();
+                            this.calc_z_arrow_length();
+                            this.draw_init_z_plot_poles_zeros();
+                        else
+                            this.draw_update_w_limits_and_plot();
+                            this.calc_w_arrow_length();
+                        end
+                        
                         this.draw_one_frame();
+                        
                         this.s_check_limits = false;
                     end
                     
@@ -941,24 +949,32 @@ classdef anp_gui < handle
             this.h_text_res_annot(2).String =   ['Phase:       ',res_phase_txt];
         end
         
-        function [] = draw_update_limits_and_plots(this)
+        function [] = draw_update_z_limits_and_plot(this)
             % Updates the axes' limits and their plot data.
             % Gets called by GUI callback-methods. For example after a zoom
             % or pan event.
             
             this.p_z_xlim = xlim(this.h_sub1);
             this.p_z_ylim = ylim(this.h_sub1);
-
+            
             this.calc_truncated_z_values();
             this.draw_update_full_z_plot();
-
+            
+            dbg_out('anp_gui[draw_update_z_limits_and_plot]:\tz_xlim=[%.2f,%.2f], z_ylim =[%.2f,%.2f]\n',this.p_z_xlim(1),this.p_z_xlim(2),this.p_z_ylim(1),this.p_z_ylim(2));
+        end
+        
+        function [] = draw_update_w_limits_and_plot(this)
+            % Updates the axes' limits and their plot data.
+            % Gets called by GUI callback-methods. For example after a zoom
+            % or pan event.
+            
             this.p_w_xlim = xlim(this.h_sub2);
             this.p_w_ylim = ylim(this.h_sub2);
             
             this.calc_truncated_w_values();
             this.draw_update_full_w_plot();
             
-            dbg_out('anp_gui[draw_update_limits_and_plots]:\tz_xlim=[%.2f,%.2f], z_ylim =[%.2f,%.2f], w_xlim=[%.2f,%.2f], w_ylim=[%.2f,%.2f]\n',this.p_z_xlim(1),this.p_z_xlim(2),this.p_z_ylim(1),this.p_z_ylim(2),this.p_w_xlim(1),this.p_w_xlim(2),this.p_w_ylim(1),this.p_w_ylim(2));
+            dbg_out('anp_gui[draw_update_w_limits_and_plot]:\tw_xlim=[%.2f,%.2f], w_ylim=[%.2f,%.2f]\n',this.p_w_xlim(1),this.p_w_xlim(2),this.p_w_ylim(1),this.p_w_ylim(2));
         end
         
         function [] = draw_update_full_z_plot(this)
@@ -1076,23 +1092,29 @@ classdef anp_gui < handle
             this.ui_btn_next.Enable =   'on';
         end
         
-        function cb_after_zoom_or_pan(this,~,~)
+        function cb_after_zoom_or_pan(this,~,obj)
             % CB methods for zoom and pan events.
-            
+                        
             if ~this.s_draw_busy
                 % As long as draw_run_continuous_animation() isn't running,
                 % we do the updates directly.
                 
-                this.draw_update_limits_and_plots();
-                this.calc_z_arrow_length();
-                this.calc_w_arrow_length();
-                this.draw_init_z_plot_poles_zeros();
+                if isequal(obj.Axes,this.h_sub1)
+                    this.draw_update_z_limits_and_plot();
+                    this.calc_z_arrow_length();
+                    this.draw_init_z_plot_poles_zeros();
+                else
+                    this.draw_update_w_limits_and_plot();
+                    this.calc_w_arrow_length();
+                end
+                
                 this.draw_one_frame();
             else
                 % draw_run_continuous_animation() is still running, notify
                 % it of the changed axes limits.
                 
                 this.s_check_limits =   true;
+                this.s_plot_src =       obj;
             end
         end
         
