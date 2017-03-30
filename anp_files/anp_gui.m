@@ -814,13 +814,13 @@ classdef anp_gui < handle
             z_arrow_tip_x = real(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor));
             z_arrow_tip_y = imag(this.d_z_values_truncated(this.a_time_ii * this.p_oversampling_factor));
             
-            this.draw_update_arrow(this.h_sub1,this.h_z_plot_arrow,z_arrow_tip_x,z_arrow_tip_y,z_phi,this.p_z_arrow_length);
+            this.draw_update_arrow(this.h_sub1,this.h_z_plot_arrow,z_arrow_tip_x,z_arrow_tip_y,z_phi,this.p_z_arrow_length,[this.p_z_xlim,this.p_z_ylim]);
             
             
             w_arrow_tip_x = real(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor));
             w_arrow_tip_y = imag(this.d_w_values_truncated(this.a_time_ii * this.p_oversampling_factor));
             
-            this.draw_update_arrow(this.h_sub2,this.h_w_plot_arrow,w_arrow_tip_x,w_arrow_tip_y,w_phi,this.p_w_arrow_length);
+            this.draw_update_arrow(this.h_sub2,this.h_w_plot_arrow,w_arrow_tip_x,w_arrow_tip_y,w_phi,this.p_w_arrow_length,[this.p_w_xlim,this.p_w_ylim]);
         end
         
         function [] = draw_update_plot_titles(this)
@@ -1112,7 +1112,7 @@ classdef anp_gui < handle
             set(h_arrow,'parent',parent,'position',[x0-r,r],'String',text,'Color',color);
         end
         
-        function [] = draw_update_arrow(~,h_plot,h_arrow,x,y,phi,length) % ignored parameter is 'this'
+        function [] = draw_update_arrow(~,h_plot,h_arrow,x,y,phi,length,axis_limits) % ignored parameter is 'this'
             % Updates an annotation('arrow')-object's position
             
             % First calculate the start and end coordinates within the plot
@@ -1125,7 +1125,8 @@ classdef anp_gui < handle
             % Transform the plot coordinates to relative position
             % coordinates in the figure, as this is the arrow's parent
             % object.
-            [transformed_x,transformed_y] = ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y]);
+            
+            [transformed_x,transformed_y] = ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y],axis_limits);
             
             h_arrow.X = transformed_x;
             h_arrow.Y = transformed_y;

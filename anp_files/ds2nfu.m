@@ -1,4 +1,4 @@
-function [x_t,y_t] = ds2nfu(hAx,x,y)
+function [x_t,y_t] = ds2nfu(hAx,x,y,axlim)
     % DS2NFU  Convert data space units into normalized figure units.
     %
     % Michelle Hirsch
@@ -11,7 +11,6 @@ function [x_t,y_t] = ds2nfu(hAx,x,y)
     axun = get(hAx,'Units');
     set(hAx,'Units','normalized');
     axpos = get(hAx,'Position');
-    axlim = axis(hAx);
     axwidth = diff(axlim(1:2));
     axheight = diff(axlim(3:4));
     
