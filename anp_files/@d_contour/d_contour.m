@@ -91,24 +91,35 @@ classdef d_contour < handle
             % 
             % PRE: Monotonically increasing list of real values in the range [0,1]
             
-            % As we know that the values in t are monotonically increasing, there's
-            % no need to look for the right interval for every point of t. Simply
-            % check whether t(ii) > current interval's upper limit and switch to
-            % the next interval if the comparison yields true.
-            ii_interval = 1;
-            this.z_values = zeros(size(this.t_values));
-            for ii = 1:length(this.t_values)
-                while (ii_interval + 1 <= length(this.interval_list)) && (this.t_values(ii) > this.interval_list(ii_interval).t(2))
-                    ii_interval = ii_interval + 1;
+            z = zeros(size(this.t_values));
+            
+            t_end_idx =     0;
+            
+            for ii_interval = 1:length(this.interval_list)
+                t_to_q_fct =    this.interval_list(ii_interval).density_fct_handle;
+                q_to_z_fct =    this.interval_list(ii_interval).input_fct_handle;
+                
+                t_begin_idx =   t_end_idx + 1;
+                t_end_idx =     t_end_idx + 1;
+                
+                interval_end =  this.interval_list(ii_interval).t(2);
+                
+                while this.t_values(t_end_idx) < interval_end
+                    t_end_idx = t_end_idx + 1;
+                end
+                
+                if t_end_idx ~= length(this.t_values)
+                    t_end_idx = t_end_idx - 1;
                 end
                 
                 % Map t(ii) |--> q(ii)
-                Q = this.interval_list(ii_interval).density_fct_handle(this.t_values(ii));
+                Q = t_to_q_fct(this.t_values(t_begin_idx:t_end_idx));
                 
                 % Map q(ii) |--> z(ii)
-                this.z_values(ii) = this.interval_list(ii_interval).input_fct_handle(Q);
+                z(t_begin_idx:t_end_idx) = q_to_z_fct(Q);
             end
+            
+            this.z_values = z;
         end
-        
     end
 end
