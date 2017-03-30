@@ -20,6 +20,8 @@ classdef d_contour < handle
         halfsecant_margin
         arc_lengths
         positions
+        weight
+        shares
     end
     
     methods(Access = public)
@@ -33,6 +35,7 @@ classdef d_contour < handle
             this.halfsecant_pole_max =  in_params.halfsecant_pole_max;
             this.halfsecant_zero_max =  in_params.halfsecant_zero_max;
             this.halfsecant_margin =    in_params.halfsecant_margin;
+            this.weight =   in_params.weight;
             
             this.run();
         end

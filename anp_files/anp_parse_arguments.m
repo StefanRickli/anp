@@ -195,8 +195,10 @@ function checked_args = anp_parse_arguments(varargin)
     checked_args.halfsecants.pole_max = 1/4;                % [1] absolute
     checked_args.halfsecants.zero_max = 1/8;                % [1] absolute
     checked_args.halfsecants.margin =   0.3;                % how much free space between the nearest neighboring poles/zeros? ==> avoid that the nearest pole/zero-detours could have no straight part between them. p.31
-    checked_args.weights.pole =         2;                  % if a pole is on the Im-axis, how many spatial points should it be given in the nyquist plot?
-    checked_args.weights.zero =         1/3;                % same as above
+    checked_args.weight.per_pole =      2;                  % if a pole is on the Im-axis, how many spatial points should it be given in the nyquist plot?
+    checked_args.weight.per_zero =      1/3;                % same as above
+    checked_args.weight.of_axis_parts = 9;                  % 
+    checked_args.weight.of_crop_inf =   3;                  % 
     
     % ---------------------------------------------------------------------
     % Time and spatial resolution parameters

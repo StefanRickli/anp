@@ -62,7 +62,7 @@ classdef anp_tf_processor < handle
         p_time          % struct, members: 'n_time_steps','n_data_points','p_oversampling_factor',
         p_radii         % struct, members: 'auto_main_R','R'
         p_angles        % struct, members: 'crop_inf_transition','detour','min_angle_contribution'
-        p_weights       % struct, members: 'pole','zero'
+        p_weight        % struct, members: 'per_pole','per_zero'
         p_halfsecants   % struct, members: 'margin','pole_max','zero_max'
         
         % d: calculated data
@@ -111,7 +111,7 @@ classdef anp_tf_processor < handle
                     this.set_angles(new_params.angles),...
                     this.set_halfsecants(new_params.halfsecants),...
                     this.set_radii(new_params.radii),...
-                    this.set_weights(new_params.weights),])
+                    this.set_weights(new_params.weight),])
                 this.recalculate();
             end
             
@@ -231,17 +231,17 @@ classdef anp_tf_processor < handle
             end
         end
         
-        function dirty = set_weights(this,new_weights)
+        function dirty = set_weights(this,new_weight)
             % Updates the internal variables containing information about weigths that influence the spatial resolution of the D-contour
             % Informs the caller whether something has changed
             % (dirty=true), potentially triggering a 'recalculate' and/or
             % a fetch of updated data
             
-            assert(~isempty(new_weights) && isstruct(new_weights));
+            assert(~isempty(new_weight) && isstruct(new_weight));
             
-            if ~isequal(this.p_weights,new_weights)
+            if ~isequal(this.p_weight,new_weight)
                 dbg_out('anp_tf_processor[set_weights]:\tNew weights.\n');
-                this.p_weights =    new_weights;
+                this.p_weight =     new_weight;
                 dirty =             true;
                 if ~this.s_wait
                     this.recalculate();
@@ -369,6 +369,7 @@ classdef anp_tf_processor < handle
             args.halfsecant_pole_max =  this.p_halfsecants.pole_max;
             args.halfsecant_zero_max =  this.p_halfsecants.zero_max;
             args.halfsecant_margin =    this.p_halfsecants.margin;
+            args.weight =               this.p_weight;
         end
         
         function [] = calc_parametrization(this)
@@ -422,8 +423,8 @@ classdef anp_tf_processor < handle
             % Purely imaginary zeros cause large movement right before and
             % after the detour as the mapped points are forced to go to the
             % origin from wherever they were.
-            im_pole_correction =    this.p_weights.pole * p_pure_imag;
-            im_zero_correction =    this.p_weights.zero * z_pure_imag;
+            im_pole_correction =    this.p_weight.per_pole * p_pure_imag;
+            im_zero_correction =    this.p_weight.per_zero * z_pure_imag;
             
             % Put together all the corrections and calculate a factor that
             % relates the # of animation steps (arrow movement) with the

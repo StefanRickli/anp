@@ -1,16 +1,9 @@
 function [] = ds08_fill_interval_list_t_to_q(this)
     
-    poles =         this.poles;
-    zeros =         this.zeros;
-    im_pz_sorted =  this.im_pz_sorted;
     interval_list = this.interval_list;
     
-    n_im_poles_distinct = sum([im_pz_sorted.type] == 'p');
-    n_im_zeros_distinct = sum([im_pz_sorted.type] == 'z');
-    tf_relative_degree = length(poles) - length(zeros);
-    shares = get_shares(tf_relative_degree,n_im_poles_distinct,n_im_zeros_distinct);
-    shares = determine_crop_inf_shares(shares,interval_list);
- 
+    this.ds08a_calc_shares_of_t_intervals();
+    
     n_axis_intvls = sum(strncmp({interval_list.type},'axis',4));
     n_pole_detours = sum(strncmp({interval_list.type},'detour_pole',11)) - sum(strncmp({interval_list.type},'detour_pole_part',16))/2;
     n_zero_detours = sum(strncmp({interval_list.type},'detour_zero',11)) - sum(strncmp({interval_list.type},'detour_zero_part',16))/2;
@@ -18,19 +11,19 @@ function [] = ds08_fill_interval_list_t_to_q(this)
     for ii = 1:length(interval_list)
         switch interval_list(ii).type
             case 'axis'
-                interval_list(ii).t_len = shares.axis/n_axis_intvls;
+                interval_list(ii).t_len = this.shares.axis/n_axis_intvls;
             case 'crop'
-                interval_list(ii).t_len = shares.crop;
+                interval_list(ii).t_len = this.shares.crop;
             case 'inf'
-                interval_list(ii).t_len = shares.inf;
+                interval_list(ii).t_len = this.shares.inf;
             case 'detour_pole_part'
-                interval_list(ii).t_len = shares.poles/(2*n_pole_detours);
+                interval_list(ii).t_len = this.shares.poles/(2*n_pole_detours);
             case 'detour_pole'
-                interval_list(ii).t_len = shares.poles/n_pole_detours;
+                interval_list(ii).t_len = this.shares.poles/n_pole_detours;
             case 'detour_zero_part'
-                interval_list(ii).t_len = shares.zeros/(2*n_zero_detours);
+                interval_list(ii).t_len = this.shares.zeros/(2*n_zero_detours);
             case 'detour_zero'
-                interval_list(ii).t_len = shares.zeros/n_zero_detours;
+                interval_list(ii).t_len = this.shares.zeros/n_zero_detours;
             otherwise
                 error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
         end
@@ -89,35 +82,5 @@ function [] = ds08_fill_interval_list_t_to_q(this)
     this.interval_list = interval_list;
 end
 
-function shares = get_shares(tf_relative_degree,n_im_poles_distinct,n_im_zeros_distinct)
-    assert(tf_relative_degree >= 0);
-    
-    weights.crop_inf = 3/sqrt(tf_relative_degree+1);
-    weights.interpolation = 9;
-    weights.pole = n_im_poles_distinct*1;
-    weights.zero = n_im_zeros_distinct*1/3;
-    temp = struct2cell(weights);
-    weight_sum = sum([temp{:}]);
-    
-    shares.crop_inf = weights.crop_inf / weight_sum;
-    shares.axis = weights.interpolation / weight_sum;
-    shares.poles = weights.pole / weight_sum;
-    shares.zeros = weights.zero / weight_sum;    
-end
-
-function shares = determine_crop_inf_shares(shares,interval_list)
-    crop_idx = strncmp({interval_list.type},'crop',4);
-    crop_idx = find(crop_idx == true,1,'first');
-    crop_arc_length = interval_list(crop_idx).q_len;
-    
-    inf_idx = strncmp({interval_list.type},'inf',3);
-    inf_idx = find(inf_idx == true,1,'first');
-    inf_arc_length = interval_list(inf_idx).q_len;
-    
-    crop_inf_arc_length = 2*crop_arc_length + inf_arc_length;
-    
-    shares.crop = crop_arc_length/crop_inf_arc_length * shares.crop_inf;
-    shares.inf =  inf_arc_length/crop_inf_arc_length * shares.crop_inf;
-end
 
 
