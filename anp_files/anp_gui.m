@@ -178,7 +178,7 @@ classdef anp_gui < handle
             this.ui_run_switches(3) =   uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,6),'TooltipString','Play Forward', 'OnCallback',{@this.cb_run,1},'OffCallback',{@this.cb_run_switch_off,1},'Enable','off');
             this.ui_run_switches(4) =   uitoggletool(this.ui_toolbar,'CData',this.ui_icons(:,:,:,7),'TooltipString','Fast Forward', 'OnCallback',{@this.cb_run,3},'OffCallback',{@this.cb_run_switch_off,3},'Enable','off');
             
-            tools.dbg('anp_gui[constructor]:\t%s: Instance created.\n',this.g_uid);
+            dbg_out('anp_gui[constructor]:\t%s: Instance created.\n',this.g_uid);
         end
         
         function [] = init_params(this,new_props)
@@ -313,7 +313,7 @@ classdef anp_gui < handle
         function delete(this)
             % Destructor for the object. Closes the figure if it hasn't been already.
             
-            tools.dbg('anp_gui[delete]\t%s: Deletion requested.\n',this.g_uid);
+            dbg_out('anp_gui[delete]\t%s: Deletion requested.\n',this.g_uid);
             
             if isvalid(this.h_fig)
                 close(this.h_fig);
@@ -329,7 +329,7 @@ classdef anp_gui < handle
         function on_figure_delete(this,src,~) % ignored argument is 'evt'
             % Callback that issues the deletion of the anp_gui object that is holding the closed and now invalid figure window.
             
-            tools.dbg('anp_gui[on_figure_delete]:\tDeleting figure window.\n');
+            dbg_out('anp_gui[on_figure_delete]:\tDeleting figure window.\n');
             
             delete(src);
             this.delete();
@@ -497,7 +497,7 @@ classdef anp_gui < handle
             in_axis_width =         diff(this.p_z_xlim);                            % [1]
             in_axis_height =        diff(this.p_z_ylim);                            % [1]
             this.p_z_arrow_length = 0.04 * sqrt(in_axis_width^2 + in_axis_height^2);% [1]
-            tools.dbg('anp_gui[calc_z_arrow_length]:\t%.5f\n',this.p_z_arrow_length);
+            dbg_out('anp_gui[calc_z_arrow_length]:\t%.5f\n',this.p_z_arrow_length);
         end
         
         function [] = calc_w_arrow_length(this)
@@ -506,7 +506,7 @@ classdef anp_gui < handle
             out_axis_width =        diff(this.p_w_xlim);                                % [1]
             out_axis_height =       diff(this.p_w_ylim);                                % [1]
             this.p_w_arrow_length = 0.04 * sqrt(out_axis_width^2 + out_axis_height^2);  % [1]
-            tools.dbg('anp_gui[calc_w_arrow_length]:\t%.5f\n',this.p_w_arrow_length);
+            dbg_out('anp_gui[calc_w_arrow_length]:\t%.5f\n',this.p_w_arrow_length);
         end
         
         function [] = calc_truncated_z_values(this)
@@ -739,7 +739,7 @@ classdef anp_gui < handle
                 % this method already runs.
                 this.s_draw_busy = true;
                 
-                tools.dbg('anp_gui[draw_run_continuous_animation]:\tStarting animation\n');
+                dbg_out('anp_gui[draw_run_continuous_animation]:\tStarting animation\n');
                 
                 % Main GUI update loop.
                 while this.s_draw_allowed
@@ -760,10 +760,10 @@ classdef anp_gui < handle
                     
                     this.draw_one_frame();
                     
-                    tools.dbg('anp_gui[draw_run_continuous_animation]:\tdrawing %d :-)\n',this.a_time_ii);
+                    dbg_out('anp_gui[draw_run_continuous_animation]:\tdrawing %d :-)\n',this.a_time_ii);
                     pause(1/10);
                 end
-                tools.dbg('anp_gui[draw_run_continuous_animation]:\tStopping animation\n');
+                dbg_out('anp_gui[draw_run_continuous_animation]:\tStopping animation\n');
                 
                 this.s_draw_busy = false;
             catch err
@@ -953,7 +953,7 @@ classdef anp_gui < handle
             this.calc_truncated_w_values();
             this.draw_update_full_w_plot();
             
-            tools.dbg('anp_gui[draw_update_limits_and_plots]:\tz_xlim=[%.2f,%.2f], z_ylim =[%.2f,%.2f], w_xlim=[%.2f,%.2f], w_ylim=[%.2f,%.2f]\n',this.p_z_xlim(1),this.p_z_xlim(2),this.p_z_ylim(1),this.p_z_ylim(2),this.p_w_xlim(1),this.p_w_xlim(2),this.p_w_ylim(1),this.p_w_ylim(2));
+            dbg_out('anp_gui[draw_update_limits_and_plots]:\tz_xlim=[%.2f,%.2f], z_ylim =[%.2f,%.2f], w_xlim=[%.2f,%.2f], w_ylim=[%.2f,%.2f]\n',this.p_z_xlim(1),this.p_z_xlim(2),this.p_z_ylim(1),this.p_z_ylim(2),this.p_w_xlim(1),this.p_w_xlim(2),this.p_w_ylim(1),this.p_w_ylim(2));
         end
         
         function [] = draw_update_full_z_plot(this)
@@ -977,7 +977,7 @@ classdef anp_gui < handle
             % The dir value is hardcoded in the button's instantiation.
             
             this.s_draw_busy = true;
-            tools.dbg('anp_gui[cb_step]:\tStepping button.\n');
+            dbg_out('anp_gui[cb_step]:\tStepping button.\n');
             
             this.a_time_ii = tools.iterator_modulo(this.a_time_ii + dir,this.p_n_time_steps);
             this.draw_one_frame();
@@ -1011,7 +1011,7 @@ classdef anp_gui < handle
             else
                 % draw_run_continuous_animation() wasn't running yet.
                 
-                tools.dbg('anp_gui[cb_run]:\tStart requested.\n');
+                dbg_out('anp_gui[cb_run]:\tStart requested.\n');
                 if this.s_gui_nominal
                     % The GUI and data are ready
                     
@@ -1055,7 +1055,7 @@ classdef anp_gui < handle
         function [] = cb_pause(this,src,~)
             % CB method that reacts to the "pause" button.
             
-            tools.dbg('anp_gui[cb_pause]:\tPause requested.\n');
+            dbg_out('anp_gui[cb_pause]:\tPause requested.\n');
             
             % This causes draw_run_continuous_animation() to stop.
             this.s_draw_allowed =   false;

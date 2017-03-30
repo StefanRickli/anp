@@ -44,7 +44,7 @@ function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bou
                     interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,interval_list(interval_ii).q_len),radii.detour_zero,secant_zero,im_pz_sorted(idx_current_pz).value);
             end
         
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
         
     % 2
     elseif ~isnan(idx_current_pz) && ~any([[im_pz_sorted.neg_overlapping],[im_pz_sorted.pos_overlapping],[im_pz_sorted.neg_on_origin]])
@@ -61,12 +61,12 @@ function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bou
             zb = 0;
             interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
             
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
         
         
     % 3
     elseif ~isnan(idx_current_pz) && any([[im_pz_sorted.neg_overlapping],[im_pz_sorted.pos_overlapping],[im_pz_sorted.neg_on_origin]])
-        tools.dbg('negative and overlapping p/z\n');
+        dbg_out('negative and overlapping p/z\n');
             % lin interval first
             interval_list(interval_ii).type = 'axis';
             interval_list(interval_ii).q(1) = prev_upper_bound;
@@ -81,7 +81,7 @@ function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bou
             zb = im_pz_sorted(idx_current_pz+1).value - im_pz_sorted(idx_current_pz+1).pole*halfsecant_pole - im_pz_sorted(idx_current_pz+1).zero*halfsecant_zero;
             interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
 
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
             
             % do detour here
             interval_ii = interval_ii + 1;
@@ -104,7 +104,7 @@ function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bou
             end
             
             
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(1).q(1),interval_list(1).q(2),interval_length);
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(1).q(1),interval_list(1).q(2),interval_length);
     else
         error('Oops, we shouldn''t be here. Apologies! Please report this crash to stefanrickli [at] gmx.ch together with the input you used.');
     end

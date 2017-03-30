@@ -32,7 +32,7 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07h_negative_pz(this,
                 interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_zero),radii.detour_zero,secant_zero,im_pz_sorted(idx_current_pz).value);
         end
         
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
         interval_ii = interval_ii + 1;
         
         if negative_pz_remain > 1
@@ -49,7 +49,7 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07h_negative_pz(this,
             zb = im_pz_sorted(idx_current_pz+1).value - im_pz_sorted(idx_current_pz+1).pole*halfsecant_pole - im_pz_sorted(idx_current_pz+1).zero*halfsecant_zero;
             interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
 
-            tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+            dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_neg\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
             idx_current_pz = idx_current_pz + 1;
             interval_ii = interval_ii + 1;
             negative_pz_remain = negative_pz_remain - 1;

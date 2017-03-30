@@ -90,7 +90,7 @@ classdef anp_tf_processor < handle
             this.s_wait =           false;
             this.s_busy =           false;
             
-            tools.dbg('anp_tf_processor[constructor]:\t%s: Instance created.\n',this.g_uid);
+            dbg_out('anp_tf_processor[constructor]:\t%s: Instance created.\n',this.g_uid);
         end
         
         function [] = init_params(this,new_params)
@@ -127,7 +127,7 @@ classdef anp_tf_processor < handle
             assert(~isempty(new_time_params) && isstruct(new_time_params));
             
             if isempty(this.p_time) || ~all(this.p_time.n_time_steps == new_time_params.n_time_steps)
-                tools.dbg('anp_tf_processor[set_time_params]:\tNew time params.\n');
+                dbg_out('anp_tf_processor[set_time_params]:\tNew time params.\n');
                 this.p_time.n_time_steps =      new_time_params.n_time_steps;
                 
                 dirty =         true;
@@ -136,7 +136,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =         false;
-                tools.dbg('anp_tf_processor[set_time_params]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_time_params]:\tNothing changed.\n');
             end
         end
         
@@ -149,7 +149,7 @@ classdef anp_tf_processor < handle
             assert(~isempty(new_tf) && isa(new_tf,'tf'));
             
             if ~isequal(this.tf_obj,new_tf)
-                tools.dbg('anp_tf_processor[set_tf]:\tNew transfer function\n');
+                dbg_out('anp_tf_processor[set_tf]:\tNew transfer function\n');
                 this.tf_obj =   new_tf;
                 this.tf_poles = roots(this.tf_obj.Denominator{1}).';
                 this.tf_zeros = roots(this.tf_obj.Numerator{1}).';
@@ -165,7 +165,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =         false;
-                tools.dbg('anp_tf_processor[set_tf]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_tf]:\tNothing changed.\n');
             end
             
             this.echo_tf();
@@ -196,7 +196,7 @@ classdef anp_tf_processor < handle
             end
             
             if isempty(this.p_radii) || this.p_radii.R ~= new_radii.R
-                tools.dbg('anp_tf_processor[set_radii]:\tNew radii.\n');
+                dbg_out('anp_tf_processor[set_radii]:\tNew radii.\n');
                 this.p_radii =  new_radii;
                 dirty =         true;
                 if ~this.s_wait
@@ -204,7 +204,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =         false;
-                tools.dbg('anp_tf_processor[set_radii]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_radii]:\tNothing changed.\n');
             end
         end
         
@@ -219,7 +219,7 @@ classdef anp_tf_processor < handle
             if isempty(this.p_angles) || ~all([this.p_angles.crop_inf_transition ==         new_angles.crop_inf_transition,...
                                                this.p_angles.min_angle_contribution_at_R == new_angles.min_angle_contribution_at_R...
                                                this.p_angles.detour ==                      new_angles.detour])
-                tools.dbg('anp_tf_processor[set_angles]:\tNew angles.\n');
+                dbg_out('anp_tf_processor[set_angles]:\tNew angles.\n');
                 this.p_angles = new_angles;
                 dirty =         true;
                 if ~this.s_wait
@@ -227,7 +227,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =         false;
-                tools.dbg('anp_tf_processor[set_angles]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_angles]:\tNothing changed.\n');
             end
         end
         
@@ -240,7 +240,7 @@ classdef anp_tf_processor < handle
             assert(~isempty(new_weights) && isstruct(new_weights));
             
             if ~isequal(this.p_weights,new_weights)
-                tools.dbg('anp_tf_processor[set_weights]:\tNew weights.\n');
+                dbg_out('anp_tf_processor[set_weights]:\tNew weights.\n');
                 this.p_weights =    new_weights;
                 dirty =             true;
                 if ~this.s_wait
@@ -248,7 +248,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =             false;
-                tools.dbg('anp_tf_processor[set_weights]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_weights]:\tNothing changed.\n');
             end
         end
         
@@ -261,7 +261,7 @@ classdef anp_tf_processor < handle
             assert(~isempty(new_halfsecants) && isstruct(new_halfsecants));
             
             if ~isequal(this.p_halfsecants,new_halfsecants)
-                tools.dbg('anp_tf_processor[set_halfsecants]:\tNew halfsecants.\n');
+                dbg_out('anp_tf_processor[set_halfsecants]:\tNew halfsecants.\n');
                 dirty =                 true;
                 this.p_halfsecants =    new_halfsecants;
                 if ~this.s_wait
@@ -269,7 +269,7 @@ classdef anp_tf_processor < handle
                 end
             else
                 dirty =                 false;
-                tools.dbg('anp_tf_processor[set_halfsecants]:\tNothing changed.\n');
+                dbg_out('anp_tf_processor[set_halfsecants]:\tNothing changed.\n');
             end
         end
         
@@ -313,7 +313,7 @@ classdef anp_tf_processor < handle
         function delete(this)
             % Destructor method
             
-            tools.dbg('anp_tf_processor[delete]:\t%s: Deletion requested.\n',this.g_uid);
+            dbg_out('anp_tf_processor[delete]:\t%s: Deletion requested.\n',this.g_uid);
         end
     end
     

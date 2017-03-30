@@ -30,7 +30,7 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07g_first_after_crop2
     za = -positions.crop_y0;
     interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
     
-    tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_first_pos_after_crop2\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+    dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_first_pos_after_crop2\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
     interval_ii = interval_ii + 1;
     
     this.interval_list = interval_list;

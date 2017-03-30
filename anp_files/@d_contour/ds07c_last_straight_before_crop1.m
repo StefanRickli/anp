@@ -23,7 +23,7 @@ function [interval_ii] = ds07c_last_straight_before_crop1(this,interval_ii,idx_c
     zb = positions.crop_y0;
     interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
     
-    tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_last_pos_before_crop1\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+    dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_last_pos_before_crop1\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
     interval_ii = interval_ii + 1;
     
     this.interval_list = interval_list;

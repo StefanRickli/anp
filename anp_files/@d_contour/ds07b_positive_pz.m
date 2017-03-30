@@ -36,7 +36,7 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07b_positive_pz(this,
         zb = im_pz_sorted(idx_current_pz).value - im_pz_sorted(idx_current_pz).pole*halfsecant_pole - im_pz_sorted(idx_current_pz).zero*halfsecant_zero;
         interval_list(interval_ii).input_fct_handle = @(q) im_axis_line(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),za,zb);
         
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
         interval_ii = interval_ii + 1;
         
         % treat the pz
@@ -56,7 +56,7 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07b_positive_pz(this,
                 interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_zero),radii.detour_zero,secant_zero,im_pz_sorted(idx_current_pz).value);
         end
         
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
         interval_ii = interval_ii + 1;
         
         positive_pz_remain = positive_pz_remain - 1;

@@ -44,8 +44,8 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             interval_ii = interval_ii + 1;
             
             
-        tools.dbg('negative and overlapping p/z\n');
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(1).q(1),interval_list(1).q(2),interval_list(1).q(2)-interval_list(1).q(1));
+        dbg_out('negative and overlapping p/z\n');
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(1).q(1),interval_list(1).q(2),interval_list(1).q(2)-interval_list(1).q(1));
         
         
     elseif any([im_pz_sorted.pos_overlapping])
@@ -74,8 +74,8 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             interval_ii = interval_ii + 1;
             
             
-        tools.dbg('positive and overlapping p/z\n');
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(1).q(1),interval_list(1).q(2),interval_length);
+        dbg_out('positive and overlapping p/z\n');
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour\n',interval_list(1).q(1),interval_list(1).q(2),interval_length);
         
         
     elseif any([im_pz_sorted.pos_on_origin])
@@ -102,25 +102,25 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             interval_ii = interval_ii + 1;
             
             
-        tools.dbg('positive p/z that ends right on origin\n');
-        tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear\n',interval_list(1).q(1),interval_list(1).q(2),interval_length);
+        dbg_out('positive p/z that ends right on origin\n');
+        dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear\n',interval_list(1).q(1),interval_list(1).q(2),interval_length);
         
         
     elseif  ~isempty(idx_first_positive)
             prev_upper_bound = 0;
             
-        tools.dbg('no p/z in range of origin\n');
+        dbg_out('no p/z in range of origin\n');
         
         
     else
             prev_upper_bound = 0;
         
-        tools.dbg('no imag positive p/z\n');
+        dbg_out('no imag positive p/z\n');
         
         
     end
     
-    tools.dbg('------------------------------------------------------------------\n');
+    dbg_out('------------------------------------------------------------------\n');
     
     this.interval_list = interval_list;
 end
