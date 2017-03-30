@@ -1,4 +1,9 @@
-function [] = d_shape_06d_crop1_inf_crop2()
+function [interval_ii] = ds07d_crop1_inf_crop2(this,interval_ii)
+    interval_list =         this.interval_list;
+    arc_lengths =           this.arc_lengths;
+    radii =                 this.radii;
+    positions =             this.positions;
+    angles =                this.angles;
     
     % crop1
     interval_list(interval_ii).type = 'crop';
@@ -33,5 +38,5 @@ function [] = d_shape_06d_crop1_inf_crop2()
     tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tcrop2\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),arc_lengths.crop);
     interval_ii = interval_ii + 1;
     
-    
+    this.interval_list = interval_list;
 end

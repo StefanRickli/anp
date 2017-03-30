@@ -1,4 +1,13 @@
-function [] = d_shape_06b_positive_pz()
+function [interval_ii,idx_current_pz,prev_upper_bound] = ds07b_positive_pz(this,interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_first_positive)
+    im_pz_sorted =          this.im_pz_sorted;
+    pole_zero_combinations =this.im_pz_combinations;
+    interval_list =         this.interval_list;
+    secant_pole =           this.secant_pole;
+    secant_zero =           this.secant_zero;
+    halfsecant_pole =       this.halfsecant_pole;
+    halfsecant_zero =       this.halfsecant_zero;
+    arc_lengths =           this.arc_lengths;
+    radii =                 this.radii;
     
     % ---------------------------------------------------------------------------------------------------------------------------------------------
     % treat positive p/z
@@ -52,5 +61,5 @@ function [] = d_shape_06b_positive_pz()
         
         positive_pz_remain = positive_pz_remain - 1;
     end
-    
+    this.interval_list = interval_list;
 end

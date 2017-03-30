@@ -1,4 +1,10 @@
-function [] = d_shape_06g_first_after_crop2()
+function [interval_ii,idx_current_pz,prev_upper_bound] = ds07g_first_after_crop2(this,interval_ii)
+    im_pz_sorted =          this.im_pz_sorted;
+    interval_list =         this.interval_list;
+    positions =             this.positions;
+    halfsecant_pole =       this.halfsecant_pole;
+    halfsecant_zero =       this.halfsecant_zero;
+    
     % do the first linear interval after crop2
     interval_list(interval_ii).type = 'axis';
     interval_list(interval_ii).q(1) = interval_list(interval_ii-1).q(2);
@@ -26,4 +32,6 @@ function [] = d_shape_06g_first_after_crop2()
     
     tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_first_pos_after_crop2\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
     interval_ii = interval_ii + 1;
+    
+    this.interval_list = interval_list;
 end

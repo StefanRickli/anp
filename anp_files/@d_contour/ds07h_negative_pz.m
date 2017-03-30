@@ -1,6 +1,16 @@
-function [] = d_shape_06h_negative_pz()
+function [interval_ii,idx_current_pz,prev_upper_bound] = ds07h_negative_pz(this,interval_ii,idx_current_pz,prev_upper_bound)
+    im_pz_sorted =          this.im_pz_sorted;
+    interval_list =         this.interval_list;
+    pole_zero_combinations =this.im_pz_combinations;
+    secant_pole =           this.secant_pole;
+    secant_zero =           this.secant_zero;
+    halfsecant_pole =       this.halfsecant_pole;
+    halfsecant_zero =       this.halfsecant_zero;
+    arc_lengths =           this.arc_lengths;
+    radii =                 this.radii;
     
         % treat negative p/z
+    pz = [im_pz_sorted.value];
     negative_pz_remain = sum(pz<0) - any([[im_pz_sorted.neg_on_origin],[im_pz_sorted.neg_overlapping]]);
     
     while(negative_pz_remain)
@@ -47,4 +57,6 @@ function [] = d_shape_06h_negative_pz()
             break;
         end
     end
+    
+    this.interval_list = interval_list;
 end

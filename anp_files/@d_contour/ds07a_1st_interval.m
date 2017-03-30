@@ -1,17 +1,23 @@
-function [] = d_shape_06a_1st_interval()
+function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_first_positive] = ds07a_1st_interval(this)
 % do the first element
     % can be
     % either: a negative imaginary pz with overlap up to a positive one that
     %         just touches the origin
     % or: the first straight interval
+    im_pz_sorted =          this.im_pz_sorted;
+    interval_list =         this.interval_list;
+    radii =                 this.radii;
+    secant_pole =           this.secant_pole;
+    secant_zero =           this.secant_zero;
     
-    interval_ii = 1;
-    idx_current_pz = NaN;
+    interval_ii =           1;
+    idx_current_pz =        NaN;
+    prev_upper_bound =      0;
+    
     pz = [im_pz_sorted.value];
-    idx_first_positive = find(pz >= 0,1,'first');
-    idx_last_negative = find(pz < 0,1,'last');
-    positive_pz_remain = length(pz)-idx_first_positive+1;
-    prev_upper_bound = 0;
+    idx_first_positive =    find(pz >= 0,1,'first');
+    idx_last_negative =     find(pz < 0,1,'last');
+    positive_pz_remain =    length(pz)-idx_first_positive+1;
     
     if any([im_pz_sorted.neg_overlapping])
             idx_current_pz = idx_last_negative;
@@ -102,12 +108,7 @@ function [] = d_shape_06a_1st_interval()
         
     elseif  ~isempty(idx_first_positive)
             prev_upper_bound = 0;
-%             interval_list(1).q(1) = 0;
-%             
-%             interval_list(1).q_len = im_pz_sorted(positive_idx).value - halfsecant_pole;
-%             
-%             interval_list(1).q(2) = im_pz_sorted(positive_idx).value - halfsecant_pole;
-%             prev_upper_bound = interval_list(1).q(2);
+            
         tools.dbg('no p/z in range of origin\n');
         
         
@@ -120,4 +121,6 @@ function [] = d_shape_06a_1st_interval()
     end
     
     tools.dbg('------------------------------------------------------------------\n');
+    
+    this.interval_list = interval_list;
 end

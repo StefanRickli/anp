@@ -1,4 +1,9 @@
-function [] = d_shape_06c_last_straight_before_crop1()
+function [interval_ii] = ds07c_last_straight_before_crop1(this,interval_ii,idx_current_pz,prev_upper_bound)
+    im_pz_sorted =          this.im_pz_sorted;
+    interval_list =         this.interval_list;
+    halfsecant_pole =       this.halfsecant_pole;
+    halfsecant_zero =       this.halfsecant_zero;
+    positions =             this.positions;
     
     % do the last linear interval before crop1
     interval_list(interval_ii).type = 'axis';
@@ -21,5 +26,5 @@ function [] = d_shape_06c_last_straight_before_crop1()
     tools.dbg('interval\t[%.3f\t%.3f],\tlength = %.3f,\tlinear_last_pos_before_crop1\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
     interval_ii = interval_ii + 1;
     
-    
+    this.interval_list = interval_list;
 end

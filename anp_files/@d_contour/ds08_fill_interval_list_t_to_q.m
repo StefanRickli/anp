@@ -1,9 +1,9 @@
-function interval_list = d_shape_07_fill_interval_list_t_to_q(in_params,in_data)
+function [] = ds08_fill_interval_list_t_to_q(this)
     
-    poles =         in_params.poles;
-    zeros =         in_params.zeros;
-    im_pz_sorted =  in_data.im_pz_sorted;
-    interval_list = in_data.interval_list;
+    poles =         this.poles;
+    zeros =         this.zeros;
+    im_pz_sorted =  this.im_pz_sorted;
+    interval_list = this.interval_list;
     
     n_im_poles_distinct = sum([im_pz_sorted.type] == 'p');
     n_im_zeros_distinct = sum([im_pz_sorted.type] == 'z');
@@ -74,7 +74,7 @@ function interval_list = d_shape_07_fill_interval_list_t_to_q(in_params,in_data)
                 vb = (qb_next - qa_next)/(tb_next - ta_next);
             end
             
-            [c_lorentz,gamma_star,r1,r2,c1,c2] = d_shape_08_mixed_exp_lorentz(ta,tb,qa,qb,va,vb);
+            [c_lorentz,gamma_star,r1,r2,c1,c2] = this.ds09_mixed_exp_lorentz(ta,tb,qa,qb,va,vb);
             qa_real = exp_Lorentz(ta,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
             qb_real = exp_Lorentz(tb,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2);
             interval_list(ii).density_fct_handle = @(t) map(exp_Lorentz(t,ta,tb,qa,c_lorentz,gamma_star,r1,r2,c1,c2),qa_real,qb_real,qa,qb);
@@ -85,6 +85,8 @@ function interval_list = d_shape_07_fill_interval_list_t_to_q(in_params,in_data)
             error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
         end
     end
+    
+    this.interval_list = interval_list;
 end
 
 function shares = get_shares(tf_relative_degree,n_im_poles_distinct,n_im_zeros_distinct)

@@ -1,9 +1,9 @@
 % Accepts two arrays containing the pole and zero values.
 % Returns a struct that contains the sorted pole and zero location and
 % denotes which is of which type.
-function poles_zeros_sorted = d_shape_02_sort_pz(in_params)
-    poles = in_params.poles;
-    zeros = in_params.zeros;
+function [] = ds01_sort_poles_and_zeros(this)
+    poles = this.poles;
+    zeros = this.zeros;
     
     % first find all the pure imaginary poles and zeros
     tol =   100*eps;
@@ -19,7 +19,7 @@ function poles_zeros_sorted = d_shape_02_sort_pz(in_params)
     nzeros = length(zeros);
     
     if npoles + nzeros == 0
-        poles_zeros_sorted = struct('type',{},'pole',{},'zero',{},'value',{},'neg_on_origin',{},'pos_on_origin',{},'neg_overlapping',{},'pos_overlapping',{});
+        this.im_pz_sorted = struct('type',{},'pole',{},'zero',{},'value',{},'neg_on_origin',{},'pos_on_origin',{},'neg_overlapping',{},'pos_overlapping',{});
         return;
     end
     
@@ -79,6 +79,8 @@ function poles_zeros_sorted = d_shape_02_sort_pz(in_params)
         poles_zeros_sorted = sort_struct_array_by_field_index(poles_zeros_sorted,4);
         poles_zeros_sorted = check_for_multiple_pz_at_same_value(poles_zeros_sorted);
     end
+    
+    this.im_pz_sorted = poles_zeros_sorted;
 end
 
 function sorted_struct_array = sort_struct_array_by_field_index(array_in,ind)

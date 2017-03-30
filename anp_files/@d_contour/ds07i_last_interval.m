@@ -1,6 +1,13 @@
-function [] = d_shape_06i_last_interval()
+function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bound)
+    im_pz_sorted =          this.im_pz_sorted;
+    interval_list =         this.interval_list;
+    secant_pole =           this.secant_pole;
+    secant_zero =           this.secant_zero;
+    halfsecant_pole =       this.halfsecant_pole;
+    halfsecant_zero =       this.halfsecant_zero;
+    radii =                 this.radii;
     
-        % see p.41
+    % see p.41
     % 0
     if ~any([[im_pz_sorted.value] < 0,[im_pz_sorted.neg_overlapping],[im_pz_sorted.pos_overlapping],[im_pz_sorted.neg_on_origin]])
         % no neg pz, no pos overlap, already treated after crop2
@@ -101,4 +108,6 @@ function [] = d_shape_06i_last_interval()
     else
         error('Oops, we shouldn''t be here. Apologies! Please report this crash to ricklis@student.ethz.ch together with the input you used.');
     end
+    
+    this.interval_list = interval_list;    
 end
