@@ -562,11 +562,11 @@ classdef anp_gui < handle
             % Text boxes for zero and pole contributions.
             annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the zeros:','LineStyle','none','FontSize',9);
             for ii = 1:this.d_n_zeros
-                this.h_text_z_annot(ii) = annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['zero ',num2str(ii)],'LineStyle','none','FontSize',9);
+                this.h_text_z_annot(ii) = annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['zero ',sprintf('%d',ii)],'LineStyle','none','FontSize',9);
             end
             annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the poles:','LineStyle','none','FontSize',9);
             for ii = 1:this.d_n_poles
-                this.h_text_p_annot(ii) = annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['pole ',num2str(ii)],'LineStyle','none','FontSize',9);
+                this.h_text_p_annot(ii) = annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['pole ',sprintf('%d',ii)],'LineStyle','none','FontSize',9);
             end
 
             % Text boxes for the results.
@@ -742,6 +742,7 @@ classdef anp_gui < handle
                 
                 % Main GUI update loop.
                 while this.s_draw_allowed
+                    start_time = tic;
                     
                     % Check whether the plot limits have been changed in
                     % the meantime during the last update below.
@@ -760,7 +761,11 @@ classdef anp_gui < handle
                     this.draw_one_frame();
                     
                     dbg_out('anp_gui[draw_run_continuous_animation]:\tdrawing %d :-)\n',this.a_time_ii);
-                    pause(1/10);
+                    
+                    while toc(start_time) < 1/15
+                        pause(1/100);
+                    end
+                    pause(1/100);
                 end
                 dbg_out('anp_gui[draw_run_continuous_animation]:\tStopping animation\n');
                 
@@ -832,8 +837,8 @@ classdef anp_gui < handle
             current_z_value = this.d_z_values(this.a_time_ii * this.p_oversampling_factor);
             current_w_value = this.d_w_values(this.a_time_ii * this.p_oversampling_factor);
             
-            title(this.h_sub1,['Current value of D-Curve: ',num2str(current_z_value,'%.1f'),': M = ',num2str(abs(current_z_value),'%.2f'),' p = ',num2str(rad2deg(angle(current_z_value)),'%.2f'),'°']);
-            title(this.h_sub2,['Nyquist: G(',num2str(current_z_value,'%.1f'),') = ',num2str(current_w_value,'%.1f'),': M = ',num2str(abs(current_w_value),'%.2f'),' p = ',num2str(rad2deg(angle(current_w_value)),'%.2f'),'°']);
+            title(this.h_sub1,['Current value of D-Curve: ',sprintf('%.1f',current_z_value),': M = ',sprintf('%.2f',abs(current_z_value)),' p = ',sprintf('%.1f',rad2deg(angle(current_z_value))),'°']);
+            title(this.h_sub2,['Nyquist: G(',sprintf('%.1f',current_z_value),') = ',sprintf('%.1f',current_w_value),': M = ',sprintf('%.2f',abs(current_w_value)),' p = ',sprintf('%.1f',rad2deg(angle(current_w_value))),'°']);
         end
         
         function [] = draw_update_textboxes(this)
@@ -869,13 +874,13 @@ classdef anp_gui < handle
                 % Put together the text for the text box that describes the
                 % current zero's contribution, for example
                 % Z1: (0.0+1.1i) - (-0.7): M=1.3 p=57.9°
-                this.h_text_z_annot(z).String = ['Z',num2str(z),    ': (',  num2str(this.d_z_values(this.a_time_ii * this.p_oversampling_factor),           '%.1f'),') - (',num2str(this.d_zeros(z),'%.1f'),'): M=',num2str(abs(z_contribution),'%.1f'),' p=',num2str(rad2deg(angle(z_contribution)),'%.1f'),'°'];
+                this.h_text_z_annot(z).String = ['Z',sprintf('%.1f',z),    ': (',   sprintf('%.1f',this.d_z_values(this.a_time_ii * this.p_oversampling_factor)),') - (',sprintf('%.1f',this.d_zeros(z)),'): M=',sprintf('%.1f',abs(z_contribution)),' p=',sprintf('%.1f',rad2deg(angle(z_contribution))),'°'];
                 if z == 1
-                    res_magnitude_txt =      	[res_magnitude_txt,         num2str(abs(z_contribution),           '%.2f')     ];
+                    res_magnitude_txt =      	[res_magnitude_txt,                 sprintf('%.2f',abs(z_contribution))     ];
                 else
-                    res_magnitude_txt =        	[res_magnitude_txt, ' * ',  num2str(abs(z_contribution),           '%.2f')     ];
+                    res_magnitude_txt =        	[res_magnitude_txt, ' * ',          sprintf('%.2f',abs(z_contribution))     ];
                 end
-                res_phase_txt =             [res_phase_txt,     ' + (', num2str(rad2deg(angle(z_contribution)),'%.2f'), '°)'];
+                res_phase_txt =                 [res_phase_txt,     ' + (',         sprintf('%.2f',rad2deg(angle(z_contribution))), '°)'];
             end
             
             % ****************************************
@@ -905,13 +910,13 @@ classdef anp_gui < handle
                 res_magnitude =                 res_magnitude / abs(p_contribution);
                 res_phase =                     res_phase - angle(p_contribution);
                 
-                this.h_text_p_annot(p).String = ['P',num2str(p),    ': (',  num2str(this.d_z_values(this.a_time_ii * this.p_oversampling_factor),           '%.1f'),') - (',num2str(this.d_poles(p),'%.1f'),'): M=',num2str(abs(p_contribution),'%.1f'),' p=',num2str(rad2deg(angle(p_contribution)),'%.1f'),'°'];            
+                this.h_text_p_annot(p).String = ['P',sprintf('%.1f',p),    ': (',   sprintf('%.1f',this.d_z_values(this.a_time_ii * this.p_oversampling_factor)),') - (',sprintf('%.1f',this.d_poles(p)),'): M=',sprintf('%.1f',abs(p_contribution)),' p=',sprintf('%.1f',rad2deg(angle(p_contribution))),'°'];
                 if p == 1
-                    res_magnitude_txt =     	[res_magnitude_txt,         num2str(abs(p_contribution),           '%.2f')     ];
+                    res_magnitude_txt =     	[res_magnitude_txt,                 sprintf('%.2f',abs(p_contribution))     ];
                 else
-                    res_magnitude_txt =      	[res_magnitude_txt, ' * ',  num2str(abs(p_contribution),           '%.2f')     ];
+                    res_magnitude_txt =      	[res_magnitude_txt, ' * ',          sprintf('%.2f',abs(p_contribution))     ];
                 end
-                res_phase_txt =            	[res_phase_txt,     ' - (', num2str(rad2deg(angle(p_contribution)),'%.2f'), '°)'];
+                res_phase_txt =                 [res_phase_txt,     ' - (',       	sprintf('%.2f',rad2deg(angle(p_contribution))), '°)'];
             end
             
             % ************************
@@ -926,11 +931,11 @@ classdef anp_gui < handle
             if this.d_delay ~= 0
                 delay_contribution =            -(this.d_delay * imag(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)));
                 res_phase =                     res_phase + delay_contribution;
-                res_phase_txt  =                [res_phase_txt,    ' \{ ',  num2str(rad2deg(delay_contribution),'%.3f'), '°\}'];
+                res_phase_txt  =                [res_phase_txt,    ' \{ ',  sprintf('%.3f',rad2deg(delay_contribution)), '°\}'];
             end
             
-            res_magnitude_txt =               	[res_magnitude_txt,' = ',   num2str(res_magnitude,     '%.3f')];
-            res_phase_txt =                    	[res_phase_txt,    ' = ',   num2str(rad2deg(res_phase),'%.3f'),'°'];
+            res_magnitude_txt =               	[res_magnitude_txt,' = ',   sprintf('%.3f',res_magnitude)];
+            res_phase_txt =                    	[res_phase_txt,    ' = ',   sprintf('%.3f',rad2deg(res_phase)),'°'];
             
             this.h_text_res_annot(1).String =   ['Magnitude: ',  res_magnitude_txt];
             this.h_text_res_annot(2).String =   ['Phase:       ',res_phase_txt];
