@@ -1,6 +1,27 @@
 function R = anp_calc_main_R(poles,zeros,min_angle_contribution_at_R,max_halfsecant,delay)
-    pz_all = [poles,zeros];
     
+    %                       ^ Im
+    %                       |
+    %                       |
+    %        radius=omega:  o--
+    %                      /|   \
+    %                    /  |     \
+    %                  /    |       \
+    %                /      |        \
+    %              /min_ang°|         |
+    % ------------X-------------------|-----> Re
+    %           pole        |         |
+    %                       |        /
+    %                       |       /
+    %                       |     /
+    %                       |   /
+    %                       |--
+    %
+    % For every pole and zero, calculate the required value for the
+    % radius R such that the angle contribution
+    % is min_angle_contribution_at_R°
+
+    pz_all = [poles,zeros];
     R1 = imag(pz_all) - real(pz_all) * tan(deg2rad(min_angle_contribution_at_R));
     R2 = imag(pz_all) - real(pz_all) * tan(-deg2rad(min_angle_contribution_at_R));
     
@@ -9,10 +30,15 @@ function R = anp_calc_main_R(poles,zeros,min_angle_contribution_at_R,max_halfsec
         pz_im = 0;
     end
     
+    % Require that the angle contributions of ALL poles and zeros are at
+    % least 'min_angle_contribution_at_R' and if there's a purely imaginary
+    % p/z far outside, have R be 'reasonably' larger (here hardcoded)
     R = max([abs(R1),abs(R2),(abs(pz_im) + 3.5*max_halfsecant)*1.5]);
     
+    % Take delay into account by adding three additional encirclements
     if delay ~= 0
-        R = 2*R + max(0,exp(-1.4*log(delay))) + max(0,100*log(delay)) + 15;
+        delta_w = 3*2*pi/delay;
+        R = R + delta_w;
     end
     
     if R > 1e4
