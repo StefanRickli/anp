@@ -1,4 +1,7 @@
 function R = calc_main_R(~, poles, zeros, min_angle_contribution_at_R, max_halfsecant, delay) % ignored parameter is 'this'
+    % Tries to calculate an appropriate radius for the main half circle
+    % such that we can investigate what happens in the origin of the
+    % Nyquist plot during that part of the D-contour.
     
     %                       ^ Im
     %                       |
