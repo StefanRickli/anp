@@ -38,7 +38,7 @@ classdef anp_gui < handle
         
         % h: handles
         
-        h_anp_tf_processor                      % remember the handle to the calculation object
+        h_tf_processor                      	% remember the handle to the calculation object
         
         h_fig               matlab.ui.Figure                            % main figure handle
         h_sub1              matlab.graphics.axis.Axes                   % left (z-)plot
@@ -194,7 +194,7 @@ classdef anp_gui < handle
             this.set_window_props(new_props);
             this.set_plot_props(new_props);
             
-            this.set_anp_tf_processor(new_props);
+            this.set_tf_processor(new_props);
         end
         
         function [] = set_window_props(this,new_props)
@@ -256,10 +256,10 @@ classdef anp_gui < handle
             this.d_delay = new_props.tf_delay;
         end
         
-        function [] = set_anp_tf_processor(this,new_props)
+        function [] = set_tf_processor(this,new_props)
             % Changes the handle reference to a new tf_processor object.
             
-            this.h_anp_tf_processor = new_props.processor_handle;
+            this.h_tf_processor = new_props.processor_handle;
         end
         
         function [] = init_visuals(this)
@@ -351,24 +351,24 @@ classdef anp_gui < handle
         function [] = fetch_R(this)
             % Gets the current value of the half-circle from the tf_processor object.
             
-            assert(isvalid(this.h_anp_tf_processor));
+            assert(isvalid(this.h_tf_processor));
             
-            this.d_R =                  this.h_anp_tf_processor.get_R();
+            this.d_R =                  this.h_tf_processor.get_R();
         end
         
         function [] = fetch_data(this)
             % Gets all data that could be relevant to the GUI from the tf_processor object.
             
-            assert(isvalid(this.h_anp_tf_processor));
+            assert(isvalid(this.h_tf_processor));
             
-            time_data =                     this.h_anp_tf_processor.get_time_points();
+            time_data =                     this.h_tf_processor.get_time_points();
             this.d_t_values =               time_data.time_points;
             this.d_t_oversampled =          time_data.data_points;
             this.p_n_time_steps =           time_data.time_props.n_time_steps;
             this.p_oversampling_factor =    time_data.time_props.oversampling_factor;
             this.p_n_data_points =          time_data.time_props.n_data_points;
             
-            function_data =         this.h_anp_tf_processor.get_data();
+            function_data =         this.h_tf_processor.get_data();
             this.d_z_values =       function_data.z_values;
             this.d_w_values =       function_data.w_values;
         end
@@ -445,7 +445,7 @@ classdef anp_gui < handle
                 % the user decide by setting either 'left_x0' or
                 % 'left_dims' to a manual value
                 
-                [this.p_z_xlim,this.p_z_ylim] = anp_plot_auto_zoom_z([this.d_zeros,this.d_poles],this.d_R); % separate source file
+                [this.p_z_xlim,this.p_z_ylim] = this.auto_zoom_z([this.d_zeros,this.d_poles],this.d_R); % separate source file
             else
                this.p_z_xlim = [(this.p_z_x0(1) - this.p_z_dims(1)/2), ...
                                 (this.p_z_x0(1) + this.p_z_dims(1)/2)];
@@ -456,7 +456,7 @@ classdef anp_gui < handle
             
             % Override too small axis limits by replacing them with the
             % span of the data.
-            [this.p_z_xspan,this.p_z_yspan] = anp_plot_find_span([this.d_zeros,this.d_poles,this.d_z_values]); % separate source file
+            [this.p_z_xspan,this.p_z_yspan] = this.get_value_span([this.d_zeros,this.d_poles,this.d_z_values]); % separate source file
             if diff(this.p_z_xlim) < 100*eps
                 this.p_z_xlim = this.p_z_xspan;
             end
@@ -470,7 +470,7 @@ classdef anp_gui < handle
                 % let the user decide by setting either 'right_x0' or
                 % 'right_dims' to a manual value
                 
-                [this.p_w_xlim,this.p_w_ylim] = anp_plot_auto_zoom_w(this.d_w_values); % separate source file
+                [this.p_w_xlim,this.p_w_ylim] = this.auto_zoom_w(this.d_w_values); % separate source file
             else
                this.p_w_xlim = [(this.p_w_x0(1) - this.p_w_dims(1)/2), ...
                                 (this.p_w_x0(1) + this.p_w_dims(1)/2)];
@@ -481,7 +481,7 @@ classdef anp_gui < handle
             
             % Override too small axis limits by replacing them with the
             % span of the data.
-            [this.p_w_xspan,this.p_w_yspan] = anp_plot_find_span(this.d_w_values); % separate source file
+            [this.p_w_xspan,this.p_w_yspan] = this.get_value_span(this.d_w_values); % separate source file
             if diff(this.p_w_xlim) < 100*eps
                 this.p_w_xlim = this.p_w_xspan;
             end
@@ -590,7 +590,7 @@ classdef anp_gui < handle
             % Do this to let the user zoom all the way out with a double
             % click.
             xlim(this.h_sub1, 'manual'), ylim(this.h_sub1, 'manual');
-            xlim(this.h_sub1, anp_stretch_centered(this.p_z_xspan,1.05)), ylim(this.h_sub1, anp_stretch_centered(this.p_z_yspan,1.05));
+            xlim(this.h_sub1, this.stretch_centered(this.p_z_xspan,1.05)), ylim(this.h_sub1, this.stretch_centered(this.p_z_yspan,1.05));
             zoom(this.h_sub1, 'reset');
             xlim(this.h_sub1, this.p_z_xlim), ylim(this.h_sub1, this.p_z_ylim);
             
@@ -607,7 +607,7 @@ classdef anp_gui < handle
             % Same story as in z-plot.
             axis(this.h_sub2, 'equal');
             xlim(this.h_sub2, 'manual'), ylim(this.h_sub2, 'manual');
-            xlim(this.h_sub2, anp_stretch_centered(this.p_w_xspan,1.05)), ylim(this.h_sub2, anp_stretch_centered(this.p_w_yspan,1.05));
+            xlim(this.h_sub2, this.stretch_centered(this.p_w_xspan,1.05)), ylim(this.h_sub2, this.stretch_centered(this.p_w_yspan,1.05));
             zoom(this.h_sub2, 'reset');
             xlim(this.h_sub2, this.p_w_xlim), ylim(this.h_sub2, this.p_w_ylim);
             this.h_sub2.XAxisLocation = 'origin';
@@ -1139,7 +1139,7 @@ classdef anp_gui < handle
             set(h_arrow,'parent',parent,'position',[x0-r,r],'String',text,'Color',color);
         end
         
-        function [] = draw_update_arrow(~,h_plot,h_arrow,x,y,phi,length,axis_limits) % ignored parameter is 'this'
+        function [] = draw_update_arrow(this, h_plot, h_arrow, x, y, phi, length, axis_limits)
             % Updates an annotation('arrow')-object's position
             
             % First calculate the start and end coordinates within the plot
@@ -1153,19 +1153,19 @@ classdef anp_gui < handle
             % coordinates in the figure, as this is the arrow's parent
             % object.
             
-            [transformed_x,transformed_y] = ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y],axis_limits);
+            [transformed_x,transformed_y] = this.ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y],axis_limits);
             
             h_arrow.X = transformed_x;
             h_arrow.Y = transformed_y;
         end
 
-        function values_truncated = trunc(~,values,xlim,ylim) % ignored parameter is 'this'
+        function values_truncated = trunc(this ,values,xlim,ylim)
             % Clips the input values to the maximum value allowed inside the plot.
             
             % We actually don't clip to the maximum value but only 97% so
             % the clipped value is well inside the plot.
-            xlim = anp_stretch_centered(xlim,0.97);
-            ylim = anp_stretch_centered(ylim,0.97);
+            xlim = this.stretch_centered(xlim,0.97);
+            ylim = this.stretch_centered(ylim,0.97);
             values_truncated = max(xlim(1), min(xlim(2), real(values))) ...
                           + 1i*max(ylim(1), min(ylim(2), imag(values)));
         end

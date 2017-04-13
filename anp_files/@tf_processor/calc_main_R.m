@@ -1,4 +1,4 @@
-function R = anp_calc_main_R(poles,zeros,min_angle_contribution_at_R,max_halfsecant,delay)
+function R = calc_main_R(~, poles, zeros, min_angle_contribution_at_R, max_halfsecant, delay) % ignored parameter is 'this'
     
     %                       ^ Im
     %                       |
