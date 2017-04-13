@@ -23,6 +23,23 @@ function [] = ds03_calc_definitive_halfsecants(this)
     % init!
     % 'halfsecant_margin' reduces the secants by this factor and ultimately
     % leads to the desired minimum gap between detour circles.
+    % 
+    % Before:               After applying margin:
+    % 
+    % |                     |
+    % |-                    |-
+    % |  \                  |  \
+    % X   |                 X   |
+    % |  /                  |  /
+    % |-                    |-   ----/-
+    % |  \                  |        | margin
+    % X   |                 |-   ----/-
+    % |  /                  |  \
+    % |-                    X   |
+    % |                     |  /
+    %                       |-
+    %                       |
+    % 
     this.halfsecant_pole = min([(1-halfsecant_margin)*nonzero_halfsecant_poles,...
                                 halfsecant_pole_max]);
     this.halfsecant_zero = min([(1-halfsecant_margin)*nonzero_halfsecant_zeros,...

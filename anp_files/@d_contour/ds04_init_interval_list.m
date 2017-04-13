@@ -23,7 +23,7 @@ function [] = ds04_init_interval_list(this)
                                          (im_zeros+actual_halfsecant_zero)==0,...
                                          (im_zeros+actual_halfsecant_zero)==0]);
     
-    % There are 5 base intervals along the D-contour:
+    % There are 5 base interval types along the D-contour:
     %   - a straight line from origin to the upper crop-cirlce
     %   - the upper crop-circle
     %   - the main large halfcircle
