@@ -1,4 +1,4 @@
-function [x_t,y_t] = ds2nfu(hAx,x,y,axlim)
+function [x_t,y_t] = ds2nfu(~, hAx, x, y, axlim) % ignored parameter is 'this'
     % DS2NFU  Convert data space units into normalized figure units.
     %
     % Michelle Hirsch

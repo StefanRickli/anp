@@ -2,7 +2,7 @@
 % of zeros and poles. If we have a bunch of zeros and poles that are fairly
 % close to each other with one outlier, forget about the outlier and zoom
 % in on the group.
-function [z_xlim,z_ylim] = anp_plot_auto_zoom_z(zp, R)
+function [z_xlim,z_ylim] = auto_zoom_z(this, zp, R)
     % find the 'center of gravity' of the zeros and poles
     locus_m = mean(zp);
     
@@ -33,8 +33,8 @@ function [z_xlim,z_ylim] = anp_plot_auto_zoom_z(zp, R)
     else
         % include the origin in the box around the clumped points and then
         % make the plot size 8 times (rule of thumb) larger
-        z_xlim = anp_stretch_centered([min([real(zp(locus_inner)),0]),max([real(zp(locus_inner)),0])],8);
-        z_ylim = anp_stretch_centered([min([imag(zp(locus_inner)),0]),max([imag(zp(locus_inner)),0])],8);
+        z_xlim = this.stretch_centered([min([real(zp(locus_inner)),0]),max([real(zp(locus_inner)),0])],8);
+        z_ylim = this.stretch_centered([min([imag(zp(locus_inner)),0]),max([imag(zp(locus_inner)),0])],8);
         
         width = z_xlim(2) - z_xlim(1);
         height = z_ylim(2) - z_ylim(1);

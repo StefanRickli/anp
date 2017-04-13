@@ -1,4 +1,4 @@
-function [x_span,y_span] = anp_plot_find_span(values)
+function [x_span,y_span] = get_value_span(~, values) % ignored parameter is 'this'
     
     real_values = real(values);
     imag_values = imag(values);

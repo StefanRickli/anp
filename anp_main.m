@@ -106,7 +106,7 @@ function [] = anp_main(varargin)
         h_gui = anp_gui;
         
         if isempty(h_tf_processor) || ~isvalid(h_tf_processor) || debug_no_reuse
-            h_tf_processor =        anp_tf_processor;
+            h_tf_processor =        tf_processor;
         else
             fprintf('(Reusing old tf_processor instance. If subsequent calls to anp_main behave odd, try ''clear all'')\n\n');
         end
