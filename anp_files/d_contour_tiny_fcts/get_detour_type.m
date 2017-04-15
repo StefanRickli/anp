@@ -1,4 +1,6 @@
 function type = get_detour_type(pz_type,remark)
+    % Returns 'detour_pole' or 'detour_zero' as string or alternatively adds '_whatever-remark' to it.
+    
     underline = [];
     if ~isempty(remark)
         underline = '_';
