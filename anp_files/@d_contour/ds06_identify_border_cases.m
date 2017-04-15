@@ -1,4 +1,7 @@
 function [] = ds06_identify_border_cases(this)
+    % Checks for every purely imaginary p/z in the list if its detour arc coincidentally crosses the real axis or lands exactly on it.
+    % We need this info later to plan the intervals of the D-contour.
+    
     if isempty(this.im_pz_sorted)
         return;
     end
@@ -13,22 +16,30 @@ function [] = ds06_identify_border_cases(this)
             case 'p'
                 if pz_value < 0 && (pz_value + halfsecant_pole == 0)
                     pz_list_sorted(ii).neg_on_origin = true;
+                    
                 elseif pz_value < 0 && (pz_value + halfsecant_pole > 0)
                     pz_list_sorted(ii).neg_overlapping = true;
+                    
                 elseif pz_value >= 0 && (pz_value - halfsecant_pole == 0)
                     pz_list_sorted(ii).pos_on_origin = true;
+                    
                 elseif pz_value >= 0 && (pz_value - halfsecant_pole < 0)
                     pz_list_sorted(ii).pos_overlapping = true;
+                    
                 end
             case 'z'
                 if pz_value < 0 && (pz_value + halfsecant_zero == 0)
                     pz_list_sorted(ii).neg_on_origin = true;
+                    
                 elseif pz_value < 0 && (pz_value + halfsecant_zero > 0)
                     pz_list_sorted(ii).neg_overlapping = true;
+                    
                 elseif pz_value >= 0 && (pz_value - halfsecant_zero == 0)
                     pz_list_sorted(ii).pos_on_origin = true;
+                    
                 elseif pz_value >= 0 && (pz_value - halfsecant_zero < 0)
                     pz_list_sorted(ii).pos_overlapping = true;
+                    
                 end
             otherwise
                 dbg_out('identify_border_cases: ii = %d, type = %s, value = %f\n',ii,pz_list_sorted(ii).type,pz_list_sorted(ii).value);
