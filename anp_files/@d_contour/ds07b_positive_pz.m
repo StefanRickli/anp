@@ -99,7 +99,8 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07b_positive_pz(this,
         
         interval_list(interval_ii).q(1) = prev_upper_bound;
         
-        interval_length = im_pz_sorted(idx_current_pz).pole*arc_lengths.detour_pole + im_pz_sorted(idx_current_pz).zero*arc_lengths.detour_zero;
+        interval_length = arc_lengths.detour_pole * im_pz_sorted(idx_current_pz).pole + ...
+                          arc_lengths.detour_zero * im_pz_sorted(idx_current_pz).zero;
         interval_list(interval_ii).q_len = interval_length;
         
         interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
@@ -107,9 +108,15 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07b_positive_pz(this,
         
         switch im_pz_sorted(idx_current_pz).type
             case 'p'
-                interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_pole),radii.detour_pole,secant_pole,im_pz_sorted(idx_current_pz).value);
+                interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_pole), ...
+                                                                               radii.detour_pole, ...
+                                                                               secant_pole, ...
+                                                                               im_pz_sorted(idx_current_pz).value);
             case 'z'
-                interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_zero),radii.detour_zero,secant_zero,im_pz_sorted(idx_current_pz).value);
+                interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_zero), ...
+                                                                               radii.detour_zero, ...
+                                                                               secant_zero, ...
+                                                                               im_pz_sorted(idx_current_pz).value);
         end
         
         dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
