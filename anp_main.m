@@ -79,6 +79,16 @@
 %   Please visit https://github.com/StefanRickli/anp/issues to find a list
 %   of documented issues.
 %
+%
+%   Announcements:
+%   --------------
+%   The next major version will see basic MIMO support.
+%   Along with it the D-contour will see a change, i.e. detours around
+%   poles/zeros that lie exactly on the Im-axis will go around them on the
+%   LHP and not the RHP anymore. This has no impact for the Nyquist
+%   stability criterion in the SISO case, but is very vital to the MIMO
+%   Nyquist stability criterion.
+%
 % -------------------------------------------------------------------------
 
 function [] = anp_main(varargin)
