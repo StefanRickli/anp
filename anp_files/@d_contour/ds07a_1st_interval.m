@@ -49,12 +49,14 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             % If it's a straight line, then q_len is just |begin - end|,
             % if it's part of an arc, then q_len is the length of that arc.
             arc_length_overlapping_pole = radii.detour_pole * ( asin(-im_pz_sorted(idx_current_pz).value/radii.detour_pole) + ...
-                                                                angles.detour_pole_phi0 );
+                                                                angles.detour_pole_phi0 ...
+                                                               );
             arc_length_overlapping_zero = radii.detour_zero * ( asin(-im_pz_sorted(idx_current_pz).value/radii.detour_zero) + ...
-                                                                angles.detour_zero_phi0 );
+                                                                angles.detour_zero_phi0 ...
+                                                               );
             % (Remember that im_pz_sorted(ii).pole and .zero are booleans)
-            interval_length = im_pz_sorted(idx_current_pz).pole*(arc_lengths.detour_pole - arc_length_overlapping_pole) + ...
-                              im_pz_sorted(idx_current_pz).zero*(arc_lengths.detour_zero - arc_length_overlapping_zero);
+            interval_length = (arc_lengths.detour_pole - arc_length_overlapping_pole) * im_pz_sorted(idx_current_pz).pole + ...
+                              (arc_lengths.detour_zero - arc_length_overlapping_zero) * im_pz_sorted(idx_current_pz).zero;
             interval_list(1).q_len = interval_length;
             
             % Note down where this interval ends on the whole length of
@@ -105,12 +107,14 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             % If it's a straight line, then q_len is just |begin - end|,
             % if it's part of an arc, then q_len is the length of that arc.
             arc_length_overlapping_pole = radii.detour_pole * ( asin(-im_pz_sorted(idx_current_pz).value/radii.detour_pole) + ...
-                                                                angles.detour_pole_phi0 );
+                                                                angles.detour_pole_phi0 ...
+                                                               );
             arc_length_overlapping_zero = radii.detour_zero * ( asin(-im_pz_sorted(idx_current_pz).value/radii.detour_zero) + ...
-                                                                angles.detour_zero_phi0 );
+                                                                angles.detour_zero_phi0 ...
+                                                               );
             % (Remember that im_pz_sorted(ii).pole and .zero are booleans)
-            interval_length = im_pz_sorted(idx_current_pz).pole*(arc_lengths.detour_pole - arc_length_overlapping_pole) + ...
-                              im_pz_sorted(idx_current_pz).zero*(arc_lengths.detour_zero - arc_length_overlapping_zero);
+            interval_length = (arc_lengths.detour_pole - arc_length_overlapping_pole) * im_pz_sorted(idx_current_pz).pole + ...
+                              (arc_lengths.detour_zero - arc_length_overlapping_zero) * im_pz_sorted(idx_current_pz).zero;
             interval_list(1).q_len = interval_length;
             
             % Note down where this interval ends on the whole length of
@@ -161,8 +165,8 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             % Note down the effective length this interval takes.
             % If it's a straight line, then q_len is just |begin - end|,
             % if it's part of an arc, then q_len is the length of that arc.
-            interval_length = im_pz_sorted(idx_current_pz).pole*arc_lengths.detour_pole + ...
-                              im_pz_sorted(idx_current_pz).zero*arc_lengths.detour_zero;
+            interval_length = arc_lengths.detour_pole * im_pz_sorted(idx_current_pz).pole + ...
+                              arc_lengths.detour_zero * im_pz_sorted(idx_current_pz).zero;
             interval_list(1).q_len = interval_length;
             
             % Note down where this interval ends on the whole length of
@@ -172,8 +176,8 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             % Remember the end of this interval for ease of use later.
             prev_upper_bound = interval_list(1).q(2);
             
-            % Construct a function handle which will be fed with 0 to
-            % 'length of this interval'.
+            % Construct a function handle which will be fed with q = 0 to
+            % q = 'length of this interval'.
             switch im_pz_sorted(idx_current_pz).type
                 case 'p'
                     interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_pole), ...
@@ -218,5 +222,6 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
     
     dbg_out('------------------------------------------------------------------\n');
     
+    % Write back changes to the interval list.
     this.interval_list = interval_list;
 end
