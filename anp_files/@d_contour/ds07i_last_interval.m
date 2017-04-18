@@ -25,7 +25,7 @@ function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bou
             if im_pz_sorted(idx_current_pz).neg_on_origin
                 interval_list(interval_ii).type = [repmat('detour_pole', im_pz_sorted(idx_current_pz).pole), ...
                                                    repmat('detour_zero', im_pz_sorted(idx_current_pz).zero)];
-                interval_length = im_pz_sorted(idx_current_pz).pole*arc_lengths.pole + im_pz_sorted(idx_current_pz).zero*arc_lengths.pole;
+                interval_length = im_pz_sorted(idx_current_pz).pole*arc_lengths.pole + im_pz_sorted(idx_current_pz).zero*arc_lengths.zero;
                 interval_list(interval_ii).q_len = interval_length;
                 interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
 
