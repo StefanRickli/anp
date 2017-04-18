@@ -6,6 +6,9 @@ function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bou
     halfsecant_pole =       this.halfsecant_pole;
     halfsecant_zero =       this.halfsecant_zero;
     radii =                 this.radii;
+    pole_zero_combinations =this.im_pz_combinations;
+    angles =                this.angles;
+    arc_lengths =           this.arc_lengths;
     
     % see p.41
     % 0
