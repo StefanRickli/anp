@@ -94,18 +94,29 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07b_positive_pz(this,
         % Step 2: Define the detour after the piece of straight
         %         Im-axis part.
         
+        % Note down the type of this interval.
         interval_list(interval_ii).type = [repmat('detour_pole', im_pz_sorted(idx_current_pz).pole), ...
                                            repmat('detour_zero', im_pz_sorted(idx_current_pz).zero)];
         
+        % Note down where this interval starts on the whole length of
+        % the D-contour.
         interval_list(interval_ii).q(1) = prev_upper_bound;
         
+        % Note down the length this interval takes. In this case it's part
+        % of a detour arc, so q_len is the length of that arc.
         interval_length = arc_lengths.detour_pole * im_pz_sorted(idx_current_pz).pole + ...
                           arc_lengths.detour_zero * im_pz_sorted(idx_current_pz).zero;
         interval_list(interval_ii).q_len = interval_length;
         
+        % Note down where this interval ends on the whole length of
+        % the D-contour.
         interval_list(interval_ii).q(2) = interval_list(interval_ii).q(1) + interval_length;
+        
+        % Remember the end of this interval for ease of use later.
         prev_upper_bound = interval_list(interval_ii).q(2);
         
+        % Construct a function handle which will be fed with q = 0 to
+        % q = 'length of this interval'.
         switch im_pz_sorted(idx_current_pz).type
             case 'p'
                 interval_list(interval_ii).input_fct_handle = @(q) circ_detour(map(q,interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),0,arc_lengths.detour_pole), ...
@@ -120,9 +131,12 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07b_positive_pz(this,
         end
         
         dbg_out('interval\t[%.3f\t%.3f],\tlength = %.3f,\tdetour_pos\n',interval_list(interval_ii).q(1),interval_list(interval_ii).q(2),interval_length);
-        interval_ii = interval_ii + 1;
         
+        % Update iterator and counting variable.
+        interval_ii = interval_ii + 1;
         positive_pz_remain = positive_pz_remain - 1;
     end
+    
+    % Write back changes to the interval list.
     this.interval_list = interval_list;
 end
