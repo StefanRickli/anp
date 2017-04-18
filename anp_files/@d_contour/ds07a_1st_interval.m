@@ -37,7 +37,8 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             idx_current_pz = idx_last_negative;
             
             % Note down the type of this interval.
-            interval_list(1).type = get_detour_type(im_pz_sorted(idx_current_pz).type,'part');
+            interval_list(1).type = [repmat('detour_pole_part', im_pz_sorted(idx_current_pz).pole), ...
+                                     repmat('detour_zero_part', im_pz_sorted(idx_current_pz).zero)];
             
             % Note down where this interval starts on the whole length of
             % the D-contour.
@@ -92,7 +93,8 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             idx_current_pz = idx_first_positive;
             
             % Note down the type of this interval.
-            interval_list(1).type = get_detour_type(im_pz_sorted(idx_current_pz).type,'part');
+            interval_list(1).type = [repmat('detour_pole_part', im_pz_sorted(idx_current_pz).pole), ...
+                                     repmat('detour_zero_part', im_pz_sorted(idx_current_pz).zero)];
             
             % Note down where this interval starts on the whole length of
             % the D-contour.
@@ -148,7 +150,8 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             idx_current_pz = idx_first_positive;
             
             % Note down the type of this interval.
-            interval_list(1).type = get_detour_type(im_pz_sorted(idx_current_pz).type,[]);
+            interval_list(1).type = [repmat('detour_pole', im_pz_sorted(idx_current_pz).pole), ...
+                                     repmat('detour_zero', im_pz_sorted(idx_current_pz).zero)];
             
             % Note down where this interval starts on the whole length of
             % the D-contour.

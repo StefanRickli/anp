@@ -16,7 +16,8 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07h_negative_pz(this,
     while(negative_pz_remain)
         % there are negative poles/zeros left to treat
         
-        interval_list(interval_ii).type = get_detour_type(im_pz_sorted(idx_current_pz).type,[]);
+        interval_list(interval_ii).type = [repmat('detour_pole', im_pz_sorted(idx_current_pz).pole), ...
+                                           repmat('detour_zero', im_pz_sorted(idx_current_pz).zero)];
         interval_list(interval_ii).q(1) = prev_upper_bound;
         
         interval_length = im_pz_sorted(idx_current_pz).pole*arc_lengths.detour_pole + im_pz_sorted(idx_current_pz).zero*arc_lengths.detour_zero;
