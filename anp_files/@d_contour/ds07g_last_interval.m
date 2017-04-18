@@ -1,4 +1,4 @@
-function [] = ds07i_last_interval(this,interval_ii,idx_current_pz,prev_upper_bound)
+function [] = ds07g_last_interval(this,interval_ii,idx_current_pz,prev_upper_bound)
     im_pz_sorted =          this.im_pz_sorted;
     interval_list =         this.interval_list;
     secant_pole =           this.secant_pole;

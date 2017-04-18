@@ -1,4 +1,4 @@
-function [interval_ii,idx_current_pz,prev_upper_bound] = ds07h_negative_pz(this,interval_ii,idx_current_pz,prev_upper_bound)
+function [interval_ii,idx_current_pz,prev_upper_bound] = ds07f_negative_pz(this,interval_ii,idx_current_pz,prev_upper_bound)
     im_pz_sorted =          this.im_pz_sorted;
     interval_list =         this.interval_list;
     pole_zero_combinations =this.im_pz_combinations;
