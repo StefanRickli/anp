@@ -308,6 +308,11 @@ classdef anp_gui < handle
             this.ui_control_enable();
         end
         
+        function [] = trigger_step(this)
+            % Calls 'cb_step' once. Used for debugging purposes.
+            
+            this.cb_step([], [], 1);
+        end
         
         function delete(this)
             % Destructor for the object. Closes the figure if it hasn't been already.
@@ -1005,7 +1010,6 @@ classdef anp_gui < handle
             
             this.s_draw_busy = false;
         end
-        
         
         function [] = cb_run(this,src,~,dir) % ignored parameter is evt
             % CB method reacting to one of the "play" buttons.

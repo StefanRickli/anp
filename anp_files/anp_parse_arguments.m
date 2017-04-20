@@ -1,4 +1,4 @@
-% TODO duration, FPS, noplayer and export are deprecated
+% TODO duration, FPS are deprecated
 % 2017-02-24: reuse them later
 
 function checked_args = anp_parse_arguments(varargin)
@@ -7,7 +7,7 @@ function checked_args = anp_parse_arguments(varargin)
     % Define the allowed single keywords here in 'anp_keywords'
     global anp_arg_types anp_keywords;
     anp_arg_types = '';
-    anp_keywords = {'noplayer',false;'export',false};
+    anp_keywords = {'return_handle',false;'trigger_step',false;'cleanup_after_error',false};
     
     %% Argument syntax checking
     ip = inputParser;
@@ -16,6 +16,7 @@ function checked_args = anp_parse_arguments(varargin)
     default_arg2            = NaN;
     default_arg3            = NaN;
     default_arg4            = NaN;
+    default_arg5            = NaN;
     
     default_R               = NaN;
     default_duration        = 20;       % length of animation in movie player, affects spatial resolution, [s]
@@ -32,6 +33,7 @@ function checked_args = anp_parse_arguments(varargin)
     addOptional(ip,'arg2',          default_arg2,           @checkOptArg);
     addOptional(ip,'arg3',          default_arg3,           @checkOptArg);
     addOptional(ip,'arg4',          default_arg4,           @checkOptArg);
+    addOptional(ip,'arg5',          default_arg5,           @checkOptArg);
     
     addParameter(ip,'R',            default_R,              @isScalarNumberPositive);
     addParameter(ip,'duration',     default_duration,       @isScalarNumber);
@@ -52,7 +54,7 @@ function checked_args = anp_parse_arguments(varargin)
     % - either (neither a transfer function nor poles/zeros), followed by zero, one or two anp_keywords
     % - OR a transfer function, followed by zero, one or two anp_keywords
     % - OR two vectors containing the poles and zeros, followed by zero, one or two anp_keywords
-    if isempty(regexp(anp_arg_types,'^(t|v{2})?k{0,2}$','emptymatch'))
+    if isempty(regexp(anp_arg_types,'^(t|v{2})?k{0,3}$','emptymatch'))
         error('Check type and order of optional arguments.');
     end
     
@@ -64,7 +66,7 @@ function checked_args = anp_parse_arguments(varargin)
     
     % unused yet
     % parse the poles, zeros and construct the tf-object if necessary
-    if ~isempty(regexp(anp_arg_types,'^k{0,2}$','emptymatch','once'))
+    if ~isempty(regexp(anp_arg_types,'^k{0,3}$','emptymatch','once'))
         % if neither a [t]ransfer function nor [v]ectors of poles and
         % zeros have been specified: use some standard values for
         % demonstration purposes
@@ -79,7 +81,7 @@ function checked_args = anp_parse_arguments(varargin)
         tf_zeros =                  -0.7;
         checked_args.tf_obj =       tf(poly(tf_zeros),poly(tf_poles));
         
-    elseif ~isempty(regexp(anp_arg_types,'^tk{0,2}$', 'once'))
+    elseif ~isempty(regexp(anp_arg_types,'^tk{0,3}$', 'once'))
         % [t]ransfer function
         % we only take the first transfer function if an object with 
         % multiple transfer function has been provided
@@ -89,7 +91,7 @@ function checked_args = anp_parse_arguments(varargin)
             warning('Specified system is not SISO. Will only use first transfer function from input 1 to output 1.');
         end
         
-    elseif ~isempty(regexp(anp_arg_types,'^vvk{0,2}$', 'once'))
+    elseif ~isempty(regexp(anp_arg_types,'^vvk{0,3}$', 'once'))
         % two [v]ectors, containing lists of pole and zero locations
         
         % transpose to row vector if necessary
@@ -207,10 +209,15 @@ function checked_args = anp_parse_arguments(varargin)
     checked_args.time_params.resolution_factor =    3;      % TODO deprecated, unused: remove in future version
     
     % ---------------------------------------------------------------------
+    % Keywords
+    % ---------------------------------------------------------------------
+    checked_args.return_handle =    anp_keywords{1,2};      % Causes anp_main to return the handle to the GUI and tf_processor object
+    checked_args.trigger_step =     anp_keywords{2,2};      % Causes anp_main to trigger one call to the step callback function in anp_gui
+    checked_args.cleanup_after_error = anp_keywords{3,2};   % Causes anp_main to close all windows and delete its objects.
+    
+    % ---------------------------------------------------------------------
     % Video export parameters, DEPRECATED
     % ---------------------------------------------------------------------
-    checked_args.noPlayer =     anp_keywords{1,2};          % TODO deprecated, unused
-    checked_args.export =       anp_keywords{2,2};          % TODO deprecated, unused
     checked_args.filename =     ip.Results.filename;        % TODO deprecated, unused
     
 end
@@ -238,6 +245,8 @@ function res = checkOptArg(x)
 end
 
 function res = isKeyword(x)
+    % Checks whether the provided keyword is a valid one. If it is, it remembers that the keyword was set by setting the corresponding boolean to True.
+    
     global anp_keywords;
     
     try
