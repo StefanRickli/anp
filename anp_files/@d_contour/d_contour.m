@@ -71,9 +71,9 @@ classdef d_contour < handle
 
             [interval_ii] = this.ds07d_crop1_inf_crop2(interval_ii);
 
-            [interval_ii,idx_current_pz,prev_upper_bound] =                     this.ds07g_first_after_crop2(interval_ii);
-            [interval_ii,idx_current_pz,prev_upper_bound] =                     this.ds07h_negative_pz(interval_ii,idx_current_pz,prev_upper_bound);
-                                                                                this.ds07i_last_interval(interval_ii,idx_current_pz,prev_upper_bound);
+            [interval_ii,idx_current_pz,prev_upper_bound] =                     this.ds07e_first_after_crop2(interval_ii);
+            [interval_ii,idx_current_pz,prev_upper_bound] =                     this.ds07f_negative_pz(interval_ii,idx_current_pz,prev_upper_bound);
+                                                                                this.ds07g_last_interval(interval_ii,idx_current_pz,prev_upper_bound);
 
             if debug_graphics
                 figure;
