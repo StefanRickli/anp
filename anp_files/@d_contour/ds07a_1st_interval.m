@@ -68,7 +68,7 @@ function [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_fir
             
             % Construct a function handle which will be fed with q = 0 to
             % q = 'length of this interval'.
-            switch im_pz_sorted(end).type
+            switch im_pz_sorted(idx_current_pz).type
                 case 'p'
                     interval_list(1).input_fct_handle = @(q) circ_detour(map(q,0,interval_list(1).q(2),arc_lengths.detour_pole-interval_list(1).q_len,arc_lengths.detour_pole), ...
                                                                          radii.detour_pole, ...
