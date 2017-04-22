@@ -40,6 +40,11 @@ function [interval_ii,idx_current_pz,prev_upper_bound] = ds07e_first_after_crop2
              -halfsecant_pole * im_pz_sorted(idx_current_pz).pole + ...
              -halfsecant_zero * im_pz_sorted(idx_current_pz).zero;
          
+         % Bugfix: in case the current p/z is the case of
+         % negative_overlapping
+         if im_pz_sorted(idx_current_pz).neg_overlapping || im_pz_sorted(idx_current_pz).neg_on_origin
+             idx_current_pz = NaN;
+         end
     elseif any([im_pz_sorted.pos_overlapping])
         % An imaginary p/z of the upper HP that lies so close to the origin
         % that its detour extends beyond the real axis into the lower HP.
