@@ -91,7 +91,7 @@
 %
 % -------------------------------------------------------------------------
 
-function [] = anp_main(varargin)
+function arg_out = anp_main(varargin)
     addpath('anp_files');
     addpath('anp_files/d_contour_tiny_fcts');
     addpath('anp_files/tools');
@@ -136,9 +136,23 @@ function [] = anp_main(varargin)
         h_gui.init_params(args);
         
         h_gui.init_visuals();
+        
+        % Handling of debugging keywords
+        if args.trigger_step
+            h_gui.trigger_step();
+        end
+        
+        if args.return_handle
+            arg_out = {h_tf_processor, h_gui};
+        end
+        
     catch err
         clear h_tf_processor;
         disp(getReport(err,'extended'));
+        
+        if args.cleanup_after_error
+            delete(h_gui);
+        end
     end
 end
 
