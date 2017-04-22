@@ -65,7 +65,7 @@ classdef d_contour < handle
                 debug_graphics = false;
             end
 
-            [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_first_positive] =  this.ds07a_1st_interval();
+            [interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_first_positive,idx_last_negative] =  this.ds07a_1st_interval();
             [interval_ii,idx_current_pz,prev_upper_bound] =                     this.ds07b_positive_pz(interval_ii,idx_current_pz,prev_upper_bound,positive_pz_remain,idx_first_positive);
             [interval_ii] =                                                     this.ds07c_last_straight_before_crop1(interval_ii,idx_current_pz,prev_upper_bound);
 
@@ -73,7 +73,7 @@ classdef d_contour < handle
 
             [interval_ii,idx_current_pz,prev_upper_bound] =                     this.ds07e_first_after_crop2(interval_ii);
             [interval_ii,idx_current_pz,prev_upper_bound] =                     this.ds07f_negative_pz(interval_ii,idx_current_pz,prev_upper_bound);
-                                                                                this.ds07g_last_interval(interval_ii,idx_current_pz,prev_upper_bound);
+                                                                                this.ds07g_last_interval(interval_ii,idx_current_pz,prev_upper_bound,idx_first_positive,idx_last_negative);
 
             if debug_graphics
                 figure;
