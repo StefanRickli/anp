@@ -113,7 +113,7 @@ function checked_args = anp_parse_arguments(varargin)
     end
     
     % If any sort of delay was specified, prefer IODelay over
-    % Input- and OutputDelay. Calculate the effecttive delay if
+    % Input- and OutputDelay. Calculate the effective delay if
     % both In- and OutputDelay are present. (According to
     % https://ch.mathworks.com/help/control/ug/time-delays-in-linear-systems.html )
     if checked_args.tf_obj.IODelay ~= 0
