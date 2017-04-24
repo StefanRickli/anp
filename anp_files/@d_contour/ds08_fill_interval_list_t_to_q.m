@@ -46,6 +46,10 @@ function [] = ds08_fill_interval_list_t_to_q(this)
         interval_list(ii).t(2) = interval_list(ii).t(1) + interval_list(ii).t_len;
     end
     
+    % Bugfix: there are cases when the 't_len's add up to a value slightly
+    % greater than 1 which lead to a crash at the evaluation.
+    %interval_list(end).t(2) = 1;
+    
     % Construct a mapping from the t-interval to its counterpart in the
     % q-domain for every member in the interval list.
     for ii = 1:length(interval_list)
