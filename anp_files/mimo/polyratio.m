@@ -19,6 +19,46 @@ classdef polyratio < handle
             y = this;
         end
         
+        function y = reduce(this)
+            % TODO: tol most certainly needs to be dynamically changed
+            %       based on the expected precision of 'roots'
+            tol = 1e-4;
+            
+            zeros = roots(this.num);
+            poles = roots(this.denom);
+            
+            while(true)
+                dist = inf;
+                zi = NaN;
+                pi = NaN;
+                
+                for ii = 1:length(zeros)
+                    for jj = 1:length(poles)
+                        e = abs(zeros(ii) - poles(jj));
+                        if e < dist
+                            dist = e;
+                            zi = ii;
+                            pi = jj;
+                        end
+                    end
+                end
+                
+                if (dist < tol)
+                    zeros(zi) = [];
+                    poles(pi) = [];
+                else
+                    break;
+                end
+            end
+            
+            this.num = poly(zeros);
+            this.denom = poly(poles);
+            
+            this.normalize;
+            
+            y = this;
+        end
+        
         function y = mult(this,x)
             assert(isequal(class(x),'polyratio'));
             
