@@ -6,7 +6,7 @@ classdef polyratio < handle
     
     methods
         function this = polyratio(a,b)
-            assert(isequal(class(a),'double') && isequal(class(b),'double'));
+            assert(isa(a,'double') && isa(b,'double'));
             
             this.num = a;
             this.denom = b;
@@ -60,13 +60,13 @@ classdef polyratio < handle
         end
         
         function y = mult(this,x)
-            assert(isequal(class(x),'polyratio'));
+            assert(isa(x,'polyratio'));
             
             y = polyratio(conv(this.num,x.num),conv(this.denom,x.denom));
         end
         
         function y = add(this,x)
-            assert(isequal(class(x),'polyratio'));
+            assert(isa(x,'polyratio'));
             
             [a1,a2] = pad_left(conv(this.num,x.denom),conv(x.num,this.denom));
             
@@ -76,7 +76,7 @@ classdef polyratio < handle
         end
         
         function y = sub(this,x)
-            assert(isequal(class(x),'polyratio'));
+            assert(isa(x,'polyratio'));
             
             [a1,a2] = pad_left(conv(this.num,x.denom),conv(x.num,this.denom));
             

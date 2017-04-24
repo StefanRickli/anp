@@ -1,7 +1,7 @@
 function Y = polyratio_matrix_det(A)
     assert(ismatrix(A));
     s = size(A);
-    assert( (s(1) == s(2)) || ~isequal(class(A),'polyratio') )
+    assert( (s(1) == s(2)) || ~isa(A,'polyratio') )
     
     if s(1) >= 10
         warning('Determinand of matrix with dimensions >9 requested. This can take a while. Are you shure you want to continue?');
@@ -15,7 +15,7 @@ end
 function Y = polydet2(A)
     assert(iscell(A));
     s = size(A);
-    assert( (s(1) == s(2)) || ~isequal(class(A{1}),'double') )
+    assert( (s(1) == s(2)) || ~isa(A{1},'double') )
     
     m = s(1);
     
