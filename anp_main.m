@@ -93,6 +93,7 @@
 
 function arg_out = anp_main(varargin)
     addpath('anp_files');
+    addpath('anp_files/mimo');
     addpath('anp_files/d_contour_tiny_fcts');
     addpath('anp_files/tools');
     addpath('anp_icons');
