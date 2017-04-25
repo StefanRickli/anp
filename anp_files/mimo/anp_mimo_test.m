@@ -15,17 +15,32 @@ G = [tf11,tf12,tf13;
      tf21,tf22,tf23;
      tf31,tf32,tf33];
 
+H = tf(ss([1,0.1;0.2,-2],[1,0.1;0.2,0.5],[1,0;0,1],[0,0;0,0]));
 
-polymatrix = cell(size(G));
-for ii = 1:length(G(1,:))^2
-    polymatrix{ii} = polyratio(G.Numerator{ii},G.Denominator{ii});
-end
+anp_main(H)
 
-for ii = 1:length(G(1,:))
-    polymatrix{ii} = polymatrix{ii}.add(polyratio(1,1));
-end
-
-det_I_plus_L = polyratio_matrix_det(polymatrix);
-det_I_plus_L.reduce;
-
-anp_main(tf(det_I_plus_L.num,det_I_plus_L.denom));
+% polymatrix = cell(size(G));
+% for ii = 1:length(G(1,:))^2
+%     polymatrix{ii} = polyratio(G.Numerator{ii},G.Denominator{ii});
+% end
+% 
+% for ii = 1:length(G(1,:))
+%     for jj = 1:length(G(1,:))
+%         disp(polymatrix{ii,jj})
+%     end
+% end
+% 
+% for ii = 1:length(G(1,:))
+%     polymatrix{ii,ii} = polymatrix{ii,ii}.add(polyratio(1,1));
+% end
+% 
+% for ii = 1:length(G(1,:))
+%     for jj = 1:length(G(1,:))
+%         disp(polymatrix{ii,jj})
+%     end
+% end
+% 
+% det_I_plus_L = polyratio_matrix_det(polymatrix);
+% [z,p] = det_I_plus_L.reduce;
+% 
+% anp_main(tf(det_I_plus_L.num,det_I_plus_L.denom));
