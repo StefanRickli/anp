@@ -19,7 +19,10 @@ classdef polyratio < handle
             y = this;
         end
         
-        function y = reduce(this)
+        function varargout = reduce(this)
+            % ATTENTION: This method is dangerous as it deletes poles and
+            %            zeros that are close enough ( < tol) to each other
+            
             % TODO: tol most certainly needs to be dynamically changed
             %       based on the expected precision of 'roots'
             tol = 1e-4;
@@ -51,12 +54,22 @@ classdef polyratio < handle
                 end
             end
             
-            this.num = poly(zeros);
-            this.denom = poly(poles);
+            this.num =      poly(zeros);
+            this.denom =    poly(poles);
             
             this.normalize;
             
-            y = this;
+            switch nargout
+                case 0
+                    varargout = {};
+                case 1
+                    varargout{1} = this;
+                case 2
+                    varargout{1} = zeros;
+                    varargout{2} = poles;
+                otherwise
+                    error('''reduce'' accepts either one output argument, returning the object itself, or two output arguments, returning zeros and poles of the polyratio');
+            end
         end
         
         function y = mult(this,x)
