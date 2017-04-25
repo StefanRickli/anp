@@ -107,7 +107,7 @@ classdef tf_processor < handle
             % we need that all of them really run. Hence we can't use a
             % syntax like A || B || C etc because of lazy computing.
             if any([this.set_time_params(new_params.time_params),...
-                    this.set_tf(new_params.tf_obj,new_params.tf_delay),...
+                    this.set_tf(new_params.tf_obj,new_params.tf_poles,new_params.tf_zeros,new_params.tf_delay),...
                     this.set_angles(new_params.angles),...
                     this.set_halfsecants(new_params.halfsecants),...
                     this.set_radii(new_params.radii),...
@@ -140,7 +140,7 @@ classdef tf_processor < handle
             end
         end
         
-        function dirty = set_tf(this,new_tf,delay)
+        function dirty = set_tf(this,new_tf,poles,zeros,delay)
             % Updates the internal variables containing 'tranfer function'-information
             % Informs the caller whether something has changed
             % (dirty=true), potentially triggering a 'recalculate' and/or
@@ -151,8 +151,8 @@ classdef tf_processor < handle
             if ~isequal(this.tf_obj,new_tf)
                 dbg_out('tf_processor[set_tf]:\tNew transfer function\n');
                 this.tf_obj =   new_tf;
-                this.tf_poles = roots(this.tf_obj.Denominator{1}).';
-                this.tf_zeros = roots(this.tf_obj.Numerator{1}).';
+                this.tf_poles = poles;
+                this.tf_zeros = zeros;
                 
                 this.tf_delay = delay;
                 

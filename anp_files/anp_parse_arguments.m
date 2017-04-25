@@ -79,7 +79,11 @@ function checked_args = anp_parse_arguments(varargin)
         
         tf_poles =                  [-3,-2,-1+1i,-1-1i];
         tf_zeros =                  -0.7;
+        
+        % Use this order for the fields of 'checked_args'
         checked_args.tf_obj =       tf(poly(tf_zeros),poly(tf_poles));
+        checked_args.tf_poles =     tf_poles;
+        checked_args.tf_zeros =     tf_zeros;
         
     elseif ~isempty(regexp(anp_arg_types,'^tk{0,3}$', 'once'))
         % [t]ransfer function
