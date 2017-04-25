@@ -289,9 +289,9 @@ classdef tf_processor < handle
             fprintf('Plotting the ');
             transfer_function = this.tf_obj(1,1)        %#ok<NOPRT,NASGU>
             fprintf('with\n');
-            poles = this.tf_poles                       %#ok<NOPRT,NASGU>
+            poles = this.tf_poles.'                     %#ok<NOPRT,NASGU>
             fprintf('and\n');
-            zeros = this.tf_zeros                       %#ok<NOPRT,NASGU>
+            zeros = this.tf_zeros.'                     %#ok<NOPRT,NASGU>
             
             if this.tf_delay ~= 0
                 fprintf('and\n');
