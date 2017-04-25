@@ -1210,24 +1210,6 @@ classdef anp_gui < handle
         % Utility functions
         % ---------------------
         
-        % UNUSED
-        function arrowHandle = draw_arrow(this,parent,x0,phi,l)
-            % Places an arrow annotation at the given location.
-            r = l*[cos(phi),sin(phi)];
-            
-            arrowHandle = annotation(this.h_fig,'Arrow');
-            set(arrowHandle,'parent',parent,'position',[x0-r,r]);
-        end
-        
-        % UNUSED
-        function h_arrow = draw_text_arrow_old(this,parent,x0,phi,l,text,color)
-            % Places a text arrow annotation at the given location.
-            r = l*[cos(phi),sin(phi)];
-
-            h_arrow = annotation(this.h_fig,'TextArrow');
-            set(h_arrow,'parent',parent,'position',[x0-r,r],'String',text,'Color',color);
-        end
-        
         function h_arrow = draw_text_arrow(this, h_plot, ...
                                            x, y, phi, length, ...
                                            current_axis_limits, ...
