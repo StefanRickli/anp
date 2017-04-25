@@ -89,10 +89,46 @@ function checked_args = anp_parse_arguments(varargin)
         % [t]ransfer function
         % we only take the first transfer function if an object with 
         % multiple transfer function has been provided
-        checked_args.tf_obj =       ip.Results.arg1(1,1);
         
-        if any(size(checked_args.tf_obj.Numerator)-[1,1])
-            warning('Specified system is not SISO. Will only use first transfer function from input 1 to output 1.');
+        [m,n] = size(ip.Results.arg1.Numerator);
+        if m ~= n
+            error('Need a square matrix of transfer functions. How would you feed back the output when there is a different count of inputs?');
+        end
+        
+        if m == 1
+            % SISO case
+            
+            checked_args.tf_obj =   ip.Results.arg1;
+            checked_args.tf_poles = roots(checked_args.tf_obj.Denominator{1}).';
+            checked_args.tf_zeros = roots(checked_args.tf_obj.Numerator{1}).';
+        else
+            % MIMO case
+            % We interpret the given transfer function as the open loop
+            % transfer function L(s)
+            
+            G = ip.Results.arg1;
+            
+            % Convert the tf-matrix into a cell-array of 'polyratio's
+            polyratio_matrix = cell(size(G));
+            for ii = 1:length(G(1,:))^2
+                polyratio_matrix{ii} = polyratio(G.Numerator{ii},G.Denominator{ii});
+            end
+            
+            % Add the identity matrix as in (I + L(s))
+            for ii = 1:length(G(1,:))
+                polyratio_matrix{ii,ii} = polyratio_matrix{ii,ii}.add(polyratio(1,1));
+            end
+            
+            det_I_plus_L = polyratio_matrix_det(polyratio_matrix);
+            
+            % ATTENTION: this step is dangerous as it deletes poles and
+            %            zeros that we consider close enough to each other
+            %            such that they count as pole/zero cancellation.
+            [tf_zeros,tf_poles] =   det_I_plus_L.reduce;
+            
+            checked_args.tf_obj =   tf(det_I_plus_L.num,det_I_plus_L.denom);
+            checked_args.tf_poles = tf_zeros.';
+            checked_args.tf_zeros = tf_poles.';
         end
         
     elseif ~isempty(regexp(anp_arg_types,'^vvk{0,3}$', 'once'))
