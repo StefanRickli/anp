@@ -154,7 +154,17 @@ classdef tf_processor < handle
                 this.tf_poles = poles;
                 this.tf_zeros = zeros;
                 
-                this.tf_delay = delay;
+                if isequal(size(this.tf_obj),[1,1])
+                    % SISO case
+                    
+                    this.tf_delay = delay;
+                else
+                    if delay ~= 0
+                        warning('You have specified a MIMO system with delays. Delays are currently only supported in the SISO case.');
+                    end
+                    
+                    this.tf_delay = 0;
+                end
                 
                 % Prepare the function that is to be evaluated later
                 this.tf_G =     @(z) polyval(this.tf_obj.Numerator{1},z)./polyval(this.tf_obj.Denominator{1},z);
