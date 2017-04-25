@@ -54,6 +54,8 @@ classdef anp_gui < handle
         h_z_plot_trail      matlab.graphics.chart.primitive.Line    % left plot yellow/orange trail of arrow
         h_z_plot_arrow      matlab.graphics.shape.Arrow             % left plot arrow
         h_z_pz_objcts       % annotations of type crosses, circles and arrows with text
+        h_z_p_scatter       matlab.graphics.chart.primitive.Scatter % scatter plot of poles
+        h_z_z_scatter       matlab.graphics.chart.primitive.Scatter % scatter plot of poles
         
         h_w_plot_full       matlab.graphics.chart.primitive.Line
         h_w_plot_trail      matlab.graphics.chart.primitive.Line
@@ -662,21 +664,10 @@ classdef anp_gui < handle
         function [] = draw_init_z_plot_poles_zeros(this)
             % Draws x's at the location of poles and o's at the location of zeros in the left plot.
             
-            % TODO we could be way more efficient if we knew which objects
-            % we need to touch and which we don't. For the time being just
-            % redo everything every time this method runs.
-                        
-            % First delete all existing objects to start fresh.
-            for ii = 1:length(this.h_z_pz_objcts)
-                this.h_z_pz_objcts{ii}.delete();
-            end
-            
-            % Preallocate the cell-array containing the object handles.
-            this.h_z_pz_objcts = cell(1,this.d_n_poles + this.d_n_zeros);
-                        
             % Where's the center of the plot with the current limits?
             plot_center = mean(xlim(this.h_sub1)) + 1i*mean(ylim(this.h_sub1));
             
+            visible_poles = [];
             objct_ii = 1;
             for p_ii = 1:this.d_n_poles
                 current_pole = this.d_poles(p_ii);
@@ -686,27 +677,33 @@ classdef anp_gui < handle
                     % means that it lies outside the current subplot limits.
                     % Instead of drawing just an X at the border, plot an
                     % arrow, indicating that there's an outlier.
-                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow(this.h_sub1,[real(pole_trunc),imag(pole_trunc)],angle(current_pole - plot_center),this.p_z_arrow_length,' x',[255 140 0]/255);
+                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow(this.h_sub1,real(pole_trunc),imag(pole_trunc),angle(current_pole - plot_center),this.p_z_arrow_length,[this.p_z_xlim,this.p_z_ylim],' x',[255 140 0]/255);
+                    objct_ii = objct_ii + 1;
                 else
                     % The current pole lies within xlim and ylim, so draw
                     % an X at its location.
-                    this.h_z_pz_objcts{objct_ii} = scatter(this.h_sub1,real(current_pole),imag(current_pole),60,'x','MarkerEdgeColor',[255 140 0]/255,'LineWidth',1.5);
+                    visible_poles(end+1) = current_pole;        %#ok<AGROW>
                 end
-                objct_ii = objct_ii + 1;
             end
             
+            this.h_z_p_scatter = scatter(this.h_sub1,real(visible_poles),imag(visible_poles),60,'x','MarkerEdgeColor',[255 140 0]/255,'LineWidth',1.5);
+            
             % Same procedure as with poles but instead of X's, plot circles
+            visible_zeros = [];
             for z_ii = 1:this.d_n_zeros
                 current_zero = this.d_zeros(z_ii);
                 zero_trunc = this.trunc(current_zero, this.p_z_xlim, this.p_z_ylim);
                 if current_zero ~= zero_trunc
-                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow(this.h_sub1,[real(zero_trunc),imag(zero_trunc)],angle(current_zero - plot_center),this.p_z_arrow_length,' o',[95 158 160]/255);
+                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow(this.h_sub1,real(zero_trunc),imag(zero_trunc),angle(current_zero - plot_center),this.p_z_arrow_length,[this.p_z_xlim,this.p_z_ylim],' o',[95 158 160]/255);
+                    objct_ii = objct_ii + 1;
                 else
-                    this.h_z_pz_objcts{objct_ii} = scatter(this.h_sub1,real(current_zero),imag(current_zero),60,'o','MarkerEdgeColor',[70 130 180]/255,'LineWidth',1.5);
+                    visible_zeros(end+1) = current_zero;        %#ok<AGROW>
                 end
-                objct_ii = objct_ii + 1;
             end
+            
+            this.h_z_z_scatter = scatter(this.h_sub1,real(visible_zeros),imag(visible_zeros),60,'o','MarkerEdgeColor',[70 130 180]/255,'LineWidth',1.5);
         end
+        
         
         % -----------------------------------------------------------------
         % GUI methods
@@ -757,7 +754,7 @@ classdef anp_gui < handle
                         if isequal(obj.Axes,this.h_sub1)
                             this.draw_update_z_limits_and_plot();
                             this.calc_z_arrow_length();
-                            this.draw_init_z_plot_poles_zeros();
+                            this.draw_update_z_plot_poles_zeros();
                         else
                             this.draw_update_w_limits_and_plot();
                             this.calc_w_arrow_length();
@@ -1021,6 +1018,54 @@ classdef anp_gui < handle
             dbg_out('anp_gui[draw_update_w_limits_and_plot]:\tw_xlim=[%.2f,%.2f], w_ylim=[%.2f,%.2f]\n',this.p_w_xlim(1),this.p_w_xlim(2),this.p_w_ylim(1),this.p_w_ylim(2));
         end
         
+        function [] = draw_update_z_plot_poles_zeros(this)
+            % Draws x's at the location of poles and o's at the location of zeros in the left plot.
+            
+            % First delete all existing objects to start fresh.
+            for ii = 1:length(this.h_z_pz_objcts)
+                this.h_z_pz_objcts{ii}.delete();
+            end
+            
+            % Where's the center of the plot with the current limits?
+            plot_center = mean(xlim(this.h_sub1)) + 1i*mean(ylim(this.h_sub1));
+            
+            visible_poles = [];
+            objct_ii = 1;
+            for p_ii = 1:this.d_n_poles
+                current_pole = this.d_poles(p_ii);
+                pole_trunc = this.trunc(current_pole, this.p_z_xlim, this.p_z_ylim);
+                if current_pole ~= pole_trunc
+                    % The current pole being not equal to its truncated value
+                    % means that it lies outside the current subplot limits.
+                    % Instead of drawing just an X at the border, plot an
+                    % arrow, indicating that there's an outlier.
+                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow(this.h_sub1,real(pole_trunc),imag(pole_trunc),angle(current_pole - plot_center),this.p_z_arrow_length,[this.p_z_xlim,this.p_z_ylim],' x',[255 140 0]/255);
+                    objct_ii = objct_ii + 1;
+                else
+                    % The current pole lies within xlim and ylim, so draw
+                    % an X at its location.
+                    visible_poles(end+1) = current_pole; %#ok<AGROW>
+                end
+            end
+            
+            set(this.h_z_p_scatter,'XData',real(visible_poles),'YData',imag(visible_poles));
+            
+            % Same procedure as with poles but instead of X's, plot circles
+            visible_zeros = [];
+            for z_ii = 1:this.d_n_zeros
+                current_zero = this.d_zeros(z_ii);
+                zero_trunc = this.trunc(current_zero, this.p_z_xlim, this.p_z_ylim);
+                if current_zero ~= zero_trunc
+                    this.h_z_pz_objcts{objct_ii} = this.draw_text_arrow(this.h_sub1,real(zero_trunc),imag(zero_trunc),angle(current_zero - plot_center),this.p_z_arrow_length,[this.p_z_xlim,this.p_z_ylim],' o',[95 158 160]/255);
+                    objct_ii = objct_ii + 1;
+                else
+                    visible_zeros(end+1) = current_zero; %#ok<AGROW>
+                end
+            end
+            
+            set(this.h_z_z_scatter,'XData',real(visible_zeros),'YData',imag(visible_zeros));
+        end
+        
         function [] = draw_update_full_z_plot(this)
             % Wrapper method. Updates the z-plot's data.
             
@@ -1145,7 +1190,7 @@ classdef anp_gui < handle
                 if isequal(obj.Axes,this.h_sub1)
                     this.draw_update_z_limits_and_plot();
                     this.calc_z_arrow_length();
-                    this.draw_init_z_plot_poles_zeros();
+                    this.draw_update_z_plot_poles_zeros();
                 else
                     this.draw_update_w_limits_and_plot();
                     this.calc_w_arrow_length();
@@ -1174,7 +1219,8 @@ classdef anp_gui < handle
             set(arrowHandle,'parent',parent,'position',[x0-r,r]);
         end
         
-        function h_arrow = draw_text_arrow(this,parent,x0,phi,l,text,color)
+        % UNUSED
+        function h_arrow = draw_text_arrow_old(this,parent,x0,phi,l,text,color)
             % Places a text arrow annotation at the given location.
             r = l*[cos(phi),sin(phi)];
 
@@ -1182,7 +1228,33 @@ classdef anp_gui < handle
             set(h_arrow,'parent',parent,'position',[x0-r,r],'String',text,'Color',color);
         end
         
-        function [] = draw_update_arrow(this, h_plot, h_arrow, x, y, phi, length, axis_limits)
+        function h_arrow = draw_text_arrow(this, h_plot, ...
+                                           x, y, phi, length, ...
+                                           current_axis_limits, ...
+                                           text, color)
+            % Places a text arrow annotation at the given location.
+            
+            % First calculate the start and end coordinates within the plot
+            dx = length * cos(phi);
+            dy = length * sin(phi);
+            
+            arrow_end_x = x - dx;
+            arrow_end_y = y - dy;
+            
+            % Transform the plot coordinates to relative position
+            % coordinates in the figure, as this is the arrow's parent
+            % object.
+            
+            [transformed_x,transformed_y] = this.ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y],current_axis_limits);
+            
+            h_arrow = annotation(this.h_fig,'TextArrow');
+            set(h_arrow,'String',text,'Color',color);
+            
+            h_arrow.X = transformed_x;
+            h_arrow.Y = transformed_y;
+        end
+        
+        function [] = draw_update_arrow(this, h_plot, h_arrow, x, y, phi, length, current_axis_limits)
             % Updates an annotation('arrow')-object's position
             
             % First calculate the start and end coordinates within the plot
@@ -1196,7 +1268,7 @@ classdef anp_gui < handle
             % coordinates in the figure, as this is the arrow's parent
             % object.
             
-            [transformed_x,transformed_y] = this.ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y],axis_limits);
+            [transformed_x,transformed_y] = this.ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y],current_axis_limits);
             
             h_arrow.X = transformed_x;
             h_arrow.Y = transformed_y;
