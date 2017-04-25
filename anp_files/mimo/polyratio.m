@@ -23,9 +23,13 @@ classdef polyratio < handle
             % ATTENTION: This method is dangerous as it deletes poles and
             %            zeros that are close enough ( < tol) to each other
             
+            
             % TODO: tol most certainly needs to be dynamically changed
             %       based on the expected precision of 'roots'
             tol = 1e-4;
+            
+            fprintf('polyratio.reduce: Will remove all pole/zero combinations that have a difference of < %s\n', num2str(tol,'%1.1e'));
+            fprintf('This is a (quick and) dirty numerical solution. Keep this in mind!');
             
             zeros = roots(this.num);
             poles = roots(this.denom);
@@ -47,6 +51,7 @@ classdef polyratio < handle
                 end
                 
                 if (dist < tol)
+                    fprintf('Removing zero (%s) and pole (%s) from polynomial fraction. Difference is: %s\n', num2str(zeros(zi)), num2str(poles(pi)), num2str(zeros(zi) - poles(pi)));
                     zeros(zi) = [];
                     poles(pi) = [];
                 else
