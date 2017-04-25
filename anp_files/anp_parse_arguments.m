@@ -112,10 +112,12 @@ function checked_args = anp_parse_arguments(varargin)
         end
         
         checked_args.tf_obj =       tf(poly(tf_zeros),poly(tf_poles));
+        checked_args.tf_poles =     tf_poles;
+        checked_args.tf_zeros =     tf_zeros;
     else
         error('Error: oops, we shouldn''t be here... sorry about that. Please send me an email about this and provide me with the input arguments you used.');
     end
-    
+        
     % If any sort of delay was specified, prefer IODelay over
     % Input- and OutputDelay. Calculate the effective delay if
     % both In- and OutputDelay are present. (According to
