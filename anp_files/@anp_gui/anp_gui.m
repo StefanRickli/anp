@@ -47,9 +47,6 @@ classdef anp_gui < handle
         h_pan               matlab.graphics.interaction.internal.pan    % oject needed for panning related callbacks
         
         h_textboxes                                                 % struct containing handles to all the TextBoxes
-        h_text_p_annot      matlab.graphics.shape.TextBox           % handles to the textboxes of the pole-contributions
-        h_text_z_annot      matlab.graphics.shape.TextBox           % handles to the textboxes of the zero-contributions
-        h_text_res_annot    matlab.graphics.shape.TextBox           % handles to the textboxes of the result
         
         h_z_plot_full       matlab.graphics.chart.primitive.Line    % left plot full D-shape
         h_z_plot_trail      matlab.graphics.chart.primitive.Line    % left plot yellow/orange trail of arrow
@@ -85,16 +82,10 @@ classdef anp_gui < handle
         w_sub1_position     double          % vector conataining the left plot's position withing the figure
         w_sub2_position     double          % vector conataining the right plot's position withing the figure
         
-        w_border                    double  % how much border to the left, right and top from the plots? [pixel]
-        w_plot_size                 double  % [pixel]
-        w_plot_width_frac           double  % [1]
-        w_plot_upper_border         double  % [pixel]
-        w_plot_lower_border         double  % [pixel]
-        w_plot_side_border          double  % [pixel]
-        w_border_horizontal_frac    double  % [1]
-        w_border_vertical_frac      double  % [1]
-        w_annotation_start_frac     double  % where (vertically) on the figure do the annotations start? [1]
-        w_annotation_textbox_frac   double  % vertical separation between annotations [1]
+        w_plot_size                     double  % [pixel]
+        w_plot_upper_border             double  % [pixel]
+        w_plot_lower_border             double  % [pixel]
+        w_plot_side_border              double  % [pixel]
         w_textbox_title_vert_position   double  % [pixel]
         w_textbox_title_z_hor_position  double  % [pixel]
         w_textbox_title_p_hor_position  double  % [pixel]
