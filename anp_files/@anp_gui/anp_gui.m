@@ -1239,10 +1239,10 @@ classdef anp_gui < handle
             % Check if the top of the figure window is within the computer
             % screen's dimensions.
             res = this.get_screen_resolution();
-            excess = this.h_fig.Position(2) + this.h_fig.Position(4) - res(2);
+            excess = this.h_fig.Position(2) + this.h_fig.Position(4) + 80 - res(2);
             if excess > 0
                 % Shift the figure window downwards.
-                this.h_fig.Position(2) = this.h_fig.Position(2) - excess - 80;
+                this.h_fig.Position(2) = this.h_fig.Position(2) - excess;
             end
         end
 
