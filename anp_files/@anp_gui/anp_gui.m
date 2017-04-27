@@ -618,35 +618,6 @@ classdef anp_gui < handle
             % want automatic textwrap to occur.
         end
         
-        function [] = draw_init_gui_text_objects_old(this)
-            % Prepares the annotations below the plots and populates the corresponding handle arrays.
-            
-            % Delete all previous instances of text boxes first as there
-            % might be a different number of poles and zeros this time.
-            for ii = 1:length(this.h_text_z_annot)
-                this.h_text_z_annot(ii).delete
-            end
-            for ii = 1:length(this.h_text_p_annot)
-                this.h_text_p_annot(ii).delete
-            end
-            
-            % Text boxes for zero and pole contributions.
-            annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the zeros:','LineStyle','none','FontSize',9);
-            for ii = 1:this.d_n_zeros
-                this.h_text_z_annot(ii) = annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['zero ',sprintf('%d',ii)],'LineStyle','none','FontSize',9);
-            end
-            annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the poles:','LineStyle','none','FontSize',9);
-            for ii = 1:this.d_n_poles
-                this.h_text_p_annot(ii) = annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['pole ',sprintf('%d',ii)],'LineStyle','none','FontSize',9);
-            end
-
-            % Text boxes for the results.
-            annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','Resulting value of G:','LineStyle','none','FontSize',9);
-            this.h_text_res_annot(1) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 2*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 1','LineStyle','none','FontSize',9);
-            this.h_text_res_annot(2) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 3*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 2','LineStyle','none','FontSize',9);
-            
-        end
-        
         function [] = draw_init_plot_axes(this)
             % Prepares the geometry and behavior of the two subplots and attaches the proper callback methods to them.
             
