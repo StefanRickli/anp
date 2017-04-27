@@ -1,6 +1,6 @@
-
 s = tf('s');
 
+%% 3x3 system with lots of different integer poles
 tf11 = 1/(s^2+4);
 tf12 = 2/(s+2);
 tf13 = 3/(s+3);
@@ -15,32 +15,15 @@ G = [tf11,tf12,tf13;
      tf21,tf22,tf23;
      tf31,tf32,tf33];
 
-H = tf(ss([-2,1,0.1;0.2,-2,-0.1;0.05,-0.5,-1],[1,0.1;0.2,0.5;0.1,-0.7],[1,0,0;0,1,0],[0,0;0,0]));
+out = anp_main(G,'trigger_step','return_handle','cleanup_after_error');
+drawnow;
+delete(out{1});
+delete(out{2});
 
-anp_main(H)
+%% 3x3 system out of state space system
+G = tf(ss([-2,1,0.1;0.2,-2,-0.1;0.05,-0.5,-1],[1,0.1;0.2,0.5;0.1,-0.7],[1,0,0;0,1,0],[0,0;0,0]));
 
-% polymatrix = cell(size(G));
-% for ii = 1:length(G(1,:))^2
-%     polymatrix{ii} = polyratio(G.Numerator{ii},G.Denominator{ii});
-% end
-% 
-% for ii = 1:length(G(1,:))
-%     for jj = 1:length(G(1,:))
-%         disp(polymatrix{ii,jj})
-%     end
-% end
-% 
-% for ii = 1:length(G(1,:))
-%     polymatrix{ii,ii} = polymatrix{ii,ii}.add(polyratio(1,1));
-% end
-% 
-% for ii = 1:length(G(1,:))
-%     for jj = 1:length(G(1,:))
-%         disp(polymatrix{ii,jj})
-%     end
-% end
-% 
-% det_I_plus_L = polyratio_matrix_det(polymatrix);
-% [z,p] = det_I_plus_L.reduce;
-% 
-% anp_main(tf(det_I_plus_L.num,det_I_plus_L.denom));
+out = anp_main(G,'trigger_step','return_handle','cleanup_after_error');
+drawnow;
+delete(out{1});
+delete(out{2});
