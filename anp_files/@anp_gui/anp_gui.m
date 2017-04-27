@@ -1393,6 +1393,37 @@ classdef anp_gui < handle
                                               'Phase:       ', sprintf('\n'), res_phase_txt];
         end
         
+        function [] = draw_handle_textbox_positions(this)
+            % Checks if a TextBox's position is outside the figure and adjusts the positions of all the objects in that case.
+            
+            % Enforce a redraw. This is because 'FitBoxToText' could
+            % possibly have not been executed yet and as such the heights
+            % of the TextBoxes not been automatically adapted.
+            drawnow;
+            
+            % 'Undershoot' means a TextBox's position being outside the
+            % figure (vertically).
+            largest_undershoot = min(structfun(@this.get_undershoot, this.h_textboxes));
+            
+            if largest_undershoot < 0
+                % A negative undershoot means that there exists a TextBox
+                % which goes beyond the figure.
+                this.draw_enlarge_figure_and_shift_contents_vertically(-largest_undershoot);
+            elseif largest_undershoot > 5
+                % We don't want too much whitespace.
+                this.draw_shift_figure_and_contents_vertically(-largest_undershoot);
+            end
+            
+            % Enlarge the results TextBox to the height of the larger
+            % TextBox of zero/pole contributions
+            if this.h_textboxes.result.Position(4) < max(this.h_textboxes.zeros.Position(4), this.h_textboxes.poles.Position(4))
+                this.h_textboxes.result.Position(2) = min(this.h_textboxes.zeros.Position(2), ...
+                                                          this.h_textboxes.poles.Position(2));
+                this.h_textboxes.result.Position(4) = max(this.h_textboxes.zeros.Position(4), ...
+                                                          this.h_textboxes.poles.Position(4));
+            end
+        end
+        
         % -----------------------------------------------------------------
         % Callback methods
         % -----------------------------------------------------------------
