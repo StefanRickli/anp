@@ -1653,5 +1653,10 @@ classdef anp_gui < handle
             values_truncated = max(xlim(1), min(xlim(2), real(values))) ...
                           + 1i*max(ylim(1), min(ylim(2), imag(values)));
         end
+        
+        function x = get_undershoot(~, h_obj)
+            x = h_obj.Position(2);
+        end
+        
     end
 end
