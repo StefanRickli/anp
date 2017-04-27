@@ -1226,6 +1226,43 @@ classdef anp_gui < handle
             this.draw_handle_textbox_positions();
         end
         
+        function [] = draw_update_zero_textbox(this)
+            % Updates the zero contributions and puts the information in the pre-allocated textbox.
+            
+            textbox_z_strings =         cell(this.d_n_zeros,1);
+            for z = 1:this.d_n_zeros
+                % Calculate (s-z_i).
+                z_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_zeros(z);
+                
+                % Put together the texts for the TextBox that describes the
+                % current zero's contribution, for example
+                % Z1: (0.0+1.1i) - (-0.7): M=1.3 p=57.9°
+                textbox_z_strings{z} =  ['Z', ...
+                                         sprintf('%.1f',z), ...
+                                         ': (', ...
+                                         sprintc(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)), ...
+                                         ') - (', ...
+                                         sprintc(this.d_zeros(z)), ...
+                                         '): M=', ...
+                                         sprintf('%.1f',abs(z_contribution)), ...
+                                         ' p=', ...
+                                         sprintf('%.1f',rad2deg(angle(z_contribution))), ...
+                                         '°'];
+            end
+            
+            % Stitch all the parts together to one huge string,
+            % 'textbox_z_content'. Concatenate them using 'sprintf'.
+            % (We need 'sprintf' to convert the line break commands \n into
+            % real ASCII characters, as TextBox.String can't handle this.)
+            textbox_z_content = sprintf('Contribution of the zeros:\n\n');
+            
+            for z = 1:this.d_n_zeros
+                textbox_z_content = sprintf('%s%s\n',textbox_z_content,textbox_z_strings{z});
+            end
+            
+            this.h_textboxes.zeros.String = textbox_z_content;
+        end
+        
         % -----------------------------------------------------------------
         % Callback methods
         % -----------------------------------------------------------------
