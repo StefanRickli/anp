@@ -861,6 +861,8 @@ classdef anp_gui < handle
                     % Check whether the plot limits have been changed in
                     % the meantime during the last update below.
                     if this.s_check_limits
+                        this.s_check_limits = false;
+                        
                         obj = this.s_plot_src;
                         
                         if isequal(obj.Axes,this.h_sub1)
@@ -873,8 +875,6 @@ classdef anp_gui < handle
                         end
                         
                         this.draw_one_frame();
-                        
-                        this.s_check_limits = false;
                     end
                     
                     % Set the animation iterator to the next value.
@@ -1569,7 +1569,8 @@ classdef anp_gui < handle
         
         function cb_after_zoom_or_pan(this,~,obj)
             % CB methods for zoom and pan events.
-                        
+            dbg_out('anp_gui[cb_after_zoom_or_pan]:\tstart\n');
+            
             if ~this.s_draw_busy
                 % As long as draw_run_continuous_animation() isn't running,
                 % we do the updates directly.
@@ -1591,6 +1592,8 @@ classdef anp_gui < handle
                 this.s_check_limits =   true;
                 this.s_plot_src =       obj;
             end
+            
+            dbg_out('anp_gui[cb_after_zoom_or_pan]:\tend\n');
         end
         
         % ---------------------
