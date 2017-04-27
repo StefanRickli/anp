@@ -1263,6 +1263,35 @@ classdef anp_gui < handle
             this.h_textboxes.zeros.String = textbox_z_content;
         end
         
+        function [] = draw_update_pole_textbox(this)
+            % Updates the pole contributions and puts the information in the pre-allocated textbox.
+            
+            % Same story as with the zeros.
+            textbox_p_strings =         cell(this.d_n_poles,1);
+            for p = 1:this.d_n_poles
+                p_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_poles(p);
+                
+                textbox_p_strings{p} =  ['P', ...
+                                         sprintf('%.1f',p), ...
+                                         ': (', ...
+                                         sprintc(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)), ...
+                                         ') - (', ...
+                                         sprintc(this.d_poles(p)), ...
+                                         '): M=', ...
+                                         sprintf('%.1f',abs(p_contribution)), ...
+                                         ' p=', ...
+                                         sprintf('%.1f',rad2deg(angle(p_contribution))),'°'];
+            end
+            
+            textbox_p_content = sprintf('Contribution of the poles:\n\n');
+            
+            for p = 1:this.d_n_poles
+                textbox_p_content = sprintf('%s%s\n',textbox_p_content,textbox_p_strings{p});
+            end
+            
+            this.h_textboxes.poles.String = textbox_p_content;
+        end
+        
         % -----------------------------------------------------------------
         % Callback methods
         % -----------------------------------------------------------------
