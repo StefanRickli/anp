@@ -1292,6 +1292,107 @@ classdef anp_gui < handle
             this.h_textboxes.poles.String = textbox_p_content;
         end
         
+        function [] = draw_update_result_textbox(this)
+            % Updates the results from the zero and pole contributions and puts the information in the pre-allocated textbox.
+            
+            res_magnitude = 1;
+            res_phase =     0;
+            
+            % *************************
+            % Text before contributions
+            % *************************
+            
+            switch this.d_n_zeros
+                case 0
+                    res_magnitude_txt =	'1';
+                case 1
+                    res_magnitude_txt = '';
+                otherwise
+                    res_magnitude_txt =	'[';
+            end
+            res_phase_txt =            	'[';
+            
+            % ******************
+            % Zero contributions
+            % ******************
+            
+            for z = 1:this.d_n_zeros
+                % Calculate (s-z_i).
+                z_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_zeros(z);
+                res_magnitude =       	res_magnitude * abs(z_contribution);
+                res_phase =            	res_phase + angle(z_contribution);
+                
+                if z == 1
+                    res_magnitude_txt =	[res_magnitude_txt, ...
+                                         sprintf('%.2f',abs(z_contribution))];
+                else
+                    res_magnitude_txt =	[res_magnitude_txt, ...
+                                         ' * ', ...
+                                         sprintf('%.2f',abs(z_contribution))];
+                end
+                res_phase_txt =      	[res_phase_txt, ...
+                                         ' + (', ...
+                                         sprintf('%.2f',rad2deg(angle(z_contribution))), ...
+                                         '°)'];
+            end
+            
+            % ****************************************
+            % Text between zero and pole contributions
+            % ****************************************
+            
+            if this.d_n_zeros <= 1
+                res_magnitude_txt =     [res_magnitude_txt, ' / '];
+            else
+                res_magnitude_txt =   	[res_magnitude_txt, '] / '];
+            end
+            
+            if this.d_n_poles >= 2
+                res_magnitude_txt =    	[res_magnitude_txt, '['];
+            end
+            
+            res_phase_txt =            	[res_phase_txt,     '] ['];
+            
+            
+            % ******************
+            % Pole contributions
+            % ******************
+            
+            for p = 1:this.d_n_poles
+                p_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_poles(p);
+                res_magnitude =        	res_magnitude / abs(p_contribution);
+                res_phase =            	res_phase - angle(p_contribution);
+                
+                if p == 1
+                    res_magnitude_txt =	[res_magnitude_txt,                 sprintf('%.2f',abs(p_contribution))     ];
+                else
+                    res_magnitude_txt =	[res_magnitude_txt, ' * ',          sprintf('%.2f',abs(p_contribution))     ];
+                end
+                res_phase_txt =       	[res_phase_txt,     ' - (',       	sprintf('%.2f',rad2deg(angle(p_contribution))), '°)'];
+            end
+            
+            % ************************
+            % Text after contributions
+            % ************************
+            
+            if this.d_n_poles >= 2
+                res_magnitude_txt =  	[res_magnitude_txt,']'];
+            end
+            res_phase_txt =           	[res_phase_txt,    ']'];
+            
+            if this.d_delay ~= 0
+                delay_contribution =   	-(this.d_delay * imag(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)));
+                res_phase =            	res_phase + delay_contribution;
+                res_phase_txt  =      	[res_phase_txt,    ' \{ ',  sprintf('%.3f',rad2deg(delay_contribution)), '°\}'];
+            end
+            
+            res_magnitude_txt =      	[res_magnitude_txt,' = ',   sprintf('%.3f',res_magnitude)];
+            res_phase_txt =           	[res_phase_txt,    ' = ',   sprintf('%.3f',rad2deg(res_phase)),'°'];
+            
+            this.h_textboxes.result.String = ['Resulting value of G:', sprintf('\n\n'), ...
+                                              'Magnitude: ', sprintf('\n'), res_magnitude_txt, sprintf('\n\n'), ...
+                                              'Phase:       ', sprintf('\n'), res_phase_txt];
+        end
+        
         % -----------------------------------------------------------------
         % Callback methods
         % -----------------------------------------------------------------
