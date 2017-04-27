@@ -38,24 +38,24 @@ classdef polyratio < handle
             
             while(true)
                 dist = inf;
-                zi = NaN;
-                pi = NaN;
+                zii = NaN;
+                pii = NaN;
                 
                 for ii = 1:length(zeros)
                     for jj = 1:length(poles)
                         e = abs(zeros(ii) - poles(jj));
                         if e < dist
                             dist = e;
-                            zi = ii;
-                            pi = jj;
+                            zii = ii;
+                            pii = jj;
                         end
                     end
                 end
                 
                 if (dist < tol)
-                    fprintf('Removing zero (%s) and pole (%s) from polynomial fraction. Difference is: %s\n', num2str(zeros(zi)), num2str(poles(pi)), num2str(zeros(zi) - poles(pi)));
-                    zeros(zi) = [];
-                    poles(pi) = [];
+                    fprintf('Removing zero (%s) and pole (%s) from polynomial fraction. Distance is: %s\n', num2str(zeros(zii)), num2str(poles(pii)), num2str(abs(zeros(zii) - poles(pii))));
+                    zeros(zii) = [];
+                    poles(pii) = [];
                 else
                     break;
                 end
