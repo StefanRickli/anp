@@ -1658,5 +1658,20 @@ classdef anp_gui < handle
             x = h_obj.Position(2);
         end
         
+        function x = get_screen_resolution(~)
+            % Returns the dimensions of the screen resolution as x = [width, height].
+            
+            % Backup units.
+            unit = get(0,'Units');
+            
+            set(0,'Units','pixels');
+            x = get(0,'ScreenSize');
+            
+            % Restore units.
+            set(0,'Units',unit);
+            
+            x(1:2) = [];
+        end
+
     end
 end
