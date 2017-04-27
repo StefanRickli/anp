@@ -397,6 +397,43 @@ classdef anp_gui < handle
         % ---------------
         
         function [] = calc_gui_positions(this)
+            % Figure properties
+            fig_height =         	this.w_plot_upper_border + ...
+                                    this.w_plot_size + ...
+                                    this.w_plot_lower_border;
+            fig_width =          	3 * this.w_plot_side_border + ...
+                                    2 * this.w_plot_size;
+            
+            this.w_fig_position =   [100, 100, fig_width, fig_height];
+            
+            % Subplot properties
+            subs_vert_position = 	this.w_plot_lower_border;
+            subs_width_height =   	this.w_plot_size;
+            sub1_hor_position =   	this.w_plot_side_border;
+            sub1_hor_center =     	this.w_plot_side_border + ...
+                                    1/2 * this.w_plot_size;
+            sub2_hor_position =   	2 * this.w_plot_side_border + ...
+                                    this.w_plot_size;
+            sub2_hor_center =      	this.w_plot_side_border + ...
+                                    3/2 * this.w_plot_size;
+            
+            this.w_sub1_position = [sub1_hor_position, subs_vert_position, ...
+                                    subs_width_height, subs_width_height];
+            this.w_sub2_position = [sub2_hor_position, subs_vert_position, ...
+                                    subs_width_height, subs_width_height];
+            
+            % TextBox properties
+            this.w_textbox_title_vert_position =	fig_height + ...
+                                                    -1/3 * this.w_plot_upper_border;
+            this.w_textbox_title_z_hor_position =   sub1_hor_center;
+            this.w_textbox_title_p_hor_position =   sub2_hor_center;
+            this.w_textbox_z_hor_position =         this.w_plot_side_border;
+            this.w_textbox_p_hor_position =         this.w_plot_side_border + ...
+                                                    1/2 * this.w_plot_size;
+            this.w_textbox_res_hor_position =       2 * this.w_plot_side_border + ...
+                                                    this.w_plot_size;
+        end
+        
         function [] = calc_gui_positions_old(this)
             % Determines where within the figure the different elements should be.
             % The function does this first in units of pixel (for better
