@@ -1,3 +1,4 @@
+cd('..');
 s = tf('s');
 
 %% 3x3 system with lots of different integer poles

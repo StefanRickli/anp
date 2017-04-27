@@ -1,3 +1,5 @@
+cd('..');
+
 %% random SISO 1-state system 1
 G = tf(rss(1,1,1));
 
