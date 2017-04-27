@@ -101,10 +101,15 @@ function arg_out = anp_main(varargin)
     anp_check_Matlab_version(); % sets global variable 'matlab_version'
     
     global debug_graphics debug_graphics_interpolation debug_text;
-    debug_graphics = false;
-    debug_graphics_interpolation = false;
-    debug_text = false;
-    debug_no_reuse = false;
+    
+    % ***************
+    % * Debug flags *
+    % ***************
+
+    debug_graphics =                false;
+    debug_graphics_interpolation =  false;
+    debug_text =                    false;
+    debug_no_reuse =                false;
     
     args = anp_parse_arguments(varargin{:});
     

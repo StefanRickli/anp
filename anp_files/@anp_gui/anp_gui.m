@@ -46,6 +46,7 @@ classdef anp_gui < handle
         h_zoom              matlab.graphics.interaction.internal.zoom   % oject needed for zooming related callbacks
         h_pan               matlab.graphics.interaction.internal.pan    % oject needed for panning related callbacks
         
+        h_textboxes                                                 % struct containing handles to all the TextBoxes
         h_text_p_annot      matlab.graphics.shape.TextBox           % handles to the textboxes of the pole-contributions
         h_text_z_annot      matlab.graphics.shape.TextBox           % handles to the textboxes of the zero-contributions
         h_text_res_annot    matlab.graphics.shape.TextBox           % handles to the textboxes of the result
@@ -87,11 +88,19 @@ classdef anp_gui < handle
         w_border                    double  % how much border to the left, right and top from the plots? [pixel]
         w_plot_size                 double  % [pixel]
         w_plot_width_frac           double  % [1]
+        w_plot_upper_border         double  % [pixel]
+        w_plot_lower_border         double  % [pixel]
+        w_plot_side_border          double  % [pixel]
         w_border_horizontal_frac    double  % [1]
         w_border_vertical_frac      double  % [1]
         w_annotation_start_frac     double  % where (vertically) on the figure do the annotations start? [1]
         w_annotation_textbox_frac   double  % vertical separation between annotations [1]
-        
+        w_textbox_title_vert_position   double  % [pixel]
+        w_textbox_title_z_hor_position  double  % [pixel]
+        w_textbox_title_p_hor_position  double  % [pixel]
+        w_textbox_z_hor_position        double  % [pixel]
+        w_textbox_p_hor_position        double  % [pixel]
+        w_textbox_res_hor_position      double  % [pixel]
         
         % p: plot properties (z: left, w=f(z): right)
         
@@ -161,10 +170,10 @@ classdef anp_gui < handle
             this.a_direction =  1;
             
             % Instantiate the figure and its subplots
-            this.h_fig =        figure('IntegerHandle','off','CloseRequestFcn',@this.on_figure_delete);
-            this.h_sub1 =       subplot(1,2,1);
+            this.h_fig =        figure('IntegerHandle','off','CloseRequestFcn',@this.on_figure_delete,'Resize','off');
+            this.h_sub1 =       subplot(1,2,1,'Units','pixels');
             hold on;
-            this.h_sub2 =       subplot(1,2,2);
+            this.h_sub2 =       subplot(1,2,2,'Units','pixels');
             hold on;
             this.h_fig.HandleVisibility = 'off';
             
@@ -202,8 +211,11 @@ classdef anp_gui < handle
         function [] = set_window_props(this,new_props)
             % Populates the variables holding the main window properties with new values.
             
-            this.w_border =     new_props.border;
-            this.w_plot_size =  new_props.plot_size;
+            this.w_plot_size =          new_props.plot_size;
+            this.w_plot_upper_border =  new_props.plot_upper_border;
+            this.w_plot_lower_border =  new_props.plot_lower_border;
+            this.w_plot_side_border =   new_props.plot_side_border;
+            
         end
         
         function [] = set_plot_props(this,new_props)
@@ -385,51 +397,41 @@ classdef anp_gui < handle
         % ---------------
         
         function [] = calc_gui_positions(this)
-            % Determines where within the figure the different elements should be.
-            % The function does this first in units of pixel (for better
-            % human readable code) and then converts the findings to
-            % fractions like the .Position function expects.
+            % Figure properties
+            fig_height =         	this.w_plot_upper_border + ...
+                                    this.w_plot_size + ...
+                                    this.w_plot_lower_border;
+            fig_width =          	3 * this.w_plot_side_border + ...
+                                    2 * this.w_plot_size;
             
-            % Calculate the correct positions (relative to interior of the
-            % figure).
-            fig_plot_height =               2*this.w_border + this.w_plot_size; % plot + border above and below, [pixel]
-            fig_annotation_textbox_height = 14;                                 % one box, [pixel]
-            fig_annotation_height_sum =     (max(this.d_n_zeros,this.d_n_poles)+2) ...
-                                              * fig_annotation_textbox_height;  % cumulative, [pixel]
+            this.w_fig_position =   [100, 100, fig_width, fig_height];
             
-            fig_height =            fig_plot_height ...
-                                    + fig_annotation_height_sum;                % [pixel]
-            fig_width =             3*this.w_border + 2*this.w_plot_size;       % [pixel]
+            % Subplot properties
+            subs_vert_position = 	this.w_plot_lower_border;
+            subs_width_height =   	this.w_plot_size;
+            sub1_hor_position =   	this.w_plot_side_border;
+            sub1_hor_center =     	this.w_plot_side_border + ...
+                                    1/2 * this.w_plot_size;
+            sub2_hor_position =   	2 * this.w_plot_side_border + ...
+                                    this.w_plot_size;
+            sub2_hor_center =      	this.w_plot_side_border + ...
+                                    3/2 * this.w_plot_size;
             
-            % fig.Position expects pixels as unit.
-            this.w_fig_position =   [100, ...
-                                     100, ...
-                                     fig_width, ...
-                                     fig_height];
+            this.w_sub1_position = [sub1_hor_position, subs_vert_position, ...
+                                    subs_width_height, subs_width_height];
+            this.w_sub2_position = [sub2_hor_position, subs_vert_position, ...
+                                    subs_width_height, subs_width_height];
             
-            % As subplot.Postion expects fractions of the inside of the
-            % figure, we recalculate the pixel values into fractions.
-            this.w_border_horizontal_frac = this.w_border / fig_width;                                      % [1]
-            this.w_border_vertical_frac =   this.w_border / fig_height;                                     % [1]
-            this.w_plot_width_frac =        (fig_width - 3*this.w_border) / (2*fig_width);                  % [1]
-            fig_plot_height_frac =          1 - (2*this.w_border + fig_annotation_height_sum) / fig_height; % [1]
-            
-            % subX.Position expects fractions of the inside of the figure
-            % as unit.
-            this.w_sub1_position =  [this.w_border_horizontal_frac, ...
-                                     (1 - this.w_border_vertical_frac - fig_plot_height_frac), ...
-                                     this.w_plot_width_frac, ...
-                                     fig_plot_height_frac];
-            this.w_sub2_position =  [(2*this.w_border_horizontal_frac + this.w_plot_width_frac), ...
-                                     (1 - this.w_border_vertical_frac - fig_plot_height_frac), ...
-                                     this.w_plot_width_frac, ...
-                                     fig_plot_height_frac];
-            
-            % Text box object parameters:
-            % Again we need to know relative (fractions) positions inside
-            % the figure.
-            this.w_annotation_start_frac =      (fig_annotation_height_sum + 10) / fig_height;  % [1]
-            this.w_annotation_textbox_frac =    fig_annotation_textbox_height / fig_height;     % [1]
+            % TextBox properties
+            this.w_textbox_title_vert_position =	fig_height + ...
+                                                    -1/3 * this.w_plot_upper_border;
+            this.w_textbox_title_z_hor_position =   sub1_hor_center;
+            this.w_textbox_title_p_hor_position =   sub2_hor_center;
+            this.w_textbox_z_hor_position =         this.w_plot_side_border;
+            this.w_textbox_p_hor_position =         this.w_plot_side_border + ...
+                                                    1/2 * this.w_plot_size;
+            this.w_textbox_res_hor_position =       2 * this.w_plot_side_border + ...
+                                                    this.w_plot_size;
         end
         
         function [] = calc_axis_limits(this)
@@ -555,32 +557,65 @@ classdef anp_gui < handle
         end
         
         function [] = draw_init_gui_text_objects(this)
-            % Prepares the annotations below the plots and populates the corresponding handle arrays.
+            % Prepares the annotations below the plots as well as the plot titles and populates the corresponding handle structure.
+            % The method initializes the p/z/res TextBoxes's position such
+            % that they start below the visible space of the figure.
+            % Later on we call 'draw_align_textboxes' anyway, which adjusts
+            % the figure's height to accomodate all the TextBoxes.
             
-            % Delete all previous instances of text boxes first as there
-            % might be a different number of poles and zeros this time.
-            for ii = 1:length(this.h_text_z_annot)
-                this.h_text_z_annot(ii).delete
-            end
-            for ii = 1:length(this.h_text_p_annot)
-                this.h_text_p_annot(ii).delete
-            end
             
-            % Text boxes for zero and pole contributions.
-            annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the zeros:','LineStyle','none','FontSize',9);
-            for ii = 1:this.d_n_zeros
-                this.h_text_z_annot(ii) = annotation(this.h_fig,'TextBox',[this.w_border_horizontal_frac, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['zero ',sprintf('%d',ii)],'LineStyle','none','FontSize',9);
-            end
-            annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String','Contribution of the poles:','LineStyle','none','FontSize',9);
-            for ii = 1:this.d_n_poles
-                this.h_text_p_annot(ii) = annotation(this.h_fig,'TextBox',[0.25, (this.w_annotation_start_frac - this.w_annotation_textbox_frac*(ii+1)), this.w_plot_width_frac, this.w_annotation_textbox_frac],'String',['pole ',sprintf('%d',ii)],'LineStyle','none','FontSize',9);
-            end
-
-            % Text boxes for the results.
-            annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 0.5*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','Resulting value of G:','LineStyle','none','FontSize',9);
-            this.h_text_res_annot(1) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 2*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 1','LineStyle','none','FontSize',9);
-            this.h_text_res_annot(2) = annotation(this.h_fig,'TextBox',[0.5 max(0,(this.w_annotation_start_frac - 3*this.w_annotation_textbox_frac)) this.w_plot_width_frac this.w_annotation_textbox_frac],'String','resultline 2','LineStyle','none','FontSize',9);
+            % ***************
+            % * Plot Titles *
+            % ***************
             
+            this.h_textboxes.z_title = annotation(this.h_fig,'TextBox', ...
+                                             'LineStyle','none', ...
+                                             'FontSize',12,'FontWeight','bold','HorizontalAlignment','center', ...
+                                             'String','Title 1', ...
+                                             'Units','pixels','Position',[this.w_textbox_title_z_hor_position, this.w_textbox_title_vert_position, 10, 10]);
+            % After setting a manual .Position attribute, .FitBoxToText
+            % gets deactivated. Turn it on again to let Matlab handle the
+            % TextBox's height and width.
+            this.h_textboxes.z_title.FitBoxToText = 'on';
+            
+            this.h_textboxes.w_title = annotation(this.h_fig,'TextBox', ...
+                                             'LineStyle','none', ...
+                                             'FontSize',12,'FontWeight','bold','HorizontalAlignment','center', ...
+                                             'String','Title 2', ...
+                                             'Units','pixels','Position',[this.w_textbox_title_p_hor_position, this.w_textbox_title_vert_position, 10, 10]);
+            this.h_textboxes.w_title.FitBoxToText = 'on';
+            
+            % *********
+            % * Zeros *
+            % *********
+            
+            this.h_textboxes.zeros = annotation(this.h_fig,'TextBox', ...
+                                           'LineStyle','none','FontSize',9, ...
+                                           'String','Zero contributions:', ...
+                                           'Units','pixels','Position',[this.w_textbox_z_hor_position, 0, 10, 10]);
+            this.h_textboxes.zeros.FitBoxToText = 'on';
+            
+            % *********
+            % * Poles *
+            % *********
+            
+            this.h_textboxes.poles = annotation(this.h_fig,'TextBox', ...
+                                           'LineStyle','none','FontSize',9, ...
+                                           'String','Pole contributions:', ...
+                                           'Units','pixels','Position',[this.w_textbox_p_hor_position, 0, 10, 10]);
+            
+            % ***********
+            % * Results *
+            % ***********
+            
+            this.h_textboxes.poles.FitBoxToText = 'on';
+            
+            this.h_textboxes.result = annotation(this.h_fig,'TextBox', ...
+                                           'LineStyle','none','FontSize',9, ...
+                                           'String','Result:', ...
+                                           'Units','pixels','Position',[this.w_textbox_res_hor_position, -110, this.w_plot_size, 125]);
+            % Here we don't want .FitBoxToText to be turned on because we
+            % want automatic textwrap to occur.
         end
         
         function [] = draw_init_plot_axes(this)
@@ -749,6 +784,8 @@ classdef anp_gui < handle
                     % Check whether the plot limits have been changed in
                     % the meantime during the last update below.
                     if this.s_check_limits
+                        this.s_check_limits = false;
+                        
                         obj = this.s_plot_src;
                         
                         if isequal(obj.Axes,this.h_sub1)
@@ -761,8 +798,6 @@ classdef anp_gui < handle
                         end
                         
                         this.draw_one_frame();
-                        
-                        this.s_check_limits = false;
                     end
                     
                     % Set the animation iterator to the next value.
@@ -837,159 +872,7 @@ classdef anp_gui < handle
             
             this.draw_update_arrow(this.h_sub2,this.h_w_plot_arrow,w_arrow_tip_x,w_arrow_tip_y,w_phi,this.p_w_arrow_length,[this.p_w_xlim,this.p_w_ylim]);
         end
-        
-        function [] = draw_update_plot_titles(this)
-            % Updates the text of the plot titles.
-            % We calculate the angles directly from the value at the arrow
-            % tip, so the phase can be off by multiples of 360° compared to
-            % the cumulative phase in the text boxes below the graph.
-            
-            current_z_value = this.d_z_values(this.a_time_ii * this.p_oversampling_factor);
-            current_w_value = this.d_w_values(this.a_time_ii * this.p_oversampling_factor);
-            
-            title(this.h_sub1,  ['Current value of D-Curve: ', ...
-                                 sprintc(current_z_value), ...
-                                 ': M = ', ...
-                                 sprintf('%.2f',abs(current_z_value)), ...
-                                 ' p = ', ...
-                                 sprintf('%.1f',rad2deg(angle(current_z_value))), ...
-                                 '°']);
-            title(this.h_sub2,  ['Nyquist: G(', ...
-                                 sprintc(current_z_value), ...
-                                 ') = ', ...
-                                 sprintc(current_w_value), ...
-                                 ': M = ', ...
-                                 sprintf('%.2f',abs(current_w_value)), ...
-                                 ' p = ', ...
-                                 sprintf('%.1f',rad2deg(angle(current_w_value))), ...
-                                 '°']);
-        end
-        
-        function [] = draw_update_textboxes(this)
-            % Updates the zero- and pole contribution and the cumulative values and puts the information in the pre-allocated textboxes.
-                        
-            res_magnitude = 1;
-            res_phase =     0;
-            
-            % *************************
-            % Text before contributions
-            % *************************
-            
-            switch this.d_n_zeros
-                case 0
-                    res_magnitude_txt =         '1';
-                case 1
-                    res_magnitude_txt =         '';
-                otherwise
-                    res_magnitude_txt =         '[';
-            end
-            res_phase_txt =                     '[';
-            
-            % ******************
-            % Zero contributions
-            % ******************
-            
-            for z = 1:this.d_n_zeros
-                % Calculate (s-z_i).
-                z_contribution =                this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_zeros(z);
-                res_magnitude =                 res_magnitude * abs(z_contribution);
-                res_phase =                     res_phase + angle(z_contribution);
                 
-                % Put together the text for the text box that describes the
-                % current zero's contribution, for example
-                % Z1: (0.0+1.1i) - (-0.7): M=1.3 p=57.9°
-                this.h_text_z_annot(z).String = ['Z', ...
-                                                 sprintf('%.1f',z), ...
-                                                 ': (', ...
-                                                 sprintc(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)), ...
-                                                 ') - (', ...
-                                                 sprintc(this.d_zeros(z)), ...
-                                                 '): M=', ...
-                                                 sprintf('%.1f',abs(z_contribution)), ...
-                                                 ' p=', ...
-                                                 sprintf('%.1f',rad2deg(angle(z_contribution))), ...
-                                                 '°'];
-                if z == 1
-                    res_magnitude_txt =         [res_magnitude_txt, ...
-                                                 sprintf('%.2f',abs(z_contribution))];
-                else
-                    res_magnitude_txt =        	[res_magnitude_txt, ...
-                                                 ' * ', ...
-                                                 sprintf('%.2f',abs(z_contribution))];
-                end
-                res_phase_txt =                 [res_phase_txt, ...
-                                                 ' + (', ...
-                                                 sprintf('%.2f',rad2deg(angle(z_contribution))), ...
-                                                 '°)'];
-            end
-            
-            % ****************************************
-            % Text between zero and pole contributions
-            % ****************************************
-            
-            if this.d_n_zeros <= 1
-                res_magnitude_txt =           	[res_magnitude_txt, ' / '];
-            else
-                res_magnitude_txt =            	[res_magnitude_txt, '] / '];
-            end
-            
-            if this.d_n_poles >= 2
-                res_magnitude_txt =            	[res_magnitude_txt, '['];
-            end
-            
-            res_phase_txt =                     [res_phase_txt,     '] ['];
-
-            
-            % ******************
-            % Pole contributions
-            % ******************
-            
-            % Same story as with the zeros.
-            for p = 1:this.d_n_poles
-                p_contribution =                this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_poles(p);
-                res_magnitude =                 res_magnitude / abs(p_contribution);
-                res_phase =                     res_phase - angle(p_contribution);
-                
-                this.h_text_p_annot(p).String = ['P', ...
-                                                 sprintf('%.1f',p), ...
-                                                 ': (', ...
-                                                 sprintc(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)), ...
-                                                 ') - (', ...
-                                                 sprintc(this.d_poles(p)), ...
-                                                 '): M=', ...
-                                                 sprintf('%.1f',abs(p_contribution)), ...
-                                                 ' p=', ...
-                                                 sprintf('%.1f',rad2deg(angle(p_contribution))),'°'];
-                if p == 1
-                    res_magnitude_txt =     	[res_magnitude_txt,                 sprintf('%.2f',abs(p_contribution))     ];
-                else
-                    res_magnitude_txt =      	[res_magnitude_txt, ' * ',          sprintf('%.2f',abs(p_contribution))     ];
-                end
-                res_phase_txt =                 [res_phase_txt,     ' - (',       	sprintf('%.2f',rad2deg(angle(p_contribution))), '°)'];
-            end
-            
-            % ************************
-            % Text after contributions
-            % ************************
-            
-            if this.d_n_poles >= 2
-                res_magnitude_txt =             [res_magnitude_txt,']'];
-            end
-            res_phase_txt =                   	[res_phase_txt,    ']'];
-            
-            if this.d_delay ~= 0
-                delay_contribution =            -(this.d_delay * imag(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)));
-                res_phase =                     res_phase + delay_contribution;
-                res_phase_txt  =                [res_phase_txt,    ' \{ ',  sprintf('%.3f',rad2deg(delay_contribution)), '°\}'];
-            end
-            
-            res_magnitude_txt =               	[res_magnitude_txt,' = ',   sprintf('%.3f',res_magnitude)];
-            res_phase_txt =                    	[res_phase_txt,    ' = ',   sprintf('%.3f',rad2deg(res_phase)),'°'];
-            
-            this.h_text_res_annot(1).String =   ['Magnitude: ',  res_magnitude_txt];
-            this.h_text_res_annot(2).String =   ['Phase:       ',res_phase_txt];
-        end
-        
         function [] = draw_update_z_limits_and_plot(this)
             % Updates the axes' limits and their plot data.
             % Gets called by GUI callback-methods. For example after a zoom
@@ -1077,7 +960,282 @@ classdef anp_gui < handle
             set(this.h_w_plot_full,'XData',real(this.d_w_values_truncated),'YData',imag(this.d_w_values_truncated));
         end
         
+        function [] = draw_update_plot_titles(this)
+            % Updates the text of the plot titles.
+            % We calculate the angles directly from the value at the arrow
+            % tip, so the phase can be off by multiples of 360° compared to
+            % the cumulative phase in the text boxes below the graph.
+            
+            current_z_value = this.d_z_values(this.a_time_ii * this.p_oversampling_factor);
+            current_w_value = this.d_w_values(this.a_time_ii * this.p_oversampling_factor);
+            
+            this.h_textboxes.z_title.String = ['Current value of D-Curve: ', ...
+                                               sprintc(current_z_value), ...
+                                               ': M = ', ...
+                                               sprintf('%.2f',abs(current_z_value)), ...
+                                               ' p = ', ...
+                                               sprintf('%.1f',rad2deg(angle(current_z_value))), ...
+                                               '°'];
+            this.h_textboxes.w_title.String = ['Nyquist: G(', ...
+                                               sprintc(current_z_value), ...
+                                               ') = ', ...
+                                               sprintc(current_w_value), ...
+                                               ': M = ', ...
+                                               sprintf('%.2f',abs(current_w_value)), ...
+                                               ' p = ', ...
+                                               sprintf('%.1f',rad2deg(angle(current_w_value))), ...
+                                               '°'];
+        end
         
+        function [] = draw_update_textboxes(this)
+            % Updates the zero- and pole contribution and the cumulative values and puts the information in the pre-allocated textboxes.
+            
+            this.draw_update_zero_textbox();
+            this.draw_update_pole_textbox();
+            this.draw_update_result_textbox();
+            
+            this.draw_handle_textbox_positions();
+        end
+        
+        function [] = draw_update_zero_textbox(this)
+            % Updates the zero contributions and puts the information in the pre-allocated textbox.
+            
+            textbox_z_strings =         cell(this.d_n_zeros,1);
+            for z = 1:this.d_n_zeros
+                % Calculate (s-z_i).
+                z_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_zeros(z);
+                
+                % Put together the texts for the TextBox that describes the
+                % current zero's contribution, for example
+                % Z1: (0.0+1.1i) - (-0.7): M=1.3 p=57.9°
+                textbox_z_strings{z} =  ['Z', ...
+                                         sprintf('%.1f',z), ...
+                                         ': (', ...
+                                         sprintc(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)), ...
+                                         ') - (', ...
+                                         sprintc(this.d_zeros(z)), ...
+                                         '): M=', ...
+                                         sprintf('%.1f',abs(z_contribution)), ...
+                                         ' p=', ...
+                                         sprintf('%.1f',rad2deg(angle(z_contribution))), ...
+                                         '°'];
+            end
+            
+            % Stitch all the parts together to one huge string,
+            % 'textbox_z_content'. Concatenate them using 'sprintf'.
+            % (We need 'sprintf' to convert the line break commands \n into
+            % real ASCII characters, as TextBox.String can't handle this.)
+            textbox_z_content = sprintf('Contribution of the zeros:\n\n');
+            
+            for z = 1:this.d_n_zeros
+                textbox_z_content = sprintf('%s%s\n',textbox_z_content,textbox_z_strings{z});
+            end
+            
+            this.h_textboxes.zeros.String = textbox_z_content;
+        end
+        
+        function [] = draw_update_pole_textbox(this)
+            % Updates the pole contributions and puts the information in the pre-allocated textbox.
+            
+            % Same story as with the zeros.
+            textbox_p_strings =         cell(this.d_n_poles,1);
+            for p = 1:this.d_n_poles
+                p_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_poles(p);
+                
+                textbox_p_strings{p} =  ['P', ...
+                                         sprintf('%.1f',p), ...
+                                         ': (', ...
+                                         sprintc(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)), ...
+                                         ') - (', ...
+                                         sprintc(this.d_poles(p)), ...
+                                         '): M=', ...
+                                         sprintf('%.1f',abs(p_contribution)), ...
+                                         ' p=', ...
+                                         sprintf('%.1f',rad2deg(angle(p_contribution))),'°'];
+            end
+            
+            textbox_p_content = sprintf('Contribution of the poles:\n\n');
+            
+            for p = 1:this.d_n_poles
+                textbox_p_content = sprintf('%s%s\n',textbox_p_content,textbox_p_strings{p});
+            end
+            
+            this.h_textboxes.poles.String = textbox_p_content;
+        end
+        
+        function [] = draw_update_result_textbox(this)
+            % Updates the results from the zero and pole contributions and puts the information in the pre-allocated textbox.
+            
+            res_magnitude = 1;
+            res_phase =     0;
+            
+            % *************************
+            % Text before contributions
+            % *************************
+            
+            switch this.d_n_zeros
+                case 0
+                    res_magnitude_txt =	'1';
+                case 1
+                    res_magnitude_txt = '';
+                otherwise
+                    res_magnitude_txt =	'[';
+            end
+            res_phase_txt =            	'[';
+            
+            % ******************
+            % Zero contributions
+            % ******************
+            
+            for z = 1:this.d_n_zeros
+                % Calculate (s-z_i).
+                z_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_zeros(z);
+                res_magnitude =       	res_magnitude * abs(z_contribution);
+                res_phase =            	res_phase + angle(z_contribution);
+                
+                if z == 1
+                    res_magnitude_txt =	[res_magnitude_txt, ...
+                                         sprintf('%.2f',abs(z_contribution))];
+                else
+                    res_magnitude_txt =	[res_magnitude_txt, ...
+                                         ' * ', ...
+                                         sprintf('%.2f',abs(z_contribution))];
+                end
+                res_phase_txt =      	[res_phase_txt, ...
+                                         ' + (', ...
+                                         sprintf('%.2f',rad2deg(angle(z_contribution))), ...
+                                         '°)'];
+            end
+            
+            % ****************************************
+            % Text between zero and pole contributions
+            % ****************************************
+            
+            if this.d_n_zeros <= 1
+                res_magnitude_txt =     [res_magnitude_txt, ' / '];
+            else
+                res_magnitude_txt =   	[res_magnitude_txt, '] / '];
+            end
+            
+            if this.d_n_poles >= 2
+                res_magnitude_txt =    	[res_magnitude_txt, '['];
+            end
+            
+            res_phase_txt =            	[res_phase_txt,     '] ['];
+            
+            
+            % ******************
+            % Pole contributions
+            % ******************
+            
+            for p = 1:this.d_n_poles
+                p_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_poles(p);
+                res_magnitude =        	res_magnitude / abs(p_contribution);
+                res_phase =            	res_phase - angle(p_contribution);
+                
+                if p == 1
+                    res_magnitude_txt =	[res_magnitude_txt,                 sprintf('%.2f',abs(p_contribution))     ];
+                else
+                    res_magnitude_txt =	[res_magnitude_txt, ' * ',          sprintf('%.2f',abs(p_contribution))     ];
+                end
+                res_phase_txt =       	[res_phase_txt,     ' - (',       	sprintf('%.2f',rad2deg(angle(p_contribution))), '°)'];
+            end
+            
+            % ************************
+            % Text after contributions
+            % ************************
+            
+            if this.d_n_poles >= 2
+                res_magnitude_txt =  	[res_magnitude_txt,']'];
+            end
+            res_phase_txt =           	[res_phase_txt,    ']'];
+            
+            if this.d_delay ~= 0
+                delay_contribution =   	-(this.d_delay * imag(this.d_z_values(this.a_time_ii * this.p_oversampling_factor)));
+                res_phase =            	res_phase + delay_contribution;
+                res_phase_txt  =      	[res_phase_txt,    ' \{ ',  sprintf('%.3f',rad2deg(delay_contribution)), '°\}'];
+            end
+            
+            res_magnitude_txt =      	[res_magnitude_txt,' = ',   sprintf('%.3f',res_magnitude)];
+            res_phase_txt =           	[res_phase_txt,    ' = ',   sprintf('%.3f',rad2deg(res_phase)),'°'];
+            
+            this.h_textboxes.result.String = ['Resulting value of G:', sprintf('\n\n'), ...
+                                              'Magnitude: ', sprintf('\n'), res_magnitude_txt, sprintf('\n\n'), ...
+                                              'Phase:       ', sprintf('\n'), res_phase_txt];
+        end
+        
+        function [] = draw_handle_textbox_positions(this)
+            % Checks if a TextBox's position is outside the figure and adjusts the positions of all the objects in that case.
+            
+            % Enforce a redraw. This is because 'FitBoxToText' could
+            % possibly have not been executed yet and as such the heights
+            % of the TextBoxes not been automatically adapted.
+            drawnow;
+            
+            % 'Undershoot' means a TextBox's position being outside the
+            % figure (vertically).
+            largest_undershoot = min(structfun(@this.get_undershoot, this.h_textboxes));
+            
+            if largest_undershoot < 0
+                % A negative undershoot means that there exists a TextBox
+                % which goes beyond the figure.
+                this.draw_enlarge_figure_and_shift_contents_vertically(-largest_undershoot);
+            elseif largest_undershoot > 5
+                % We don't want too much whitespace.
+                this.draw_shift_figure_and_contents_vertically(-largest_undershoot);
+            end
+            
+            % Enlarge the results TextBox to the height of the larger
+            % TextBox of zero/pole contributions
+            if this.h_textboxes.result.Position(4) < max(this.h_textboxes.zeros.Position(4), this.h_textboxes.poles.Position(4))
+                this.h_textboxes.result.Position(2) = min(this.h_textboxes.zeros.Position(2), ...
+                                                          this.h_textboxes.poles.Position(2));
+                this.h_textboxes.result.Position(4) = max(this.h_textboxes.zeros.Position(4), ...
+                                                          this.h_textboxes.poles.Position(4));
+            end
+        end
+        
+        function [] = draw_enlarge_figure_and_shift_contents_vertically(this, offset)
+            % Does what the function's name says. A positive offset means 'shift vertically upwards'.
+            
+            % First set all arrow objects' units to pixels.
+            all_arrows =    [num2cell(findall(this.h_fig, 'type', 'arrowshape')); ...
+                             num2cell(findall(this.h_fig, 'type', 'textarrowshape'))];
+            
+            for ii = 1:length(all_arrows)
+                all_arrows{ii}.Units = 'pixels';
+            end
+            
+            % Then summon every visible object's handles.
+            all_objects =   [num2cell(findall(this.h_fig, 'type', 'axes')); ...
+                             num2cell(findall(this.h_fig, 'type', 'textboxshape')); ...
+                             all_arrows];
+            
+            % Enlarge the figure. As all the objects within the figure are
+            % anchored in the lower left corner, we need to shift
+            % the whole content upwards by that amount.
+            this.h_fig.Position(4) = this.h_fig.Position(4) + offset;
+            
+            % Perform the content shift.
+            for ii = 1:length(all_objects)
+                all_objects{ii}.Position(2) = all_objects{ii}.Position(2) + offset;
+            end
+            
+            % Reset the arrow object's units.
+            for ii = 1:length(all_arrows)
+                all_arrows{ii}.Units = 'normalized';
+            end
+            
+            % Check if the top of the figure window is within the computer
+            % screen's dimensions.
+            res = this.get_screen_resolution();
+            excess = this.h_fig.Position(2) + this.h_fig.Position(4) - res(2);
+            if excess > 0
+                % Shift the figure window downwards.
+                this.h_fig.Position(2) = this.h_fig.Position(2) - excess - 80;
+            end
+        end
+
         % -----------------------------------------------------------------
         % Callback methods
         % -----------------------------------------------------------------
@@ -1182,7 +1340,8 @@ classdef anp_gui < handle
         
         function cb_after_zoom_or_pan(this,~,obj)
             % CB methods for zoom and pan events.
-                        
+            dbg_out('anp_gui[cb_after_zoom_or_pan]:\tstart\n');
+            
             if ~this.s_draw_busy
                 % As long as draw_run_continuous_animation() isn't running,
                 % we do the updates directly.
@@ -1204,6 +1363,8 @@ classdef anp_gui < handle
                 this.s_check_limits =   true;
                 this.s_plot_src =       obj;
             end
+            
+            dbg_out('anp_gui[cb_after_zoom_or_pan]:\tend\n');
         end
         
         % ---------------------
@@ -1266,5 +1427,25 @@ classdef anp_gui < handle
             values_truncated = max(xlim(1), min(xlim(2), real(values))) ...
                           + 1i*max(ylim(1), min(ylim(2), imag(values)));
         end
+        
+        function x = get_undershoot(~, h_obj)
+            x = h_obj.Position(2);
+        end
+        
+        function x = get_screen_resolution(~)
+            % Returns the dimensions of the screen resolution as x = [width, height].
+            
+            % Backup units.
+            unit = get(0,'Units');
+            
+            set(0,'Units','pixels');
+            x = get(0,'ScreenSize');
+            
+            % Restore units.
+            set(0,'Units',unit);
+            
+            x(1:2) = [];
+        end
+
     end
 end
