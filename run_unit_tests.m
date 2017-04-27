@@ -1,12 +1,18 @@
-tests_d_contour =       testsuite('unit_tests/anp_d_contour_test.m');
-tests_usage_examples =  testsuite('unit_tests/anp_usage_examples_test.m');
-tests_random_systems =  testsuite('unit_tests/anp_random_test.m');
+tests = {};
+
+tests{end+1} = testsuite('unit_tests/anp_d_contour_test.m');
+tests{end+1} = testsuite('unit_tests/anp_usage_examples_test.m');
+tests{end+1} = testsuite('unit_tests/anp_random_test.m');
 
 runner = matlab.unittest.TestRunner.withTextOutput;
 
-res1 = runner.run(tests_d_contour);
-res2 = runner.run(tests_usage_examples);
+res = {};
+for ii = 1:length(tests)
+    res{end+1} = runner.run(tests{ii});
+end
 
 disp('-----------------------------------------------------------------------------------')
-disp(res1);
-disp(res2);
+
+for ii = 1:length(res)
+    disp(res{ii});
+end
