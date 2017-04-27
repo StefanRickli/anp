@@ -46,6 +46,7 @@ classdef anp_gui < handle
         h_zoom              matlab.graphics.interaction.internal.zoom   % oject needed for zooming related callbacks
         h_pan               matlab.graphics.interaction.internal.pan    % oject needed for panning related callbacks
         
+        h_textboxes                                                 % struct containing handles to all the TextBoxes
         h_text_p_annot      matlab.graphics.shape.TextBox           % handles to the textboxes of the pole-contributions
         h_text_z_annot      matlab.graphics.shape.TextBox           % handles to the textboxes of the zero-contributions
         h_text_res_annot    matlab.graphics.shape.TextBox           % handles to the textboxes of the result
@@ -87,11 +88,19 @@ classdef anp_gui < handle
         w_border                    double  % how much border to the left, right and top from the plots? [pixel]
         w_plot_size                 double  % [pixel]
         w_plot_width_frac           double  % [1]
+        w_plot_upper_border         double  % [pixel]
+        w_plot_lower_border         double  % [pixel]
+        w_plot_side_border          double  % [pixel]
         w_border_horizontal_frac    double  % [1]
         w_border_vertical_frac      double  % [1]
         w_annotation_start_frac     double  % where (vertically) on the figure do the annotations start? [1]
         w_annotation_textbox_frac   double  % vertical separation between annotations [1]
-        
+        w_textbox_title_vert_position   double  % [pixel]
+        w_textbox_title_z_hor_position  double  % [pixel]
+        w_textbox_title_p_hor_position  double  % [pixel]
+        w_textbox_z_hor_position        double  % [pixel]
+        w_textbox_p_hor_position        double  % [pixel]
+        w_textbox_res_hor_position      double  % [pixel]
         
         % p: plot properties (z: left, w=f(z): right)
         
