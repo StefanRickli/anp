@@ -1002,6 +1002,11 @@ classdef anp_gui < handle
             
             textbox_z_strings =         cell(this.d_n_zeros,1);
             for z = 1:this.d_n_zeros
+                if z > 18
+                    textbox_z_strings{z} = '(...)';
+                    break;
+                end
+                
                 % Calculate (s-z_i).
                 z_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_zeros(z);
                 
@@ -1027,7 +1032,7 @@ classdef anp_gui < handle
             % real ASCII characters, as TextBox.String can't handle this.)
             textbox_z_content = sprintf('Contribution of the zeros:\n\n');
             
-            for z = 1:this.d_n_zeros
+            for z = 1:min(19,this.d_n_zeros)
                 textbox_z_content = sprintf('%s%s\n',textbox_z_content,textbox_z_strings{z});
             end
             
@@ -1040,6 +1045,11 @@ classdef anp_gui < handle
             % Same story as with the zeros.
             textbox_p_strings =         cell(this.d_n_poles,1);
             for p = 1:this.d_n_poles
+                if p > 18
+                    textbox_p_strings{p} = '(...)';
+                    break;
+                end
+                
                 p_contribution =       	this.d_z_values(this.a_time_ii * this.p_oversampling_factor) - this.d_poles(p);
                 
                 textbox_p_strings{p} =  ['P', ...
@@ -1056,7 +1066,7 @@ classdef anp_gui < handle
             
             textbox_p_content = sprintf('Contribution of the poles:\n\n');
             
-            for p = 1:this.d_n_poles
+            for p = 1:min(19,this.d_n_poles)
                 textbox_p_content = sprintf('%s%s\n',textbox_p_content,textbox_p_strings{p});
             end
             
