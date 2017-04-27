@@ -211,8 +211,11 @@ classdef anp_gui < handle
         function [] = set_window_props(this,new_props)
             % Populates the variables holding the main window properties with new values.
             
-            this.w_border =     new_props.border;
-            this.w_plot_size =  new_props.plot_size;
+            this.w_plot_size =          new_props.plot_size;
+            this.w_plot_upper_border =  new_props.plot_upper_border;
+            this.w_plot_lower_border =  new_props.plot_lower_border;
+            this.w_plot_side_border =   new_props.plot_side_border;
+            
         end
         
         function [] = set_plot_props(this,new_props)

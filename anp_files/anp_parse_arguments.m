@@ -221,8 +221,10 @@ function checked_args = anp_parse_arguments(varargin)
     % ---------------------------------------------------------------------
     % Figure parameters
     % ---------------------------------------------------------------------
-    checked_args.plot_size =            ip.Results.plot_size;
-    checked_args.border =               20;                 % pixel   
+    checked_args.plot_size =            ip.Results.plot_size;   % pixel
+    checked_args.plot_upper_border =    50;                     % pixel
+    checked_args.plot_lower_border =    20;                     % pixel
+    checked_args.plot_side_border =     40;                     % pixel
     
     % ---------------------------------------------------------------------
     % Input-function parameters
