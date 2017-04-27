@@ -1216,6 +1216,15 @@ classdef anp_gui < handle
                                                '°'];
         end
         
+        function [] = draw_update_textboxes(this)
+            % Updates the zero- and pole contribution and the cumulative values and puts the information in the pre-allocated textboxes.
+            
+            this.draw_update_zero_textbox();
+            this.draw_update_pole_textbox();
+            this.draw_update_result_textbox();
+            
+            this.draw_handle_textbox_positions();
+        end
         
         % -----------------------------------------------------------------
         % Callback methods
