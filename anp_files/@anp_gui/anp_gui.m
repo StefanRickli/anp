@@ -171,9 +171,9 @@ classdef anp_gui < handle
             
             % Instantiate the figure and its subplots
             this.h_fig =        figure('IntegerHandle','off','CloseRequestFcn',@this.on_figure_delete,'Resize','off');
-            this.h_sub1 =       subplot(1,2,1);
+            this.h_sub1 =       subplot(1,2,1,'Units','pixels');
             hold on;
-            this.h_sub2 =       subplot(1,2,2);
+            this.h_sub2 =       subplot(1,2,2,'Units','pixels');
             hold on;
             this.h_fig.HandleVisibility = 'off';
             
