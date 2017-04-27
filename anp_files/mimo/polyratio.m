@@ -10,6 +10,8 @@ classdef polyratio < handle
             
             this.num = a;
             this.denom = b;
+            
+            this.normalize();
         end
         
         function y = normalize(this)
@@ -29,7 +31,6 @@ classdef polyratio < handle
             tol = 1e-4;
             
             fprintf('polyratio.reduce: Will remove all pole/zero combinations that have a difference of < %s\n', num2str(tol,'%1.1e'));
-            fprintf('This is a (quick and) dirty numerical solution. Keep this in mind!');
             
             zeros = roots(this.num);
             poles = roots(this.denom);
@@ -62,8 +63,6 @@ classdef polyratio < handle
             this.num =      poly(zeros);
             this.denom =    poly(poles);
             
-            this.normalize;
-            
             switch nargout
                 case 0
                     varargout = {};
@@ -81,6 +80,9 @@ classdef polyratio < handle
             assert(isa(x,'polyratio'));
             
             y = polyratio(conv(this.num,x.num),conv(this.denom,x.denom));
+            
+            y.reduce;
+            y.normalize;
         end
         
         function y = add(this,x)
@@ -91,6 +93,9 @@ classdef polyratio < handle
             common_denom = conv(this.denom,x.denom);
             
             y = polyratio(a1 + a2, common_denom);
+            
+            y.reduce;
+            y.normalize;
         end
         
         function y = sub(this,x)
@@ -101,6 +106,9 @@ classdef polyratio < handle
             common_denom = conv(this.denom,x.denom);
             
             y = polyratio(a1 - a2, common_denom);
+            
+            y.reduce;
+            y.normalize;
         end
     end
 end
