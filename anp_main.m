@@ -93,6 +93,7 @@
 
 function arg_out = anp_main(varargin)
     addpath('anp_files');
+    addpath('anp_files/mimo');
     addpath('anp_files/d_contour_tiny_fcts');
     addpath('anp_files/tools');
     addpath('anp_icons');
@@ -100,10 +101,15 @@ function arg_out = anp_main(varargin)
     anp_check_Matlab_version(); % sets global variable 'matlab_version'
     
     global debug_graphics debug_graphics_interpolation debug_text;
-    debug_graphics = false;
-    debug_graphics_interpolation = false;
-    debug_text = false;
-    debug_no_reuse = false;
+    
+    % ***************
+    % * Debug flags *
+    % ***************
+
+    debug_graphics =                false;
+    debug_graphics_interpolation =  false;
+    debug_text =                    false;
+    debug_no_reuse =                false;
     
     args = anp_parse_arguments(varargin{:});
     
@@ -124,9 +130,6 @@ function arg_out = anp_main(varargin)
         % pass the handles to the GUI and tf_processor in the args
         args.gui_handle =           h_gui;
         args.processor_handle =     h_tf_processor;
-        
-        args.tf_poles =             roots(args.tf_obj.Denominator{1}).';
-        args.tf_zeros =             roots(args.tf_obj.Numerator{1}).';
         
         % this kicks off the calculation of the data that the
         % GUI object then displays
