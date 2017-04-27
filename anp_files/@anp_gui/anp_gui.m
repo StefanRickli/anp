@@ -385,6 +385,7 @@ classdef anp_gui < handle
         % ---------------
         
         function [] = calc_gui_positions(this)
+        function [] = calc_gui_positions_old(this)
             % Determines where within the figure the different elements should be.
             % The function does this first in units of pixel (for better
             % human readable code) and then converts the findings to
@@ -555,6 +556,7 @@ classdef anp_gui < handle
         end
         
         function [] = draw_init_gui_text_objects(this)
+        function [] = draw_init_gui_text_objects_old(this)
             % Prepares the annotations below the plots and populates the corresponding handle arrays.
             
             % Delete all previous instances of text boxes first as there
@@ -838,7 +840,7 @@ classdef anp_gui < handle
             this.draw_update_arrow(this.h_sub2,this.h_w_plot_arrow,w_arrow_tip_x,w_arrow_tip_y,w_phi,this.p_w_arrow_length,[this.p_w_xlim,this.p_w_ylim]);
         end
         
-        function [] = draw_update_plot_titles(this)
+        function [] = draw_update_plot_titles_old(this)
             % Updates the text of the plot titles.
             % We calculate the angles directly from the value at the arrow
             % tip, so the phase can be off by multiples of 360° compared to
@@ -865,7 +867,7 @@ classdef anp_gui < handle
                                  '°']);
         end
         
-        function [] = draw_update_textboxes(this)
+        function [] = draw_update_textboxes_old(this)
             % Updates the zero- and pole contribution and the cumulative values and puts the information in the pre-allocated textboxes.
                         
             res_magnitude = 1;
