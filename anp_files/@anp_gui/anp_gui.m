@@ -170,7 +170,7 @@ classdef anp_gui < handle
             this.a_direction =  1;
             
             % Instantiate the figure and its subplots
-            this.h_fig =        figure('IntegerHandle','off','CloseRequestFcn',@this.on_figure_delete);
+            this.h_fig =        figure('IntegerHandle','off','CloseRequestFcn',@this.on_figure_delete,'Resize','off');
             this.h_sub1 =       subplot(1,2,1);
             hold on;
             this.h_sub2 =       subplot(1,2,2);
