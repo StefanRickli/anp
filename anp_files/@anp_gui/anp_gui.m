@@ -434,54 +434,6 @@ classdef anp_gui < handle
                                                     this.w_plot_size;
         end
         
-        function [] = calc_gui_positions_old(this)
-            % Determines where within the figure the different elements should be.
-            % The function does this first in units of pixel (for better
-            % human readable code) and then converts the findings to
-            % fractions like the .Position function expects.
-            
-            % Calculate the correct positions (relative to interior of the
-            % figure).
-            fig_plot_height =               2*this.w_border + this.w_plot_size; % plot + border above and below, [pixel]
-            fig_annotation_textbox_height = 14;                                 % one box, [pixel]
-            fig_annotation_height_sum =     (max(this.d_n_zeros,this.d_n_poles)+2) ...
-                                              * fig_annotation_textbox_height;  % cumulative, [pixel]
-            
-            fig_height =            fig_plot_height ...
-                                    + fig_annotation_height_sum;                % [pixel]
-            fig_width =             3*this.w_border + 2*this.w_plot_size;       % [pixel]
-            
-            % fig.Position expects pixels as unit.
-            this.w_fig_position =   [100, ...
-                                     100, ...
-                                     fig_width, ...
-                                     fig_height];
-            
-            % As subplot.Postion expects fractions of the inside of the
-            % figure, we recalculate the pixel values into fractions.
-            this.w_border_horizontal_frac = this.w_border / fig_width;                                      % [1]
-            this.w_border_vertical_frac =   this.w_border / fig_height;                                     % [1]
-            this.w_plot_width_frac =        (fig_width - 3*this.w_border) / (2*fig_width);                  % [1]
-            fig_plot_height_frac =          1 - (2*this.w_border + fig_annotation_height_sum) / fig_height; % [1]
-            
-            % subX.Position expects fractions of the inside of the figure
-            % as unit.
-            this.w_sub1_position =  [this.w_border_horizontal_frac, ...
-                                     (1 - this.w_border_vertical_frac - fig_plot_height_frac), ...
-                                     this.w_plot_width_frac, ...
-                                     fig_plot_height_frac];
-            this.w_sub2_position =  [(2*this.w_border_horizontal_frac + this.w_plot_width_frac), ...
-                                     (1 - this.w_border_vertical_frac - fig_plot_height_frac), ...
-                                     this.w_plot_width_frac, ...
-                                     fig_plot_height_frac];
-            
-            % Text box object parameters:
-            % Again we need to know relative (fractions) positions inside
-            % the figure.
-            this.w_annotation_start_frac =      (fig_annotation_height_sum + 10) / fig_height;  % [1]
-            this.w_annotation_textbox_frac =    fig_annotation_textbox_height / fig_height;     % [1]
-        end
-        
         function [] = calc_axis_limits(this)
             % Sets the correct x- and ylims for the left and right plot.
             % The method respects the auto-flags and only calculates the
