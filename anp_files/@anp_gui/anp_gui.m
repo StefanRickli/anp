@@ -605,6 +605,67 @@ classdef anp_gui < handle
         end
         
         function [] = draw_init_gui_text_objects(this)
+            % Prepares the annotations below the plots as well as the plot titles and populates the corresponding handle structure.
+            % The method initializes the p/z/res TextBoxes's position such
+            % that they start below the visible space of the figure.
+            % Later on we call 'draw_align_textboxes' anyway, which adjusts
+            % the figure's height to accomodate all the TextBoxes.
+            
+            
+            % ***************
+            % * Plot Titles *
+            % ***************
+            
+            this.h_textboxes.z_title = annotation(this.h_fig,'TextBox', ...
+                                             'LineStyle','none', ...
+                                             'FontSize',12,'FontWeight','bold','HorizontalAlignment','center', ...
+                                             'String','Title 1', ...
+                                             'Units','pixels','Position',[this.w_textbox_title_z_hor_position, this.w_textbox_title_vert_position, 10, 10]);
+            % After setting a manual .Position attribute, .FitBoxToText
+            % gets deactivated. Turn it on again to let Matlab handle the
+            % TextBox's height and width.
+            this.h_textboxes.z_title.FitBoxToText = 'on';
+            
+            this.h_textboxes.w_title = annotation(this.h_fig,'TextBox', ...
+                                             'LineStyle','none', ...
+                                             'FontSize',12,'FontWeight','bold','HorizontalAlignment','center', ...
+                                             'String','Title 2', ...
+                                             'Units','pixels','Position',[this.w_textbox_title_p_hor_position, this.w_textbox_title_vert_position, 10, 10]);
+            this.h_textboxes.w_title.FitBoxToText = 'on';
+            
+            % *********
+            % * Zeros *
+            % *********
+            
+            this.h_textboxes.zeros = annotation(this.h_fig,'TextBox', ...
+                                           'LineStyle','none','FontSize',9, ...
+                                           'String','Zero contributions:', ...
+                                           'Units','pixels','Position',[this.w_textbox_z_hor_position, 0, 10, 10]);
+            this.h_textboxes.zeros.FitBoxToText = 'on';
+            
+            % *********
+            % * Poles *
+            % *********
+            
+            this.h_textboxes.poles = annotation(this.h_fig,'TextBox', ...
+                                           'LineStyle','none','FontSize',9, ...
+                                           'String','Pole contributions:', ...
+                                           'Units','pixels','Position',[this.w_textbox_p_hor_position, 0, 10, 10]);
+            
+            % ***********
+            % * Results *
+            % ***********
+            
+            this.h_textboxes.poles.FitBoxToText = 'on';
+            
+            this.h_textboxes.result = annotation(this.h_fig,'TextBox', ...
+                                           'LineStyle','none','FontSize',9, ...
+                                           'String','Result:', ...
+                                           'Units','pixels','Position',[this.w_textbox_res_hor_position, -110, this.w_plot_size, 125]);
+            % Here we don't want .FitBoxToText to be turned on because we
+            % want automatic textwrap to occur.
+        end
+        
         function [] = draw_init_gui_text_objects_old(this)
             % Prepares the annotations below the plots and populates the corresponding handle arrays.
             
