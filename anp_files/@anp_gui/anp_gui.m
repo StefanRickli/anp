@@ -1424,6 +1424,47 @@ classdef anp_gui < handle
             end
         end
         
+        function [] = draw_enlarge_figure_and_shift_contents_vertically(this, offset)
+            % Does what the function's name says. A positive offset means 'shift vertically upwards'.
+            
+            % First set all arrow objects' units to pixels.
+            all_arrows =    [num2cell(findall(this.h_fig, 'type', 'arrowshape')); ...
+                             num2cell(findall(this.h_fig, 'type', 'textarrowshape'))];
+            
+            for ii = 1:length(all_arrows)
+                all_arrows{ii}.Units = 'pixels';
+            end
+            
+            % Then summon every visible object's handles.
+            all_objects =   [num2cell(findall(this.h_fig, 'type', 'axes')); ...
+                             num2cell(findall(this.h_fig, 'type', 'textboxshape')); ...
+                             all_arrows];
+            
+            % Enlarge the figure. As all the objects within the figure are
+            % anchored in the lower left corner, we need to shift
+            % the whole content upwards by that amount.
+            this.h_fig.Position(4) = this.h_fig.Position(4) + offset;
+            
+            % Perform the content shift.
+            for ii = 1:length(all_objects)
+                all_objects{ii}.Position(2) = all_objects{ii}.Position(2) + offset;
+            end
+            
+            % Reset the arrow object's units.
+            for ii = 1:length(all_arrows)
+                all_arrows{ii}.Units = 'normalized';
+            end
+            
+            % Check if the top of the figure window is within the computer
+            % screen's dimensions.
+            res = this.get_screen_resolution();
+            excess = this.h_fig.Position(2) + this.h_fig.Position(4) - res(2);
+            if excess > 0
+                % Shift the figure window downwards.
+                this.h_fig.Position(2) = this.h_fig.Position(2) - excess - 80;
+            end
+        end
+
         % -----------------------------------------------------------------
         % Callback methods
         % -----------------------------------------------------------------
