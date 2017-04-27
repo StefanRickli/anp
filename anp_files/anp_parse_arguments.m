@@ -127,8 +127,8 @@ function checked_args = anp_parse_arguments(varargin)
             [tf_zeros,tf_poles] =   det_I_plus_L.reduce;
             
             checked_args.tf_obj =   tf(det_I_plus_L.num,det_I_plus_L.denom);
-            checked_args.tf_poles = tf_zeros.';
-            checked_args.tf_zeros = tf_poles.';
+            checked_args.tf_zeros = tf_zeros.';
+            checked_args.tf_poles = tf_poles.';
         end
         
     elseif ~isempty(regexp(anp_arg_types,'^vvk{0,3}$', 'once'))
