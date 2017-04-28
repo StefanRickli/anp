@@ -33,8 +33,8 @@ classdef polyratio < handle
             fprintf('polyratio.reduce: Will remove all pole/zero combinations that have a difference of < %s\n', num2str(tol,'%1.1e'));
             fprintf('This is a (quick and) dirty numerical solution. Keep this in mind!\n');
             
-            zeros = roots(this.num);
-            poles = roots(this.denom);
+            zeros =	roots(this.num);
+            poles =	roots(this.denom);
             
             while(true)
                 dist = inf;
@@ -65,9 +65,15 @@ classdef polyratio < handle
                 end
             end
             
-            this.num =      poly(zeros);
-            this.denom =    poly(poles);
+            % We need to know the coefficient of the highest power of the
+            % polynomials apart from their roots, as we loose this constant
+            % otherwise.
+            num_scale =      this.num(find(this.num ~= 0,1,'first'));
+            denom_scale =    this.denom(find(this.denom ~= 0,1,'first'));
+            
             % Put the numerator and denominator together again.
+            this.num =      num_scale * poly(zeros);
+            this.denom =    denom_scale * poly(poles);
             
             switch nargout
                 case 0
