@@ -33,7 +33,7 @@ delete(out{1});
 delete(out{2});
 
 %% random 2x2 MIMO (1 state per tf) system 1
-G = tf(rss(2,2,2));
+G = tf(rss(1,2,2));
 
 out = anp_main(G,'trigger_step','return_handle','cleanup_after_error');
 drawnow;
