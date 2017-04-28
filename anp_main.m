@@ -26,8 +26,8 @@
 %   animated_nyquist_plot(__,Name,Value)
 %   
 %   tf: An object of type 'transfer function', created by the command 'tf'.
-%       Note that only the first transfer function is considered, should
-%       there be multiple.
+%       If the transfer function is a MIMO system, L(s), then ANP plots
+%       det(I + L(s)).
 %   
 %   [zeros],[poles]:    Row arrays with the roots of the Numerator and
 %                       Denominator of the transfer function
@@ -67,28 +67,40 @@
 %                   subplot.
 %                   Default 'right_x0' if not provided: [0,0]
 %   
+%   Syntax examples:
+%   ----------------
+%   anp_main(-1,[0,-2,-3+4i,-3-4i]);    % Plot of a transfer function
+%                                       % with a zero at -1 and
+%                                       % poles at 0, -2, -3+4i, -3-4i
+%   s = tf('s');
+%   anp_main(2*exp(-0.5*s)/(s+1));      % Plot of a transfer function
+%                                       % with scaling factor 2, a
+%                                       % delay of 0.01 and a pole at -1
 %   
-%   Known Limitations:
-%   ------------------
-%   ANP can't handle input- or output delays and other nonlinearities, yet.
-%
-%
+%   anp_main(tf(rss(2,2,2)));           % Plot of det(I + L(s)) a random
+%                                       % 2x2 MIMO transfer function L(s)
+%   
+%   Refer to 'anp_usage_examples.m' for more examples.
+%   
+%   
+%   About detours around poles and zeros on the imaginary axis:
+%   -----------------------------------------------------------
+%   ANP makes the D-contour such that detours around these points go to the
+%   left of the imaginary axis. This is in contradiction to most textbooks,
+%   where the detours are drawn to the right.
+%   This is certainly no error in the SISO case, as it has no influence on
+%   the number of encirclements of the point (-1).
+%   In the MIMO case taking a right detour is wrong, because MIMO feedback
+%   doesn't force all poles and zeros to move. So a pole/zero on the
+%   imaginary axis could stay there even under feedback. Thus we need to
+%   count it as unstable and take a left detour around it.
+%   
+%   
 %   Known Issues:
 %   -------------
-%
 %   Please visit https://github.com/StefanRickli/anp/issues to find a list
 %   of documented issues.
-%
-%
-%   Announcements:
-%   --------------
-%   The next major version will see basic MIMO support.
-%   Along with it the D-contour will see a change, i.e. detours around
-%   poles/zeros that lie exactly on the Im-axis will go around them on the
-%   LHP and not the RHP anymore. This has no impact for the Nyquist
-%   stability criterion in the SISO case, but is very vital to the MIMO
-%   Nyquist stability criterion.
-%
+%   
 % -------------------------------------------------------------------------
 
 function arg_out = anp_main(varargin)
