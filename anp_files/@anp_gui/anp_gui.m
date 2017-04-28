@@ -126,6 +126,7 @@ classdef anp_gui < handle
         d_n_zeros               double      % how many zeros does the transfer function have?
         d_poles                 double      % array holding the pole locations
         d_zeros                 double      % array holding the zero locations
+        d_scaling_factor        double      % scaling factor of transfer function (highest coefficient of numerator divided by highest coeff of denom)
         d_delay                 double      % delay of transfer function in [s]
         d_R                     double      % radius of the half-circle
         
@@ -192,7 +193,7 @@ classdef anp_gui < handle
             this.set_z_plot_limits(new_props);
             this.set_w_plot_limits(new_props);
             this.set_poles_zeros(new_props);
-            this.set_delay(new_props);
+            this.set_gain_delay(new_props);
             this.set_window_props(new_props);
             this.set_plot_props(new_props);
             
@@ -255,9 +256,11 @@ classdef anp_gui < handle
             this.d_n_zeros =        length(new_props.tf_zeros);
         end
         
-        function [] = set_delay(this,new_props)
-            % Populates the variable containing information about the delay of the transfer function with the new value.
+        function [] = set_gain_delay(this,new_props)
+            % Populates the variables containing information about the delay and static gain of the transfer function with the new value.
             
+            this.d_scaling_factor =  new_props.tf_obj.Numerator{1}(find(new_props.tf_obj.Numerator{1} ~= 0,1,'first')) / ...
+                           new_props.tf_obj.Denominator{1}(find(new_props.tf_obj.Denominator{1} ~= 0,1,'first'));
             this.d_delay = new_props.tf_delay;
         end
         
@@ -1067,22 +1070,34 @@ classdef anp_gui < handle
         function [] = draw_update_result_textbox(this)
             % Updates the results from the zero and pole contributions and puts the information in the pre-allocated textbox.
             
-            res_magnitude = 1;
-            res_phase =     0;
+            res_magnitude = abs(this.d_scaling_factor);
+            
+            if sign(this.d_scaling_factor) >= 0
+                res_phase =     0;
+            else
+                res_phase =     pi;
+            end
             
             % *************************
             % Text before contributions
             % *************************
             
+            res_magnitude_txt =         sprintf('%.2f',abs(this.d_scaling_factor));
+            
             switch this.d_n_zeros
                 case 0
-                    res_magnitude_txt =	'1';
+                    % do nothing
                 case 1
-                    res_magnitude_txt = '';
+                    res_magnitude_txt = [res_magnitude_txt, ' * '];
                 otherwise
-                    res_magnitude_txt =	'[';
+                    res_magnitude_txt =	[res_magnitude_txt, ' * ['];
             end
-            res_phase_txt =            	'[';
+            
+            if sign(this.d_scaling_factor) >= 0
+                res_phase_txt =            	'[';
+            else
+                res_phase_txt =            	'180° + [';
+            end
             
             % ******************
             % Zero contributions
