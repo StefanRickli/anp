@@ -41,6 +41,7 @@ classdef polyratio < handle
                 zii = NaN;
                 pii = NaN;
                 
+                % Find smallest pairwise distance between poles and zeros
                 for ii = 1:length(zeros)
                     for jj = 1:length(poles)
                         e = abs(zeros(ii) - poles(jj));
@@ -57,12 +58,16 @@ classdef polyratio < handle
                     zeros(zii) = [];
                     poles(pii) = [];
                 else
+                    % The smallest distance between any pole/zero
+                    % combination is higher than our threshold, 'tol'. This
+                    % means that we're done with polynomial reduction.
                     break;
                 end
             end
             
             this.num =      poly(zeros);
             this.denom =    poly(poles);
+            % Put the numerator and denominator together again.
             
             switch nargout
                 case 0
