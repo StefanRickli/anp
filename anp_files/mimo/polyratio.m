@@ -28,10 +28,12 @@ classdef polyratio < handle
             
             % TODO: tol most certainly needs to be dynamically changed
             %       based on the expected precision of 'roots'
-            tol = 1e-4;
+            tol = 1000*eps;
             
-            fprintf('polyratio.reduce: Will remove all pole/zero combinations that have a difference of < %s\n', num2str(tol,'%1.1e'));
-            fprintf('This is a (quick and) dirty numerical solution. Keep this in mind!\n');
+            %fprintf('polyratio.reduce: Will remove all pole/zero combinations that have a difference of < %s\n', num2str(tol,'%1.1e'));
+            %fprintf('This is a (quick and) dirty numerical solution. Keep this in mind!\n');
+            this.num
+            this.denom
             
             last_nonzero_idx = find(this.num,1,'last');
             n_roots_at_zero = length(this.num) - last_nonzero_idx;
