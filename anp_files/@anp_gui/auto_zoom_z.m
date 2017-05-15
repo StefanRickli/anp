@@ -35,19 +35,6 @@ function [z_xlim,z_ylim] = auto_zoom_z(this, zp, R)
         % make the plot size 8 times (rule of thumb) larger
         z_xlim = this.stretch_centered([min([real(zp(locus_inner)),0]),max([real(zp(locus_inner)),0])],8);
         z_ylim = this.stretch_centered([min([imag(zp(locus_inner)),0]),max([imag(zp(locus_inner)),0])],8);
-        
-        width = z_xlim(2) - z_xlim(1);
-        height = z_ylim(2) - z_ylim(1);
-        
-        % make the plot rectangular (make the smaller axis as large as the
-        % bigger one)
-        if width >= height
-            y0 = mean(z_ylim);
-            z_ylim = [(y0-width/2),(y0+width/2)];
-        else
-            x0 = mean(z_xlim);
-            z_xlim = [(x0-height/2),(x0+height/2)];
-        end
     end
 end
     

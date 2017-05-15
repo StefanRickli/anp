@@ -199,9 +199,9 @@ classdef tf_processor < handle
                 
                 % Check whether the transfer function is a constant
                 if isempty([this.tf_poles,this.tf_zeros])
-                    this.p_radii.R = 5;
+                    new_radii.R =   5;
                 else
-                    new_radii.R =    this.calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_halfsecants.pole_max,this.p_halfsecants.zero_max),this.tf_delay);
+                    new_radii.R =   this.calc_main_R(this.tf_poles,this.tf_zeros,this.p_angles.min_angle_contribution_at_R,max(this.p_halfsecants.pole_max,this.p_halfsecants.zero_max),this.tf_delay);
                 end
             end
             

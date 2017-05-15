@@ -437,8 +437,7 @@ classdef anp_gui < handle
             % TODO make sure that all props and data are set before calling
             % this method.
             
-            assert(~any([isempty([this.d_zeros,this.d_poles]),...
-                         isempty(this.d_R) || isnan(this.d_R),...
+            assert(~any([isempty(this.d_R) || isnan(this.d_R),...
                          isempty(this.d_w_values),...
                          isempty(this.p_z_auto_lims),...
                          isempty(this.p_w_auto_lims)]));
@@ -461,12 +460,13 @@ classdef anp_gui < handle
             % span of the data.
             [this.p_z_xspan,this.p_z_yspan] = this.get_value_span([this.d_zeros,this.d_poles,this.d_z_values]); % separate source file
             if diff(this.p_z_xlim) < 100*eps
-                this.p_z_xlim = this.p_z_xspan;
+                this.p_z_xlim = this.stretch_centered(this.p_z_xspan,1.15);
             end
             if diff(this.p_z_ylim) < 100*eps
-                this.p_z_ylim = this.p_z_yspan;
+                this.p_z_ylim = this.stretch_centered(this.p_z_yspan,1.15);
             end
             
+            [this.p_z_xlim,this.p_z_ylim] = this.make_limits_quadratic(this.p_z_xlim,this.p_z_ylim);
             
             if this.p_w_auto_lims
                 % try to find optimal axis limits for the right plot, or
@@ -485,12 +485,20 @@ classdef anp_gui < handle
             % Override too small axis limits by replacing them with the
             % span of the data.
             [this.p_w_xspan,this.p_w_yspan] = this.get_value_span(this.d_w_values); % separate source file
+            if isempty([this.d_poles,this.d_zeros])
+                % Safeguard if transfer function is a constant gain.
+                this.p_w_xspan = [min([0,real(this.d_w_values)]),max([0,real(this.d_w_values)])];
+                this.p_w_yspan = [min([-3,imag(this.d_w_values)]),max([3,imag(this.d_w_values)])];
+            end
+            
             if diff(this.p_w_xlim) < 100*eps
-                this.p_w_xlim = this.p_w_xspan;
+                this.p_w_xlim = this.stretch_centered(this.p_w_xspan,1.15);
             end
             if diff(this.p_w_xlim) < 100*eps
-                this.p_w_ylim = this.p_w_yspan;
+                this.p_w_ylim = this.stretch_centered(this.p_w_yspan,1.15);
             end
+            
+            [this.p_w_xlim,this.p_w_ylim] = this.make_limits_quadratic(this.p_w_xlim,this.p_w_ylim);            
         end
         
         function [] = calc_z_arrow_length(this)
@@ -1127,7 +1135,9 @@ classdef anp_gui < handle
             % Text between zero and pole contributions
             % ****************************************
             
-            if this.d_n_zeros <= 1
+            if this.d_n_poles == 0
+                % Can only be with static gain. Do nothing.
+            elseif this.d_n_zeros <= 1
                 res_magnitude_txt =     [res_magnitude_txt, ' / '];
             else
                 res_magnitude_txt =   	[res_magnitude_txt, '] / '];
