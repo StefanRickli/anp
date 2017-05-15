@@ -673,12 +673,12 @@ classdef anp_gui < handle
             % Prepare the full input- and output curves with some
             % transparency
             this.h_z_plot_full =            plot(this.h_sub1,0,0);
-            set(this.h_z_plot_full,'Color',[0.05 0.4970 0.7410]);
-            this.h_z_plot_full.Color(4) =   0.3;
+            set(this.h_z_plot_full,'Color',[135 195 225]/255,'linewidth',2);
+            this.h_z_plot_full.Color(4) =   0.6;
             
             this.h_w_plot_full =            plot(this.h_sub2,0,0);
-            set(this.h_w_plot_full,'Color',[0.05 0.4970 0.7410]);
-            this.h_w_plot_full.Color(4) =   0.3;
+            set(this.h_w_plot_full,'Color',[135 195 225]/255,'linewidth',2);
+            this.h_w_plot_full.Color(4) =   0.6;
 
             % Prepare the curves' trail plots and remember their handle for
             % later use.
@@ -1134,7 +1134,6 @@ classdef anp_gui < handle
             % ****************************************
             % Text between zero and pole contributions
             % ****************************************
-            
             if this.d_n_poles == 0
                 % Can only be with static gain. Do nothing.
             elseif this.d_n_zeros <= 1
