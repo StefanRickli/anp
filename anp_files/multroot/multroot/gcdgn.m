@@ -63,7 +63,11 @@ function [g,u,v,res] = gcdgn(p, q, g0, u0, v0)
        j = j + 1;
        %fprintf('      g-n %g,%g \n',bke(j), norm(d));
        
-       if bke(j) >= bke(j-1) 
+       if isnan(bke(j))
+           error('bke is NaN, please report this error together with the exact input to stefanrickli@gmx.ch');
+       end
+       
+       if isnan(bke(j)) || bke(j) >= bke(j-1)
            g = g0; u = u0; v = v0;
            res = bke(j-1);
            break;
