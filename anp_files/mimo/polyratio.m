@@ -33,8 +33,14 @@ classdef polyratio < handle
             fprintf('polyratio.reduce: Will remove all pole/zero combinations that have a difference of < %s\n', num2str(tol,'%1.1e'));
             fprintf('This is a (quick and) dirty numerical solution. Keep this in mind!\n');
             
+            last_nonzero_idx = find(this.num,1,'last');
+            n_roots_at_zero = length(this.num) - last_nonzero_idx;
+            z = zeros(n_roots_at_zero,1);
             zeros_mult = multroot(this.num(1:end-n_roots_at_zero));
             
+            last_nonzero_idx = find(this.denom,1,'last');
+            n_roots_at_zero = length(this.denom) - last_nonzero_idx;
+            p = zeros(n_roots_at_zero,1);
             poles_mult = multroot(this.denom(1:end-n_roots_at_zero));
             
             if ~isempty(zeros_mult)
