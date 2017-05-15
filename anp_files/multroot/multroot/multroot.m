@@ -36,6 +36,13 @@ function z = multroot( p, tol )
    % clear leading/trailing zeros
    %
    n = length(p);
+   first_nonzero = find(p,1,'first');
+   if isempty(first_nonzero) || first_nonzero == n
+       z = [];
+       fprintf('Constant polynomial: no roots.\n');
+       return;
+   end
+   
    q = p;
    if q(1) == 0 | q(n) == 0 
        jj = find(p); 
