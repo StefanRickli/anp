@@ -108,6 +108,7 @@ function arg_out = anp_main(varargin)
     addpath('anp_files/mimo');
     addpath('anp_files/d_contour_tiny_fcts');
     addpath('anp_files/tools');
+    addpath('anp_files/multroot/multroot');
     addpath('anp_icons');
     
     anp_check_Matlab_version(); % sets global variable 'matlab_version'
