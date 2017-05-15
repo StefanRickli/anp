@@ -50,7 +50,7 @@ function [z, bkerr] = gcdroot( p, tol)
    k = n;            % the degree of working polynomial
    while k >= 1 
        if k == 1   % the polynomial is linear, GCD = 1
-           h = 1; u = f; v = 1; m = 1;
+           h = 1; u = ff; v = 1; m = 1;
        else
           for m = 1:k
              A = sylves(ff,gg,m);
