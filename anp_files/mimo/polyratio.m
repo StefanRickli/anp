@@ -33,8 +33,20 @@ classdef polyratio < handle
             fprintf('polyratio.reduce: Will remove all pole/zero combinations that have a difference of < %s\n', num2str(tol,'%1.1e'));
             fprintf('This is a (quick and) dirty numerical solution. Keep this in mind!\n');
             
-            zeros =	roots(this.num);
-            poles =	roots(this.denom);
+            zeros_mult = multroot(this.num(1:end-n_roots_at_zero));
+            
+            poles_mult = multroot(this.denom(1:end-n_roots_at_zero));
+            
+            if ~isempty(zeros_mult)
+                for ii = 1:length(zeros_mult(:,1))
+                    z = [z;ones(zeros_mult(ii,2),1) * zeros_mult(ii,1)];
+                end
+            end
+            if ~isempty(poles_mult)
+                for ii = 1:length(poles_mult(:,1))
+                    p = [p;ones(poles_mult(ii,2),1) * poles_mult(ii,1)];
+                end
+            end
             
             while(true)
                 dist = inf;
@@ -42,9 +54,9 @@ classdef polyratio < handle
                 pii = NaN;
                 
                 % Find smallest pairwise distance between poles and zeros
-                for ii = 1:length(zeros)
-                    for jj = 1:length(poles)
-                        e = abs(zeros(ii) - poles(jj));
+                for ii = 1:length(z)
+                    for jj = 1:length(p)
+                        e = abs(z(ii) - p(jj));
                         if e < dist
                             dist = e;
                             zii = ii;
@@ -54,9 +66,9 @@ classdef polyratio < handle
                 end
                 
                 if (dist < tol)
-                    fprintf('Removing zero (%s) and pole (%s) from polynomial fraction. Distance is: %s\n', num2str(zeros(zii)), num2str(poles(pii)), num2str(abs(zeros(zii) - poles(pii))));
-                    zeros(zii) = [];
-                    poles(pii) = [];
+                    fprintf('Removing zero (%s) and pole (%s) from polynomial fraction. Distance is: %s\n', num2str(z(zii)), num2str(p(pii)), num2str(abs(z(zii) - p(pii))));
+                    z(zii) = [];
+                    p(pii) = [];
                 else
                     % The smallest distance between any pole/zero
                     % combination is higher than our threshold, 'tol'. This
@@ -72,8 +84,8 @@ classdef polyratio < handle
             denom_scale =    this.denom(find(this.denom ~= 0,1,'first'));
             
             % Put the numerator and denominator together again.
-            this.num =      num_scale * poly(zeros);
-            this.denom =    denom_scale * poly(poles);
+            this.num =      real(num_scale * poly(z));
+            this.denom =    real(denom_scale * poly(p));
             
             switch nargout
                 case 0
@@ -81,8 +93,8 @@ classdef polyratio < handle
                 case 1
                     varargout{1} = this;
                 case 2
-                    varargout{1} = zeros;
-                    varargout{2} = poles;
+                    varargout{1} = z;
+                    varargout{2} = p;
                 otherwise
                     error('''reduce'' accepts either one output argument, returning the object itself, or two output arguments, returning zeros and poles of the polyratio');
             end
