@@ -694,8 +694,8 @@ classdef anp_gui < handle
             % We're talking about the arrow annotations that mark the value
             % of the head of the trail at the current frame and remember
             % their handle for later use.
-            this.h_z_plot_arrow =   annotation(this.h_fig, 'Arrow',[0,0.1],[0,0.1]);
-            this.h_w_plot_arrow =   annotation(this.h_fig, 'Arrow',[1,0.9],[0,0.1]);
+            this.h_z_plot_arrow =   annotation(this.h_fig, 'Arrow',[0,0.1],[0,0.1],'linewidth',1);
+            this.h_w_plot_arrow =   annotation(this.h_fig, 'Arrow',[1,0.9],[0,0.1],'linewidth',1);
         end
         
         function [] = draw_init_z_plot_poles_zeros(this)
@@ -1416,7 +1416,7 @@ classdef anp_gui < handle
             [transformed_x,transformed_y] = this.ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y],current_axis_limits);
             
             h_arrow = annotation(this.h_fig,'TextArrow');
-            set(h_arrow,'String',text,'Color',color);
+            set(h_arrow,'String',text,'Color',color,'linewidth',1);
             
             h_arrow.X = transformed_x;
             h_arrow.Y = transformed_y;
