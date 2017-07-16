@@ -2,6 +2,7 @@
 *.tmp
 *.mp4
 *.asv
+handwritten_doc/
 
 # Windows image file caches
 Thumbs.db
