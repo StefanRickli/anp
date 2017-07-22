@@ -6,7 +6,7 @@
 %           https://blogs.ethz.ch/ricklis
 %           https://github.com/StefanRickli/anp
 %
-%   Version 6.0.1
+%   Version 6.1.0
 %   
 %   
 %   What does it do?:
