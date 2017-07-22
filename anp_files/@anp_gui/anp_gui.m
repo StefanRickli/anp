@@ -437,8 +437,7 @@ classdef anp_gui < handle
             % TODO make sure that all props and data are set before calling
             % this method.
             
-            assert(~any([isempty([this.d_zeros,this.d_poles]),...
-                         isempty(this.d_R) || isnan(this.d_R),...
+            assert(~any([isempty(this.d_R) || isnan(this.d_R),...
                          isempty(this.d_w_values),...
                          isempty(this.p_z_auto_lims),...
                          isempty(this.p_w_auto_lims)]));
@@ -461,12 +460,13 @@ classdef anp_gui < handle
             % span of the data.
             [this.p_z_xspan,this.p_z_yspan] = this.get_value_span([this.d_zeros,this.d_poles,this.d_z_values]); % separate source file
             if diff(this.p_z_xlim) < 100*eps
-                this.p_z_xlim = this.p_z_xspan;
+                this.p_z_xlim = this.stretch_centered(this.p_z_xspan,1.15);
             end
             if diff(this.p_z_ylim) < 100*eps
-                this.p_z_ylim = this.p_z_yspan;
+                this.p_z_ylim = this.stretch_centered(this.p_z_yspan,1.15);
             end
             
+            [this.p_z_xlim,this.p_z_ylim] = this.make_limits_quadratic(this.p_z_xlim,this.p_z_ylim);
             
             if this.p_w_auto_lims
                 % try to find optimal axis limits for the right plot, or
@@ -485,12 +485,20 @@ classdef anp_gui < handle
             % Override too small axis limits by replacing them with the
             % span of the data.
             [this.p_w_xspan,this.p_w_yspan] = this.get_value_span(this.d_w_values); % separate source file
+            if isempty([this.d_poles,this.d_zeros])
+                % Safeguard if transfer function is a constant gain.
+                this.p_w_xspan = [min([0,real(this.d_w_values)]),max([0,real(this.d_w_values)])];
+                this.p_w_yspan = [min([-3,imag(this.d_w_values)]),max([3,imag(this.d_w_values)])];
+            end
+            
             if diff(this.p_w_xlim) < 100*eps
-                this.p_w_xlim = this.p_w_xspan;
+                this.p_w_xlim = this.stretch_centered(this.p_w_xspan,1.15);
             end
             if diff(this.p_w_xlim) < 100*eps
-                this.p_w_ylim = this.p_w_yspan;
+                this.p_w_ylim = this.stretch_centered(this.p_w_yspan,1.15);
             end
+            
+            [this.p_w_xlim,this.p_w_ylim] = this.make_limits_quadratic(this.p_w_xlim,this.p_w_ylim);            
         end
         
         function [] = calc_z_arrow_length(this)
@@ -665,12 +673,12 @@ classdef anp_gui < handle
             % Prepare the full input- and output curves with some
             % transparency
             this.h_z_plot_full =            plot(this.h_sub1,0,0);
-            set(this.h_z_plot_full,'Color',[0.05 0.4970 0.7410]);
-            this.h_z_plot_full.Color(4) =   0.3;
+            set(this.h_z_plot_full,'Color',[135 195 225]/255,'linewidth',2);
+            this.h_z_plot_full.Color(4) =   0.6;
             
             this.h_w_plot_full =            plot(this.h_sub2,0,0);
-            set(this.h_w_plot_full,'Color',[0.05 0.4970 0.7410]);
-            this.h_w_plot_full.Color(4) =   0.3;
+            set(this.h_w_plot_full,'Color',[135 195 225]/255,'linewidth',2);
+            this.h_w_plot_full.Color(4) =   0.6;
 
             % Prepare the curves' trail plots and remember their handle for
             % later use.
@@ -686,8 +694,8 @@ classdef anp_gui < handle
             % We're talking about the arrow annotations that mark the value
             % of the head of the trail at the current frame and remember
             % their handle for later use.
-            this.h_z_plot_arrow =   annotation(this.h_fig, 'Arrow',[0,0.1],[0,0.1]);
-            this.h_w_plot_arrow =   annotation(this.h_fig, 'Arrow',[1,0.9],[0,0.1]);
+            this.h_z_plot_arrow =   annotation(this.h_fig, 'Arrow',[0,0.1],[0,0.1],'linewidth',1);
+            this.h_w_plot_arrow =   annotation(this.h_fig, 'Arrow',[1,0.9],[0,0.1],'linewidth',1);
         end
         
         function [] = draw_init_z_plot_poles_zeros(this)
@@ -1126,8 +1134,9 @@ classdef anp_gui < handle
             % ****************************************
             % Text between zero and pole contributions
             % ****************************************
-            
-            if this.d_n_zeros <= 1
+            if this.d_n_poles == 0
+                % Can only be with static gain. Do nothing.
+            elseif this.d_n_zeros <= 1
                 res_magnitude_txt =     [res_magnitude_txt, ' / '];
             else
                 res_magnitude_txt =   	[res_magnitude_txt, '] / '];
@@ -1407,7 +1416,7 @@ classdef anp_gui < handle
             [transformed_x,transformed_y] = this.ds2nfu(h_plot,[arrow_end_x,x],[arrow_end_y,y],current_axis_limits);
             
             h_arrow = annotation(this.h_fig,'TextArrow');
-            set(h_arrow,'String',text,'Color',color);
+            set(h_arrow,'String',text,'Color',color,'linewidth',1);
             
             h_arrow.X = transformed_x;
             h_arrow.Y = transformed_y;

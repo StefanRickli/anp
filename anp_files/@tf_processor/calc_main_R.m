@@ -36,7 +36,7 @@ function R = calc_main_R(~, poles, zeros, min_angle_contribution_at_R, max_halfs
     % Require that the angle contributions of ALL poles and zeros are at
     % least 'min_angle_contribution_at_R' and if there's a purely imaginary
     % p/z far outside, have R be 'reasonably' larger (here hardcoded)
-    R = max([abs(R1),abs(R2),(abs(pz_im) + 3.5*max_halfsecant)*1.5]);
+    R = max(1.5*[abs(R1),abs(R2),(abs(pz_im) + 3.5*max_halfsecant)]);
     
     % Take delay into account by adding three additional encirclements
     if delay ~= 0
