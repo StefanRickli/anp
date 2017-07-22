@@ -33,8 +33,22 @@ classdef polyratio < handle
             fprintf('polyratio.reduce: Will remove all pole/zero combinations that have a difference of < %s\n', num2str(tol,'%1.1e'));
             fprintf('This is a (quick and) dirty numerical solution. Keep this in mind!\n');
             
-            zeros =	roots(this.num);
-            poles =	roots(this.denom);
+            % Handle constant polynomials and the zero function outside uvFactor
+            if isempty(find(this.num ~= 0, 1, 'first')) || find(this.num ~= 0, 1, 'first') == length(this.num)
+                zeros = [];
+            else
+                % uvFactor doesn't like vectors with leading zeros. Get rid
+                % of them.
+                zeros_res =	uvFactor(this.num(find(this.num ~= 0, 1, 'first'):end));
+                zeros = uvFactor_res2roots(zeros_res);
+            end
+            
+            if isempty(find(this.denom ~= 0, 1, 'first')) || find(this.denom ~= 0, 1, 'first') == length(this.denom)
+                poles = [];
+            else
+                poles_res =	uvFactor(this.denom(find(this.denom ~= 0, 1, 'first'):end));
+                poles = uvFactor_res2roots(poles_res);
+            end
             
             while(true)
                 dist = inf;
@@ -123,4 +137,19 @@ classdef polyratio < handle
             y.normalize;
         end
     end
+end
+
+function poly_roots = uvFactor_res2roots(factors)
+    % This function converts the output of uvFactor into a column vector of roots
+    
+    poly_roots = [];
+    [m,~] = size(factors);
+    
+    for ii = 1:m
+        for jj = 1:factors(ii, 3)
+            poly_roots(end+1) = -factors(ii,2)./factors(ii,1);
+        end
+    end
+    
+    poly_roots = poly_roots';
 end
