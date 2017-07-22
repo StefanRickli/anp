@@ -124,3 +124,18 @@ classdef polyratio < handle
         end
     end
 end
+
+function poly_roots = uvFactor_res2roots(factors)
+    % This function converts the output of uvFactor into a column vector of roots
+    
+    poly_roots = [];
+    [m,~] = size(factors);
+    
+    for ii = 1:m
+        for jj = 1:factors(ii, 3)
+            poly_roots(end+1) = -factors(ii,2)./factors(ii,1);
+        end
+    end
+    
+    poly_roots = poly_roots';
+end
