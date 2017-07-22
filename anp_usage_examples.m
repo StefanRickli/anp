@@ -52,3 +52,15 @@ anp_main(zeros,poles)
 zeros = [-40]
 poles = [-2+i,-2-i]
 anp_main(zeros,poles)
+
+% random SISO 4-state system
+G = tf(rss(4,1,1));
+anp_main(G);
+
+% random 2x2 MIMO (3 states per tf) system, the plot shows det(I - G(s))
+G = tf(rss(3,2,2));
+anp_main(G);
+
+% random 4x4 MIMO (2 state per tf) system, the plot shows det(I - G(s))
+G = tf(rss(2,4,4));
+anp_main(G);
